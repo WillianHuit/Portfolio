@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Home</title>
+	<link rel="stylesheet" type="text/css" href="src/css/style.css">
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+	<link rel="stylesheet" href="http://anijs.github.io/lib/anicollection/anicollection.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.6.1/gsap.min.js"></script>
+    
+
+</head>
+
+<body>
+	<header>
+		<a class="name"  data-anijs="if: mouseover, do: rubberBand animated">WH</a>
+		<ul>
+			<li><a href="#" class="active" data-anijs="if: mouseover, do: rubberBand animated">Home</a></li>
+			<li><a href="#">Proyects</a></li>
+			<li><a href="#">Desings</a></li>
+			<li><a href="#">Skills</a></li>
+		</ul>
+	</header>
+	<section>
+		<h2 class="text-principal" id="text_principal">
+			<label id="code_change">Hi</label><label id="cursor_text" class="code-text">&#9474;</label>
+		</h2>
+	</section>
+	<center>
+		<h1 class="title" data-anijs="if: mouseover, do: rubberBand animated">What Service We Offer For You</h1>
+	</center>
+	<div id="float_box" class="float-box" onclick="moveToStart()">
+			<span class="material-icons" data-anijs="if: mouseover, do: rubberBand animated">arrow_upward</span>
+	</div>
+	<div class="container">
+
+		<div class="card">
+			<span class="material-icons mouse-hand"  data-anijs="if: mouseover, do: rubberBand animated">language</span>
+			<h2>Web Design</h2>
+			<p>
+				I can build your website design for your company or personal project with html, javascript and css.
+			</p>
+		</div>
+		<div class="card">
+			<span class="material-icons mouse-hand" data-anijs="if: mouseover, do: rubberBand animated">build</span>
+			<h2>Application</h2>
+			<p>
+				Do you want to optimize your company?<br>
+				I can create a program to streamline processes.
+			</p>
+		</div>
+		<div class="card">
+			<span class="material-icons mouse-hand" data-anijs="if: mouseover, do: rubberBand animated">view_in_ar</span>
+			<h2>Mobile App</h2>
+			<p>
+				I can create applications for android mobile devices.
+			</p>
+		</div>
+	</div>
+	<div class="container">
+		<div class="card">
+			<span class="material-icons mouse-hand" data-anijs="if: mouseover, do: rubberBand animated">color_lens</span>
+			<h2>Design</h2>
+			<p>
+				I can create the logo for your company or for your personal projects.
+			</p>
+		</div>
+		<div class="card">
+			<span class="material-icons mouse-hand" data-anijs="if: mouseover, do: rubberBand animated">tips_and_updates</span>
+			<h2>Project manager</h2>
+			<p>
+				I can help you structure your project and create a work plan.
+			</p>
+		</div>
+		<div class="card">
+			<span class="material-icons mouse-hand" data-anijs="if: mouseover, do: rubberBand animated">sports_esports</span>
+			<h2>Games</h2>
+			<p>
+				Do you have any ideas for a video game? I can create games for windows and mobile devices.
+			</p>
+		</div>
+	</div>
+	
+	<center>
+		<h1 class="title">Fun Facts</h1>
+	</center>
+
+
+	<footer>
+		<center>
+			Developer and designded by Willian Huit. ©<label id="year">20xx</label> all rights reserved
+		</center>
+	</footer>
+	
+	<script type="text/javascript" src="src/js/controller.js"></script>
+	<script src="src/js/anijs-min.js"></script>
+	
+</body>
+</html>
