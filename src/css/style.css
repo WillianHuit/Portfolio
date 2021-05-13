@@ -230,6 +230,10 @@ section{
 	object-fit: cover;
 	background-color: #fff;
 }
+.image-gallery:hover{
+	-webkit-transform: scale3d(1.1, 1.1, 1.1);
+  	transform: scale3d(1.1, 1.1, 1.1);
+}
 
 footer{
 	margin-top: 20px;
