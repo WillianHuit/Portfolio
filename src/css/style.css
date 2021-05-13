@@ -96,6 +96,7 @@ section{
 	justify-content: center;
 	align-items: center;
 }
+
 .text-principal{
 	font-weight: 700;
 	font-size: 5em;
@@ -155,16 +156,80 @@ section{
 	text-decoration: none;
 	color: var(--focus-in-color);
 }
+.card-n{
+	-moz-user-select: none; 
+   -webkit-user-select: none;
+   -ms-user-select: none;
+   user-select: none; 
+	opacity: 1;
+	color: #40514e;
+	margin-left: 5px;
+	border-radius: 15px;
+	width: 250px;
+	padding: 15px;
+	border: 1px solid #40514e;
+	text-align: center;
+	height: 130px;	
+}
+.count-number{
+
+	margin-top: -10px;
+	font-weight: bold;
+	font-size: 2em;
+	opacity: 0.8;
+}
 .card:hover{
 
 	font-size: 1.2em;
 	background-color: #40514e;
 	color: white;
 }
+.card-n:hover{
+	
+}
 .mouse-hand{
 	cursor:	pointer;
 }
-
+.content{
+	opacity: 0.1;
+	margin-top: 110px;
+	margin-right: 20%;
+	margin-left: 20%;
+	padding: 15px;
+	color: var(--letter-color);
+	font-family: 'Ubuntu', sans-serif;
+	position: relative;
+	display: block;
+	border-radius: 20px;
+	border: 1px solid var(--letter-color);
+	text-align: center;
+	align-items: center;
+}
+.graphic{
+	height: 300px;
+	width: 300px;
+	text-align: center;
+	align-items: center;
+	display: inline-block;
+}
+.onli-text{
+	margin-top: 110px;
+	color: var(--letter-color);
+	font-family: 'Ubuntu', sans-serif;
+}
+.gallery{
+	width: 90%;
+	margin-left: 10%;
+	position: relative;
+	display: inline-block;
+}
+.image-gallery{
+	border: 1px solid #fff;
+	width: 30%;
+	height: 300px;
+	object-fit: cover;
+	background-color: #fff;
+}
 
 footer{
 	margin-top: 20px;

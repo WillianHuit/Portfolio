@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Home</title>
+	<link rel="stylesheet" type="text/css" href="src/css/style.css">
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+	<link rel="stylesheet" href="http://anijs.github.io/lib/anicollection/anicollection.css">
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.2.0/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.6.1/gsap.min.js"></script>
+    
+
+</head>
+
+<body>
+	<header>
+		<a class="name"  data-anijs="if: mouseover, do: rubberBand animated">WH</a>
+		<ul>
+			<li><a href="index.html">Home</a></li>
+			<li><a href="proyects.html">Proyects</a></li>
+			<li><a href="desings.html">Desings</a></li>
+			<li><a href="#" class="active" data-anijs="if: mouseover, do: rubberBand animated">Skills</a></li>
+		</ul>
+	</header>
+	<div class="content">
+		<center><h2>Programming languages</h2></center>
+		<div class="graphic">
+			<canvas id="myChart" width="400" height="400"></canvas>	
+		</div>
+	</div>
+	<footer>
+		<center>
+			Developer and designded by Willian Huit. ©<label id="year">20xx</label> all rights reserved
+		</center>
+	</footer>
+	
+	<script src="src/js/anijs-min.js"></script>
+	<script type="text/javascript" src="src/js/skillsScript.js"></script>
+</body>
+</html>

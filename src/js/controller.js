@@ -2,6 +2,8 @@ window.onload=function() {
 	recursiveFunction();
 	textComand();
 }
+let hours_working = 1650;
+
 let visible = true;
 let count = 0;
 let continue_time = true;
@@ -64,7 +66,7 @@ function textComand(){
 		//setTimeout("textComand()",100);
 	}
 }
-
+let countFacts = true;
 window.addEventListener('scroll',function(){
 	let value = window.scrollY;
 	
@@ -72,6 +74,10 @@ window.addEventListener('scroll',function(){
 		//console.log(value+"-"+screen.width);
 		float_box.style.marginTop = value * 0.5 + 'px';
 		showCards();
+	}
+	if(value>400 && countFacts){
+		startCount();
+		countFacts = false;
 	}
 });
 let isShowCard = false;
@@ -114,4 +120,17 @@ function moveToStart(){
 	});
 	
 }
- 
+	//let coffe_consumed = 1800; 
+	//let hours_drawing = 1160;
+ let tempWH = 0;
+function startCount(){
+	if(tempWH<hours_working){
+		tempWH = tempWH + 9
+		document.getElementById('workingHour').innerHTML = "+"+ (tempWH+2080);
+		document.getElementById('hoursDrawing').innerHTML = "+"+ (tempWH+430);
+		document.getElementById('coffeConsumed').innerHTML = "+"+ (tempWH);
+	}
+	if(tempWH<hours_working){
+		setTimeout("startCount()",100);
+	}
+}

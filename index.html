@@ -15,9 +15,9 @@
 		<a class="name"  data-anijs="if: mouseover, do: rubberBand animated">WH</a>
 		<ul>
 			<li><a href="#" class="active" data-anijs="if: mouseover, do: rubberBand animated">Home</a></li>
-			<li><a href="#">Proyects</a></li>
-			<li><a href="#">Desings</a></li>
-			<li><a href="#">Skills</a></li>
+			<li><a href="proyects.html">Proyects</a></li>
+			<li><a href="desings.html">Desings</a></li>
+			<li><a href="skills.html">Skills</a></li>
 		</ul>
 	</header>
 	<section>
@@ -81,9 +81,25 @@
 	</div>
 	
 	<center>
-		<h1 class="title">Fun Facts</h1>
+		<h1 class="title" style="margin-top: 50px;">Fun Facts</h1>
 	</center>
-
+	<div class="container">
+		<div class="card-n" data-anijs="if: mouseover, do: bounce animated">
+			<span class="material-icons">schedule</span>
+			<h3>Working Hours</h3>
+			<p id="workingHour" class="count-number">0</p>
+		</div>
+		<div class="card-n" data-anijs="if: mouseover, do: bounce animated">
+			<span class="material-icons">draw</span>
+			<h3>Drawing Hours</h3>
+			<p id="hoursDrawing" class="count-number">0</p>
+		</div>
+		<div class="card-n" data-anijs="if: mouseover, do: bounce animated">
+			<span class="material-icons">local_cafe</span>
+			<h3>Coffe Consumed</h3>
+			<p id="coffeConsumed" class="count-number">0</p>
+		</div>
+	</div>
 
 	<footer>
 		<center>

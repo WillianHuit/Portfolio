@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Home</title>
+	<link rel="stylesheet" type="text/css" href="src/css/style.css">
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+	<link rel="stylesheet" href="http://anijs.github.io/lib/anicollection/anicollection.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.6.1/gsap.min.js"></script>
+    
+
+</head>
+
+<body>
+	<header>
+		<a class="name"  data-anijs="if: mouseover, do: rubberBand animated">WH</a>
+		<ul>
+			<li><a href="index.html">Home</a></li>
+			<li><a href="#" class="active">Proyects</a></li>
+			<li><a href="desings.html">Desings</a></li>
+			<li><a href="skills.html">Skills</a></li>
+		</ul>
+	</header>
+	<div class="text-principal" data-anijs="if: mouseover,on: center, do: rubberBand animated">
+		<center>
+			<h1 data-anijs="if: mouseover, do: tada animated">Building..</h1>
+		</center>
+	</div>
+	
+
+	<footer>
+		<center>
+			Developer and designded by Willian Huit. ©<label id="year">20xx</label> all rights reserved
+		</center>
+	</footer>
+	<script type="text/javascript">
+		const date = new Date();
+		const year = date.getFullYear();
+		document.getElementById('year').innerHTML = year;
+	</script>
+	<script src="src/js/anijs-min.js"></script>
+	
+</body>
+</html>
