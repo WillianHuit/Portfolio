@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Home</title>
+	<title>Home - WH</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="stylesheet" type="text/css" href="src/css/style.css">
 	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 	<link rel="stylesheet" href="http://anijs.github.io/lib/anicollection/anicollection.css">
@@ -9,21 +10,38 @@
     <link rel="icon" type="image/gif" href="src/img/favicon.ico">
 
 </head>
-
-<body>
-	<header>
+<header>
 		<a class="name"  data-anijs="if: mouseover, do: rubberBand animated">WH</a>
-		<ul>
+		<div class="icon" onclick="btnMenuClick()">
+			<span style="font-size: 42px;" class="material-icons">
+				menu
+			</span>
+		</div>
+		<ul id="itemsBar" class="items-bar">
+				
 			<li><a href="#" class="active" data-anijs="if: mouseover, do: rubberBand animated">Home</a></li>
 			<li><a href="proyects.html">Proyects</a></li>
 			<li><a href="desings.html">Desings</a></li>
 			<li><a href="skills.html">Skills</a></li>
+			
 		</ul>
+		
 	</header>
+<body>
+	
 	<section>
-		<h2 class="text-principal" id="text_principal">
-			<label id="code_change">Hi</label><label id="cursor_text" class="code-text">&#9474;</label>
-		</h2>
+		<div class="img-center">
+			<img class="img-profile" src="src/img/profile.jpg">
+		</div>
+		<div class="info-text">
+			<h3>Hi, I'm</h3>
+			<h1 class="name-text">Willian Huit</h1>
+			<h4 class="text-principal" id="text_principal">
+				I'm 
+				<label id="code_change">Hi</label><label id="cursor_text" class="code-text">&#9474;</label>
+			</h4>	
+		</div>
+		
 	</section>
 	<center>
 		<h1 class="title" data-anijs="if: mouseover, do: rubberBand animated">What Service We Offer For You</h1>
@@ -79,6 +97,30 @@
 			</p>
 		</div>
 	</div>
+	<br>
+	<center>
+		<h1 class="title" data-anijs="if: mouseover, do: rubberBand animated">
+			My Skills
+		</h1>
+	</center>
+
+
+
+			<center>
+				<img title="Github" class="svg-img" src="src/svg/Github.svg">
+				<img title="CSS" class="svg-img" src="src/svg/css.svg">
+				<img title="Javascript" class="svg-img" src="src/svg/js.svg">
+				<img title="C#" class="svg-img" src="src/svg/c.svg">
+				<img title="HTML" class="svg-img" src="src/svg/html.svg">
+				<img title="SQL" class="svg-img" src="src/svg/sql.svg">
+				<img title="Unity" class="svg-img" src="src/svg/unity.svg">
+				<img title="PhotoShop" class="svg-img" src="src/svg/ps.svg">
+			</center>
+		
+			<center>
+				<a title="See more skills"  class="link" href="skills.html">View more skills..</a>
+			</center>
+	</div>
 	
 	<center>
 		<h1 class="title" style="margin-top: 50px;">Fun Facts</h1>
@@ -109,6 +151,7 @@
 	
 	<script type="text/javascript" src="src/js/controller.js"></script>
 	<script src="src/js/anijs-min.js"></script>
+	 <script type="text/javascript" src="src/js/responsive.js"></script>
 	
 </body>
 </html>

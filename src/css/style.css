@@ -1,23 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@300&display=swap');
-/* 
-Palet
-	f5f5f5
-	30e3ca
-	2f89fc
-	40514e
 
-	eeeeee
-	aad8d3
-	00adb5
-	393e46
-
-	eeeeee
-	00adb5
-	393e46
-	222831
-
-*/
 :root{
 	--main-bg-color: #f5f5f5;
 	--letter-color: #40514e;
@@ -31,16 +14,18 @@ a{
 body{
 	padding: 0;
 	margin: 0;
-	min-height: 100vh;
+	width: 100%;
 	background-color: var(--main-bg-color);
+	
 }
 header{
+
 	position: absolute;
 	top: 0;
 	left: 0;
 	width: 100%;
-	display: flex;
 	justify-content: space-between;
+	display: flex;
 	align-items: center;
 	z-index: 10000;
 }
@@ -87,19 +72,38 @@ header ul li a.active{
 	font-weight: bold;
 	text-transform: uppercase;
 }
+.icon {
+  display: none;
+  margin-right: 10px;
+  color: var(--letter-color);
+}
 
 section{
+	margin-top: 10px;
 	position: relative;
 	width: 100%;
-	height: 90vh;
+	height: 70vh;
 	display: flex;
 	justify-content: center;
 	align-items: center;
 }
-
+.info-text{
+	color: var(--letter-color);
+	font-family: 'Ubuntu', sans-serif;
+}
+.img-profile{
+	margin-right: 20px;
+	border-radius: 250px;
+	width: 250px;
+	height: 250px;
+	object-fit: cover;
+}
+.name-text{
+	font-size: 4em;
+	margin-top: 0;
+	margin-bottom: 0;
+}
 .text-principal{
-	font-weight: 700;
-	font-size: 5em;
 	letter-spacing: 1px;
 	color: var(--letter-color);
 	font-family: 'Inconsolata', monospace;
@@ -140,6 +144,7 @@ section{
 }
 
 .card{
+	text-align: center;
 	opacity: 0.1;
 	color: #40514e;
 	margin-left: 5px;
@@ -208,6 +213,7 @@ section{
 .graphic{
 	height: 400px;
 	width: 400px;
+	margin-top: 10px;
 	text-align: center;
 	align-items: center;
 	display: inline-block;
@@ -223,6 +229,7 @@ section{
 	position: relative;
 	display: inline-block;
 }
+
 .image-gallery{
 	border: 1px solid #fff;
 	width: 30%;
@@ -233,6 +240,138 @@ section{
 .image-gallery:hover{
 	-webkit-transform: scale3d(1.1, 1.1, 1.1);
   	transform: scale3d(1.1, 1.1, 1.1);
+}
+.svg-img{
+	width: 100px;
+	height: 100px;
+	object-fit: cover;
+}
+.svg-img:hover{
+	-webkit-transform: scale3d(1.1, 1.1, 1.1);
+  	transform: scale3d(1.5, 1.5, 1.5);
+}
+.link{
+	color: #2f89fc;
+	font-family: 'Ubuntu', sans-serif;
+}
+
+
+
+@media screen and (max-width: 600px) {
+	header{
+		background-color: var(--letter-color);
+		position: fixed;
+		display: block;
+		padding-top: 10px;
+	}
+
+	header ul{
+		margin: 0;
+		margin-bottom: 100vh;
+		margin-top: 5px;
+
+	}
+	header a.name{
+		background-color: var(--letter-color);
+		color: var(--main-bg-color);
+		font-size: 1.9em;
+		padding: 0;
+	}
+	.icon {
+		color: var(--main-bg-color);
+		float: right;
+	  	display: block;
+	}
+	header ul.items-bar{
+
+		display: none;
+
+	}
+	header ul li{
+		width: 100%;
+
+	}
+	header ul li a{
+
+			margin-left: -50px;
+			padding-right: 0;
+		   float: left;
+		  display: block;
+		  color: var(--main-bg-color);
+		 	width: 100%;
+		  font-size: 28px;
+		  border-bottom: 2px solid rgb(245, 245, 245,0.1);
+	}
+	header ul li a.active{
+		background-color: rgb(48, 227, 202,0.3);
+		color: var(--main-bg-color);
+	}
+	section{
+  		display: block;
+  		margin-top: 80px;
+  		align-items: normal;
+  		text-align: center;
+  		margin-bottom: 60px;
+	}
+	.container{
+		display: block;
+		padding: 0;
+		margin: 0;
+		width: 100%;
+		align-items: normal;
+		text-align: center;
+	}
+	.card{
+		margin: 0;
+		margin-top: 20px;
+		margin-left: 5%;
+		width: 82%;
+		height: 200px;
+	}
+	.card-n{
+		margin: 0;
+		margin-top: 20px;
+		margin-left: 5%;
+		width: 82%;
+		height: 100px;
+	}
+	.center-icons{
+		display: block;
+		margin-bottom: 10px;
+	}
+	.float-box{
+		display: none;
+	}
+	.gallery{
+		padding: 0;
+		margin: 0;
+		width: 100%;
+		text-align: center;
+	}
+	.image-gallery{
+		width: 40%;
+		height: 200px;
+	}
+	.content{
+		width: 100%;
+		margin:0;
+		margin-top: 5px;
+		padding: 0;
+	}
+	.group-grapic{
+		margin-top: 70px;
+	}
+	.graphic{
+		width: 100%;
+		height: 40%;
+	}
+}
+
+@media screen and (max-width: 600px) {
+	header ul.responsive{
+		display: block;
+	}
+  	
 }
 
 footer{

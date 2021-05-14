@@ -2,6 +2,7 @@
 <html>
 <head>
 	<title>Skills - WH</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="stylesheet" type="text/css" href="src/css/style.css">
 	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 	<link rel="stylesheet" href="http://anijs.github.io/lib/anicollection/anicollection.css">
@@ -15,43 +16,50 @@
 <body>
 	<header>
 		<a class="name"  data-anijs="if: mouseover, do: rubberBand animated">WH</a>
-		<ul>
+		<div class="icon" onclick="btnMenuClick()">
+			<span style="font-size: 42px;" class="material-icons">
+				menu
+			</span>
+		</div>
+		<ul id="itemsBar" class="items-bar">
 			<li><a href="index.html">Home</a></li>
 			<li><a href="proyects.html">Proyects</a></li>
 			<li><a href="desings.html">Desings</a></li>
 			<li><a href="#" class="active" data-anijs="if: mouseover, do: rubberBand animated">Skills</a></li>
 		</ul>
 	</header>
-	<div class="content">
-		<center><h2>Programming languages</h2></center>
-		<div class="graphic">
-			<canvas id="myChart" width="400" height="400"></canvas>	
+	<div class="group-grapic">
+		<div class="content">
+			<center><h2>Programming languages</h2></center>
+			<div class="graphic">
+				<canvas id="myChart" width="400" height="400"></canvas>	
+			</div>
 		</div>
-	</div>
-	<div class="content">
-		<center><h2>IDE's</h2></center>
-		<div class="graphic">
-			<canvas id="ideChart" width="400" height="400"></canvas>	
+		<div class="content">
+			<center><h2>IDE's</h2></center>
+			<div class="graphic">
+				<canvas id="ideChart" width="400" height="400"></canvas>	
+			</div>
 		</div>
-	</div>
-	<div class="content">
-		<center><h2>Most used code editor</h2></center>
-		<div class="graphic">
-			<canvas id="codeEditorChart" width="400" height="400"></canvas>	
+		<div class="content">
+			<center><h2>Most used code editor</h2></center>
+			<div class="graphic">
+				<canvas id="codeEditorChart" width="400" height="400"></canvas>	
+			</div>
 		</div>
-	</div>
-	<div class="content">
-		<center><h2>Microsoft Office tools</h2></center>
-		<div class="graphic">
-			<canvas id="officeChart" width="400" height="400"></canvas>	
+		<div class="content">
+			<center><h2>Microsoft Office tools</h2></center>
+			<div class="graphic">
+				<canvas id="officeChart" width="400" height="400"></canvas>	
+			</div>
 		</div>
-	</div>
-	<div class="content">
-		<center><h2>Other Programs</h2></center>
-		<div class="graphic">
-			<canvas id="otherChart" width="400" height="400"></canvas>	
+		<div class="content">
+			<center><h2>Other Programs</h2></center>
+			<div class="graphic">
+				<canvas id="otherChart" width="400" height="400"></canvas>	
+			</div>
 		</div>
-	</div>
+	<div>
 	<footer>
 		<center>
 			Developer and designded by Willian Huit. ©<label id="year">20xx</label> all rights reserved
@@ -60,5 +68,6 @@
 	
 	<script src="src/js/anijs-min.js"></script>
 	<script type="text/javascript" src="src/js/skillsScript.js"></script>
+	 <script type="text/javascript" src="src/js/responsive.js"></script>
 </body>
 </html>

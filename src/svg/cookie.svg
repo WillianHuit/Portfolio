@@ -1,0 +1,21 @@
+<svg width="512" height="512" xmlns="http://www.w3.org/2000/svg">
+ <g id="Layer_1">
+  <title>Layer 1</title>
+  <path stroke="#000" id="svg_8" d="m491.3675,289.01747l-104.99994,0l-35.00004,33.49992l35.00004,33.50007l104.99994,0l-35.00003,-33.50007l35.00003,-33.49992z" fill="#ff0000"/>
+  <path stroke="#000" id="svg_7" d="m15.36749,305.01747l113.24994,0l37.75005,33.49992l-37.75005,33.50007l-113.24994,0l37.75004,-33.50007l-37.75004,-33.49992z" fill="#ff0000"/>
+  <ellipse stroke="#000" stroke-width="0" ry="185.5" rx="198.5" id="svg_6" cy="213" cx="257" fill="#bcdaff"/>
+  <path transform="rotate(179.405 103.999 330.984)" stroke="#000" id="svg_2" d="m69.87416,368.37015l0,-74.77243l68.25011,74.77243l-68.25011,0z" fill="#720000"/>
+  <path transform="rotate(179.405 414.465 325.732)" stroke="#000" id="svg_3" d="m444.82567,358.13407l0,-64.80411l-60.72221,64.80411l60.72221,0z" fill="#720000"/>
+  <ellipse stroke-width="2" ry="133" rx="145" id="svg_9" cy="203.5" cx="256.5" stroke="#a04500" fill="#ed650b"/>
+  <ellipse stroke="#a04500" ry="12.5" rx="11.5" id="svg_14" cy="212" cx="357" stroke-width="2" fill="#753304"/>
+  <rect stroke="#000" id="svg_4" height="73" width="374.99999" y="221.5" x="69.50001" fill="#ff0000"/>
+  <rect transform="rotate(4.10011 253.5 172)" stroke="#a04500" id="svg_18" height="53" width="140" y="145.5" x="183.5" stroke-width="0" fill="#ed650b"/>
+  <ellipse ry="34" rx="17" id="svg_10" cy="151.5" cx="227.5" stroke-width="2" stroke="#a04500" fill="#ffffff"/>
+  <ellipse ry="34" rx="17" id="svg_11" cy="150.5" cx="277.5" stroke-width="2" stroke="#a04500" fill="#ffffff"/>
+  <ellipse stroke="#a04500" ry="13.5" rx="15" id="svg_12" cy="203" cx="130.5" stroke-width="2" fill="#753304"/>
+  <ellipse transform="rotate(11.5761 156.25 127.72)" stroke="#a04500" ry="13.5" rx="8.62037" id="svg_13" cy="127.7198" cx="156.25014" stroke-width="2" fill="#753304"/>
+  <ellipse stroke="#a04500" ry="12" rx="8.5" id="svg_15" cy="169.5" cx="307" stroke-width="2" fill="#753304"/>
+  <ellipse stroke="#a04500" ry="13.5" rx="15" id="svg_16" cy="99" cx="301.5" stroke-width="2" fill="#753304"/>
+ </g>
+
+</svg>

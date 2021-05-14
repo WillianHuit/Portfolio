@@ -6,14 +6,13 @@ let hours_working = 1650;
 
 let visible = true;
 let count = 0;
-let continue_time = true;
 let rounds_count = 0;
 let aux_count = 0;
 let aux_text = "";
 let wait = false;
 let cursor = document.getElementById('cursor_text');
 let float_blox = document.querySelector('float_box');
-let code = ["Hi, I'm Willian", "I'm Developer","Welcome to my page!"];
+let code = [" Web Developer", " an engineering student"," Game developer"," Desktop Developer"];
 
 function recursiveFunction(){
 	if(visible){
@@ -24,12 +23,7 @@ function recursiveFunction(){
 		visible=true;
 		cursor.className  = "code-text";
 	}
-	if(continue_time){
-		setTimeout("recursiveFunction()",500);
-	}else{
-		//cursor.className  = "code-text";
-		cursor.style.display = "none";
-	}
+	setTimeout("recursiveFunction()",500);
 }
 
 function textComand(){
@@ -47,30 +41,24 @@ function textComand(){
 			count++;
 		}else{
 			count = 0;
-			continue_time = false;
 		}
 		
 	}
-
-
-
-	if(continue_time){
 		if(wait){
 			setTimeout(() => {
 		  		wait = false;
-		  		setTimeout("textComand()",100);
-			}, 3000);
+		  		setTimeout("textComand()",50);
+			}, 2000);
 		}else{
-			setTimeout("textComand()",100);
+			setTimeout("textComand()",50);
 		}
-		//setTimeout("textComand()",100);
-	}
+	
 }
 let countFacts = true;
 window.addEventListener('scroll',function(){
 	let value = window.scrollY;
 	
-	if(value>200){
+	if(value>80){
 		//console.log(value+"-"+screen.width);
 		float_box.style.marginTop = value * 0.5 + 'px';
 		showCards();

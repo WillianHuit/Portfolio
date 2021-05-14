@@ -2,6 +2,7 @@
 <html>
 <head>
 	<title>Desings - WH</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="stylesheet" type="text/css" href="src/css/style.css">
 	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 	<link rel="stylesheet" href="http://anijs.github.io/lib/anicollection/anicollection.css">
@@ -13,7 +14,12 @@
 <body>
 	<header>
 		<a class="name"  data-anijs="if: mouseover, do: rubberBand animated">WH</a>
-		<ul>
+		<div class="icon" onclick="btnMenuClick()">
+			<span style="font-size: 42px;" class="material-icons">
+				menu
+			</span>
+		</div>
+		<ul id="itemsBar" class="items-bar">
 			<li><a href="index.html">Home</a></li>
 			<li><a href="proyects.html">Proyects</a></li>
 			<li><a href="#" class="active" data-anijs="if: mouseover, do: rubberBand animated">Desings</a></li>
@@ -26,22 +32,22 @@
 		</center>
 	</div>
 	<div class="gallery">
-		<img class="image-gallery" src="src/img/img10.png"  data-anijs="if: mouseover, do: rubberBand animated">
-		<img class="image-gallery" src="src/img/img4.png"  data-anijs="if: mouseover, do: rubberBand animated">
-		<img class="image-gallery" src="src/img/img9.jpg"  data-anijs="if: mouseover, do: rubberBand animated">
-		<img class="image-gallery" src="src/img/img12.jpg"  data-anijs="if: mouseover, do: rubberBand animated">
-		<img class="image-gallery" src="src/img/img11.jpg"  data-anijs="if: mouseover, do: rubberBand animated">
-		<img class="image-gallery" src="src/img/coin.png"  data-anijs="if: mouseover, do: rubberBand animated">
-		<img class="image-gallery" src="src/img/img8.png"  data-anijs="if: mouseover, do: rubberBand animated">
-		<img class="image-gallery" src="src/img/img6.png"  data-anijs="if: mouseover, do: rubberBand animated">
+		<img class="image-gallery" src="src/img/img10.png">
+		<img class="image-gallery" src="src/img/img4.png">
+		<img class="image-gallery" src="src/img/img9.jpg">
+		<img class="image-gallery" src="src/img/img12.jpg">
+		<img class="image-gallery" src="src/img/img11.jpg">
+		<img class="image-gallery" src="src/img/coin.png">
+		<img class="image-gallery" src="src/img/img8.png">
+		<img class="image-gallery" src="src/img/img6.png">
 		
-		<img class="image-gallery" src="src/img/draw1.jpg"  data-anijs="if: mouseover, do: rubberBand animated">
-		<img class="image-gallery" src="src/img/draw6.jpg"  data-anijs="if: mouseover, do: rubberBand animated">
-		<img class="image-gallery" src="src/img/draw7.jpg"  data-anijs="if: mouseover, do: rubberBand animated">
-		<img class="image-gallery" src="src/img/draw2.jpg"  data-anijs="if: mouseover, do: rubberBand animated">
-		<img class="image-gallery" src="src/img/draw3.jpg"  data-anijs="if: mouseover, do: rubberBand animated">
-		<img class="image-gallery" src="src/img/draw4.jpg"  data-anijs="if: mouseover, do: rubberBand animated">
-		<img class="image-gallery" src="src/img/draw5.jpg"  data-anijs="if: mouseover, do: rubberBand animated">
+		<img class="image-gallery" src="src/img/draw1.jpg">
+		<img class="image-gallery" src="src/img/draw6.jpg">
+		<img class="image-gallery" src="src/img/draw7.jpg">
+		<img class="image-gallery" src="src/img/draw2.jpg">
+		<img class="image-gallery" src="src/img/draw3.jpg">
+		<img class="image-gallery" src="src/img/draw4.jpg">
+		<img class="image-gallery" src="src/img/draw5.jpg">
 
 	</div>
 	
@@ -53,5 +59,6 @@
 	
 	<script src="src/js/anijs-min.js"></script>
 	<script type="text/javascript" src="src/js/designsScript.js"></script>
+	 <script type="text/javascript" src="src/js/responsive.js"></script>
 </body>
 </html>

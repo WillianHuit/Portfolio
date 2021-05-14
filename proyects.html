@@ -2,9 +2,11 @@
 <html>
 <head>
 	<title>Proyects  - WH</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="stylesheet" type="text/css" href="src/css/style.css">
 	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 	<link rel="stylesheet" href="http://anijs.github.io/lib/anicollection/anicollection.css">
+	<script type="text/javascript" src="src/js/responsive.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.6.1/gsap.min.js"></script>
     <link rel="icon" type="image/gif" href="src/img/favicon.ico">
 
@@ -13,17 +15,27 @@
 <body>
 	<header>
 		<a class="name"  data-anijs="if: mouseover, do: rubberBand animated">WH</a>
-		<ul>
+		<div class="icon" onclick="btnMenuClick()">
+			<span style="font-size: 42px;" class="material-icons">
+				menu
+			</span>
+		</div>
+		<ul id="itemsBar" class="items-bar">
 			<li><a href="index.html">Home</a></li>
 			<li><a href="#" class="active">Proyects</a></li>
 			<li><a href="desings.html">Desings</a></li>
 			<li><a href="skills.html">Skills</a></li>
 		</ul>
 	</header>
-	<div class="text-principal" data-anijs="if: mouseover,on: center, do: rubberBand animated">
-		<center>
-			<h1 data-anijs="if: mouseover, do: tada animated">Building..</h1>
+	<div class="text-principal" data-anijs="if: mouseover,on: center, do: shake animated">
+		<center style="margin-top: 150px; margin-bottom: 100px;">
+			
+			<span class="material-icons" style="font-size: 240px;">
+				construction
+			</span>
+			<h1>Building...</h1>
 		</center>
+		
 	</div>
 	
 
@@ -38,6 +50,6 @@
 		document.getElementById('year').innerHTML = year;
 	</script>
 	<script src="src/js/anijs-min.js"></script>
-	
+	 
 </body>
 </html>

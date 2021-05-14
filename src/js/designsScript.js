@@ -14,12 +14,5 @@ if(document.querySelector(".image-gallery")) {
 		scale: 2
 	}).to('.onli-text',{
 		scale: 1
-	})
-	.to('.image-gallery',{
-		rotate: 360,
-		y: 50
-	})
-	.to('.image-gallery',{
-		y:0
 	});
 	}
