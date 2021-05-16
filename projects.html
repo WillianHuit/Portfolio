@@ -1,18 +1,19 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Proyects  - WH</title>
+	<title>Projects  - WH</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="stylesheet" type="text/css" href="src/css/style.css">
 	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 	<link rel="stylesheet" href="http://anijs.github.io/lib/anicollection/anicollection.css">
 	<script type="text/javascript" src="src/js/responsive.js"></script>
+	<script type="text/javascript" src="src/js/projects.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.6.1/gsap.min.js"></script>
     <link rel="icon" type="image/gif" href="src/img/favicon.ico">
 
 </head>
 
-<body>
+<body  onload = "loadProjects()">
 	<header>
 		<a class="name"  data-anijs="if: mouseover, do: rubberBand animated">WH</a>
 		<div class="icon" onclick="btnMenuClick()">
@@ -22,22 +23,35 @@
 		</div>
 		<ul id="itemsBar" class="items-bar">
 			<li><a href="index.html">Home</a></li>
-			<li><a href="#" class="active">Proyects</a></li>
+			<li><a href="#" class="active">Projects</a></li>
 			<li><a href="desings.html">Desings</a></li>
 			<li><a href="skills.html">Skills</a></li>
 		</ul>
 	</header>
-	<div class="text-principal" data-anijs="if: mouseover,on: center, do: shake animated">
-		<center style="margin-top: 150px; margin-bottom: 100px;">
+	<div class="onli-text">
+		<center>
+			<h1 style="font-size:4em;" data-anijs="if: mouseover, do: tada animated">Projects</h1>
+		</center>
+	</div>
+	<div style="display: none;" class="text-principal" data-anijs="if: mouseover,on: center, do: shake animated">
+		<center style="margin-top: 150px;">
 			
 			<span class="material-icons" style="font-size: 240px;">
 				construction
 			</span>
-			<h1>Building...</h1>
+			<h1>Building</h1>
+		</center>
+		<center>
+			Vuelve pronto!
 		</center>
 		
 	</div>
-	
+	<div class="container-project" id ="projectContent">
+		
+		
+
+
+	</div>
 
 	<footer>
 		<center>
