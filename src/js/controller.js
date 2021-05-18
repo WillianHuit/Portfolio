@@ -12,7 +12,7 @@ let aux_text = "";
 let wait = false;
 let cursor = document.getElementById('cursor_text');
 let float_blox = document.querySelector('float_box');
-let code = [" Web Developer", " an engineering student"," Game developer"," Desktop Developer"];
+let code = [" Web Developer", " an engineering student"," Game developer"," Desktop Developer"," Frontend Developer"];
 
 function recursiveFunction(){
 	if(visible){
