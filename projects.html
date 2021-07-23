@@ -7,7 +7,7 @@
 	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 	<link rel="stylesheet" href="http://anijs.github.io/lib/anicollection/anicollection.css">
 	<script type="text/javascript" src="src/js/responsive.js"></script>
-	<script type="text/javascript" src="src/js/projects.js"></script>
+	<script type="text/javascript" src="src/js/controller.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.6.1/gsap.min.js"></script>
     <link rel="icon" type="image/gif" href="src/img/favicon.ico">
 
@@ -73,6 +73,9 @@
 					</div>
 				</div>
 		</div>
+		<div id="float_box" class="float-box" onclick="moveToStart()">
+			<span class="material-icons" data-anijs="if: mouseover, do: rubberBand animated">arrow_upward</span>
+	</div>
 
 
 
@@ -128,11 +131,6 @@
 			Developer and designded by Willian Huit. ©<label id="year">20xx</label> all rights reserved
 		</center>
 	</footer>
-	<script type="text/javascript">
-		const date = new Date();
-		const year = date.getFullYear();
-		document.getElementById('year').innerHTML = year;
-	</script>
 	<script src="src/js/anijs-min.js"></script>
 	 
 </body>

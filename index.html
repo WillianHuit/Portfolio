@@ -1,157 +1,234 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-	<title>Home - WH</title>
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<link rel="stylesheet" type="text/css" href="src/css/style.css">
+	<title>Willian Huit - Portfolio</title>
 	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-	<link rel="stylesheet" href="http://anijs.github.io/lib/anicollection/anicollection.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.6.1/gsap.min.js"></script>
-    <link rel="icon" type="image/gif" href="src/img/favicon.ico">
-
+	<link rel="stylesheet" type="text/css" href="src/css/styles.css">
+	<meta name="viewport" charset="utf-8" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" type="image/gif" href="src/img/favicon.ico">
 </head>
-<header>
-		<a class="name"  data-anijs="if: mouseover, do: rubberBand animated">WH</a>
-		<div class="icon" onclick="btnMenuClick()">
-			<span style="font-size: 42px;" class="material-icons">
-				menu
-			</span>
+<body id="content">
+	<p id="lenguage" style="display: none;">English</p>
+	<div id="menu" class="menu-in">
+		<div class="btn-settings">
+			<a onclick="showConfig()">
+				<span class="material-icons mouse-hand up">settings</span>
+			</a>
 		</div>
-		<ul id="itemsBar" class="items-bar">
-				
-			<li><a href="#" class="active" data-anijs="if: mouseover, do: rubberBand animated">Home</a></li>
-			<li><a href="projects.html">Projects</a></li>
-			<li><a href="desings.html">Desings</a></li>
-			<li><a href="skills.html">Skills</a></li>
-			
-		</ul>
-		
-	</header>
-<body">
 	
-	<section>
-		<div class="img-center">
-			<img class="img-profile" src="src/img/profile.jpg">
+		<div class="container-menu">
+			<h1 class="menu-title">Menu</h1>
+			<div class="menu-option">
+				<label>Theme: </label>
+				<a id="T1" onclick="themeChange(this)" class="option select">
+					Light
+				</a>
+				-
+				<a id="T2" onclick="themeChange(this)" class="option">
+					Dark
+				</a>
+			</div>
+			<div class="menu-option">
+				<label>Language: </label>
+				<a id="L1" onclick="lenguaChange(this)" class="option select">
+					English
+				</a>
+				-
+				<a id="L2" onclick="lenguaChange(this)"  class="option">
+					Spanish
+				</a>
+			</div>
 		</div>
-		<div class="info-text">
-			<h3>Hi, I'm</h3>
-			<h1 class="name-text">Willian Huit</h1>
-			<h4 class="text-principal" id="text_principal">
-				I'm 
-				<label id="code_change">Hi</label><label id="cursor_text" class="code-text">&#9474;</label>
-			</h4>	
+</div>
+	<div id="navbar" class="nav-bar bar-transparent">
+		<div class="nav-icon">WH </div>
+		<div class="principal-bar">
+			<div class="nav-icon-m">WH </div>
+			<span onclick="showMenu()" class="material-icons mouse-hand">menu</span>
 		</div>
-		
+		<div id="expand" class="nav-items">
+			<a id="item" onclick="menuHide()" class="home active" href="#home">Home</a>
+			<a id="item" onclick="menuHide()" class="about" href="#about">About</a>
+			<a id="item" onclick="menuHide()" class="services" href="#services">Services</a>
+			<a id="item" onclick="menuHide()" class="projects" href="#projects">Projects</a>
+			<a id="item" onclick="menuHide()" class="desings" href="#desings">Desings</a>
+			<a id="item" class="hide-box" onclick="showConfig()">Settings</a>
+			<a id="item" class="btn-h" onclick="showConfig()">
+				<span class="material-icons mouse-hand">settings</span>
+			</a>
+		</div>
+	</div>
+	<section id="home" class="main-section">
+		<div class="main-conteiner">
+			<div class="information-card">
+				<div class="container-center">
+					<img class="img-profile" src="src/img/profile.png">
+				</div>
+				<div class="text-box">
+					Hello, I am
+					<div class="main-text">
+						<h1>Willian Huit</h1>
+					</div>
+					Web developer
+				</div>
+			</div>
+		</div>
+		<img class="main-image" src="src/img/main-image.jpg">
 	</section>
-	<center>
-		<h1 class="title" data-anijs="if: mouseover, do: rubberBand animated">What Service We Offer For You</h1>
-	</center>
-	<div id="float_box" class="float-box" onclick="moveToStart()">
-			<span class="material-icons" data-anijs="if: mouseover, do: rubberBand animated">arrow_upward</span>
-	</div>
-	<div class="container">
+	<section id="about">
+		<div class="title">
+			<h1>About me</h1>
+		</div>
+		<div class="container">
+			<div class="group-box">
+			<h2>Who am I?</h2>
+			
+				<p>
+				I can design the website for your company or personal project with html, javascript and css.</p>
 
-		<div class="card">
-			<span class="material-icons mouse-hand"  data-anijs="if: mouseover, do: rubberBand animated">language</span>
-			<h2>Web Design</h2>
-			<p>
-				I can build your website design for your company or personal project with html, javascript and css.
-			</p>
-		</div>
-		<div class="card">
-			<span class="material-icons mouse-hand" data-anijs="if: mouseover, do: rubberBand animated">build</span>
-			<h2>Application</h2>
-			<p>
-				Do you want to optimize your company?<br>
-				I can create a program to streamline processes.
-			</p>
-		</div>
-		<div class="card">
-			<span class="material-icons mouse-hand" data-anijs="if: mouseover, do: rubberBand animated">view_in_ar</span>
-			<h2>Mobile App</h2>
-			<p>
-				I can create applications for android mobile devices.
-			</p>
-		</div>
-	</div>
-	<div class="container">
-		<div class="card">
-			<span class="material-icons mouse-hand" data-anijs="if: mouseover, do: rubberBand animated">color_lens</span>
-			<h2>Design</h2>
-			<p>
-				I can create the logo for your company or for your personal projects.
-			</p>
-		</div>
-		<div class="card">
-			<span class="material-icons mouse-hand" data-anijs="if: mouseover, do: rubberBand animated">tips_and_updates</span>
-			<h2>Project manager</h2>
-			<p>
-				I can help you structure your project and create a work plan.
-			</p>
-		</div>
-		<div class="card">
-			<span class="material-icons mouse-hand" data-anijs="if: mouseover, do: rubberBand animated">sports_esports</span>
-			<h2>Games</h2>
-			<p>
-				Do you have any ideas for a video game? I can create games for windows and mobile devices.
-			</p>
-		</div>
-	</div>
-	<br>
-	<center>
-		<h1 class="title" data-anijs="if: mouseover, do: rubberBand animated">
-			My Skills
-		</h1>
-	</center>
+				<p>I am currently looking to be part of a project that allows me to leave my mark on the web and make me grow professionally.
+				</p>
+				<br/>
+				<div>
+					<img id="https://discord.gg/Awp7C6ed" onclick="newPage(this)" class="icons-1" src="src/img/icons/discord.png">
+					<img id="https://www.facebook.com/WillianHuit98" onclick="newPage(this)" class="icons-1" src="src/svg/facebook.svg">
+					<img id="https://www.youtube.com/channel/UCEqDXwD06xKTvkPtqvyLxZQ" onclick="newPage(this)" class="icons-1" src="src/img/icons/youtube.png">
 
-
-
-			<center>
-				<img title="Github" class="svg-img" src="src/svg/Github.svg">
-				<img title="CSS" class="svg-img" src="src/svg/css.svg">
-				<img title="Javascript" class="svg-img" src="src/svg/js.svg">
-				<img title="C#" class="svg-img" src="src/svg/c.svg">
-				<img title="HTML" class="svg-img" src="src/svg/html.svg">
-				<img title="SQL" class="svg-img" src="src/svg/sql.svg">
-				<img title="Unity" class="svg-img" src="src/svg/unity.svg">
-				<img title="PhotoShop" class="svg-img" src="src/svg/ps.svg">
-			</center>
-		
-			<center>
-				<a title="See more skills"  class="link" href="skills.html">View more skills..</a>
-			</center>
-	</div>
-	
-	<center>
-		<h1 class="title" style="margin-top: 50px;">Fun Facts</h1>
-	</center>
-	<div class="container">
-		<div class="card-n" data-anijs="if: mouseover, do: bounce animated">
-			<span class="material-icons">schedule</span>
-			<h3>Working Hours</h3>
-			<p id="workingHour" class="count-number">0</p>
+				</div>
+			
 		</div>
-		<div class="card-n" data-anijs="if: mouseover, do: bounce animated">
-			<span class="material-icons">draw</span>
-			<h3>Drawing Hours</h3>
-			<p id="hoursDrawing" class="count-number">0</p>
+		<div class="group-box">
+			<h2>Skills</h2>
+			<div class="container-box">
+					<img class="svg-icon" src="src/svg/c.svg">
+					<img class="svg-icon" src="src/svg/css.svg">
+					<img class="svg-icon" src="src/svg/Github.svg">
+			</div>
+			<div class="container-box">
+					<img class="svg-icon" src="src/svg/html.svg">
+					<img class="svg-icon" src="src/svg/js.svg">
+					<img class="svg-icon" src="src/svg/ps.svg">
+			</div>
+			<div class="container-box">
+					<img class="svg-icon" src="src/svg/sql.svg">
+					<img class="svg-icon" src="src/svg/unity.svg">
+					<img style="opacity: 0" class="svg-icon" src="src/svg/unity.svg">
+					
+			</div>
 		</div>
-		<div class="card-n" data-anijs="if: mouseover, do: bounce animated">
-			<span class="material-icons">local_cafe</span>
-			<h3>Coffe Consumed</h3>
-			<p id="coffeConsumed" class="count-number">0</p>
 		</div>
-	</div>
+	</section>
+	<section id="services">
+		<h1>Services</h1>
+		<div class="container-box">
+			<div class="card-service">
+				<span class="material-icons">
+					language
+				</span>
+				<h3>Web Design</h3>
+				<p>I can build your website design for your company or personal project with html, javascript and css.</p>
+			</div>
+			<div class="card-service">
+				<span class="material-icons">
+					build
+				</span>
+				<h3>Application</h3>
+				<p>Do you want to optimize your company?</p>
+				<p>I can create a program to streamline processes.</p>
+			</div>
+			<div class="card-service">
+				<span class="material-icons">
+					view_in_ar
+				</span>
+				<h3>Mobile App</h3>
+				<p>I can create applications for android mobile devices.</p>
+			</div>
 
+		</div>
+		<div class="container-box">
+			<div class="card-service">
+				<span class="material-icons">
+					color_lens
+				</span>
+				<h3>Design</h3>
+				<p>I can create the logo for your company or for your personal projects.</p>
+			</div>
+			<div class="card-service">
+				<span class="material-icons">
+					tips_and_updates
+				</span>
+				<h3>Project manager</h3>
+				<p>I can help you structure your project and create a work plan.</p>
+			</div>
+			<div class="card-service">
+				<span class="material-icons">
+					sports_esports
+				</span>
+				<h3>Games</h3>
+				<p>Do you have any ideas for a video game? I can create games for windows and mobile devices.</p>
+			</div>
+			
+		</div>
+	</section>
+	<section id="projects">
+		<h1>Projects</h1>
+		<div class="container-box">
+			<div class="card-projects">
+				<img class="img-project" src="src/img/projects/sweetcakes.png">
+			</div>
+			<div class="card-projects">
+				<img class="img-project" src="src/img/projects/gallerypicture.png">
+			</div>
+			<div class="card-projects">
+				<img class="img-project" src="src/img/projects/dodskod.png">
+			</div>
+		</div>
+		<div class="container-box">
+			<div class="card-projects">
+				<img class="img-project" src="src/img/projects/basilik.png">
+			</div>
+		</div>
+		<div>
+			<a class="link-ref" href="#">See more...</a>
+		</div>
+	</section>
+	<section id="desings" class="desing-section">
+		<h1>Desings</h1>
+		<div class="container-box desing-m">
+			<div class="card-desings">
+				<img class="img-desings" src="src/img/desings/saha_f.jpg">
+			</div>
+			<div class="card-desings">
+				<img class="img-desings" src="src/img/desings/forest_f.png">
+			</div>
+			<div class="card-desings">
+				<img class="img-desings" src="src/img/desings/seitolg_f.jpg">
+			</div>
+			<div class="card-desings">
+				<img class="img-desings" src="src/img/desings/bakery_f.png">
+			</div>
+		</div>
+		<div class="container-box desing-m">
+			<div class="card-desings">
+				<img class="img-desings" src="src/img/desings/coin_f.png">
+			</div>
+			<div class="card-desings">
+				<img class="img-desings" src="src/img/desings/remember_f.jpg">
+			</div>
+			<div class="card-desings">
+				<img class="img-desings" src="src/img/desings/back_f.jpg">
+			</div>
+			<div class="card-desings">
+				<img class="img-desings" src="src/img/desings/pixelpop_f.png">
+			</div>
+		</div>
+		<div>
+			<a class="link-ref" href="#">See more...</a>
+		</div>
+	</section>
 	<footer>
-		<center>
-			Developer and designded by Willian Huit. ©<label id="year">20xx</label> all rights reserved
-		</center>
+		Developer and designded by   &nbsp<a href="#">Willian Huit</a>. ©<label id="year">20xx</label> &nbsp all rights reserved
 	</footer>
-	
-	<script type="text/javascript" src="src/js/controller.js"></script>
-	<script src="src/js/anijs-min.js"></script>
-	 <script type="text/javascript" src="src/js/responsive.js"></script>
-	
+	<script type="text/javascript" src="src/js/main.js"></script>
 </body>
 </html>
