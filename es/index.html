@@ -100,32 +100,80 @@
 		<div class="group-box">
 			<h2>Habilidades</h2>
 			<div class="container-box">
-					<img class="svg-icon" src="../src/svg/c.svg">
-					<img class="svg-icon" src="../src/svg/css.svg">
-					<img class="svg-icon" src="../src/svg/Github.svg">
+					<div class="text-skills">
+						<img class="svg-icon" src="../src/svg/c.svg">
+						C#
+						<br>
+						<br>
+					</div>
+					<div class="text-skills">
+						<img class="svg-icon" src="../src/svg/css.svg">
+						CSS
+						<br>
+						<br>
+					</div>
+					<div class="text-skills">
+						<img class="svg-icon" src="../src/svg/Github.svg">
+						GitHub
+						<br>
+						<br>
+					</div>
+					
+					
+				</div>
+			<div class="container-box">
+				<div class="text-skills">
+						<img class="svg-icon" src="../src/svg/html.svg">
+						HTML
+						<br>
+						<br>
+					</div>
+					<div class="text-skills">
+						<img class="svg-icon" src="../src/svg/js.svg">
+						Javascript
+						<br>
+						<br>
+					</div>
+					<div class="text-skills">
+						<img class="svg-icon" src="../src/svg/ps.svg">
+						Photoshop
+						<br>
+						<br>
+					</div>
+					
+					
+				
 			</div>
 			<div class="container-box">
-					<img class="svg-icon" src="../src/svg/html.svg">
-					<img class="svg-icon" src="../src/svg/js.svg">
-					<img class="svg-icon" src="../src/svg/ps.svg">
-			</div>
-			<div class="container-box">
-					<img class="svg-icon" src="../src/svg/sql.svg">
-					<img class="svg-icon" src="../src/svg/unity.svg">
-					<img style="opacity: 0" class="svg-icon" src="../src/svg/unity.svg">
+				<div class="text-skills">
+						<img class="svg-icon" src="../src/svg/sql.svg">
+						SQL
+					</div>
+					<div class="text-skills">
+						<img class="svg-icon" src="../src/svg/unity.svg">
+						Unity
+					</div>
+					<div class="text-skills">
+						<img style="opacity: 0" class="svg-icon" src="../src/svg/unity.svg">
+						
+						
+					</div>
+					
+					
+					
 					
 			</div>
 		</div>
 		</div>
 	</section>
 	<section id="services">
-		<h1>Services</h1>
+		<h1>Servicios</h1>
 		<div class="container-box">
 			<div class="card-service">
 				<span class="material-icons">
 					language
 				</span>
-				<h3>Web Design</h3>
+				<h3>Diseño de Páginas</h3>
 				<p>Puedo diseñar el sitio web para su empresa o proyecto personal con html, javascript y css.</p>
 			</div>
 			<div class="card-service">
@@ -174,22 +222,70 @@
 		<h1>Proyectos</h1>
 		<div class="container-box">
 			<div class="card-projects">
+					<div class="info-project-hide">
+						<div class="padding-space">
+							<label style="font-weight: bold;">Sweet Cakes</label>
+						<p>Sweet cakes es una página con efecto parallax para promocionar videojuegos, postres, viajes, etc.</p>
+					
+							<div>
+								<a class="btn-source" id = "https://willianhuit.github.io/IndieGames/" onclick="newPage(this)">View</a>
+								<a class="btn-source" id = "https://github.com/WillianHuit/IndieGames" onclick="newPage(this)">GitHub</a>
+							</div>
+						
+						</div>
+					</div>
 				<img class="img-project" src="../src/img/projects/sweetcakes.png">
+
 			</div>
 			<div class="card-projects">
+				<div class="info-project-hide">
+						<div class="padding-space">
+							<label style="font-weight: bold;">Gallery Picture</label>
+						<p>Galería simple para mostrar recuerdos o promocionarse como fotógrafo. Contiene opciones para interactuar con las imágenes.</p>
+					
+							<div>
+								<a id = "https://willianhuit.github.io/GalleryPicture/" onclick="newPage(this)" class="btn-source">View</a>
+								<a id = "https://github.com/WillianHuit/GalleryPicture" onclick="newPage(this)" class="btn-source">GitHub</a>
+							</div>
+						
+						</div>
+					</div>
 				<img class="img-project" src="../src/img/projects/gallerypicture.png">
 			</div>
-			<div class="card-projects">
-				<img class="img-project" src="../src/img/projects/dodskod.png">
-			</div>
+			
 		</div>
 		<div class="container-box">
 			<div class="card-projects">
-				<img class="img-project" src="../src/img/projects/basilik.png">
+				<div class="info-project-hide">
+						<div class="padding-space">
+							<label style="font-weight: bold;">FloatBoo</label>
+						<p>Juego para móvil sobre un fantasma, perteneciente a la categoria casual</p>
+					
+							<div>
+								<a class="btn-source" id="https://play.google.com/store/apps/details?id=com.dodskod.floatboo" onclick="newPage(this)" class="btn-source">View in PlayStore</a>
+							</div>
+						
+						</div>
+					</div>
+				<img class="img-project" src="../src/img/projects/floatboo.png">
+			</div>
+			<div class="card-projects">
+				<div class="info-project-hide">
+						<div class="padding-space">
+							<label style="font-weight: bold;">Dodskod Helper (BETA)</label>
+						<p>Dodskod Helper es un bot de respuesta por comandos, programado en NodeJS, utilizando Visual Code. Se utilizó el formato JSON para almacenar datos</p>
+					
+							<div>
+								<a id="https://sites.google.com/view/willian/dodskodhelper" onclick="newPage(this)" class="btn-source">View More</a>
+							</div>
+						
+						</div>
+					</div>
+				<img class="img-project" src="../src/img/projects/dodskod.png">
 			</div>
 		</div>
 		<div>
-			<a class="link-ref" href="#">Ver más...</a>
+			<a id="https://www.facebook.com/WillianHuit98" onclick="newPage(this)" class="link-ref" href="#projects">Ver más...</a>
 		</div>
 	</section>
 	<section id="desings" class="desing-section">
@@ -202,24 +298,10 @@
 				<img class="img-desings" src="../src/img/desings/forest_f.png">
 			</div>
 			<div class="card-desings">
-				<img class="img-desings" src="../src/img/desings/seitolg_f.jpg">
+				<img class="img-desings" src="../src/img/desings/flaotboo.png">
 			</div>
 			<div class="card-desings">
 				<img class="img-desings" src="../src/img/desings/bakery_f.png">
-			</div>
-		</div>
-		<div class="container-box desing-m">
-			<div class="card-desings">
-				<img class="img-desings" src="../src/img/desings/coin_f.png">
-			</div>
-			<div class="card-desings">
-				<img class="img-desings" src="../src/img/desings/remember_f.jpg">
-			</div>
-			<div class="card-desings">
-				<img class="img-desings" src="../src/img/desings/back_f.jpg">
-			</div>
-			<div class="card-desings">
-				<img class="img-desings" src="../src/img/desings/pixelpop_f.png">
 			</div>
 		</div>
 		<div>
