@@ -573,6 +573,9 @@ footer a{
 	.card-projects{
 		width: 90%;
 	}
+	.info-project-hide{
+		width: 90%;
+	}
 	.desing-m{
 		display: flex;
 	}
