@@ -95,14 +95,12 @@
                 <div class="image-wrapper">
                     <div class="image-bg"></div>
                     <div class="profile-placeholder">
-                        <i class="fas fa-user"></i>
+                        <img src="src/img/willian-huit.jpg" alt="Willian Eduardo Huit Tepen" class="profile-image" onerror="this.onerror=null; this.src='src/images/placeholder.jpg';">
                     </div>
                 </div>
             </div>
         </div>
-        <div class="scroll-indicator">
-            <div class="mouse"></div>
-        </div>
+       
     </section>
 
     <!-- Sobre Mí -->
@@ -404,8 +402,8 @@
             </div>
             <div class="projects-grid">
                 <div class="project-card">
-                    <div class="project-icon">
-                        <i class="fas fa-laptop-code"></i>
+                    <div class="project-image">
+                        <img src="src/img/projects/IBM-idz.jpg" alt="Compilador IBM zSeries">
                     </div>
                     <div class="project-content">
                         <h3 data-i18n="projects.project1.title">Compilador IBM zSeries</h3>
@@ -422,8 +420,8 @@
                 </div>
 
                 <div class="project-card">
-                    <div class="project-icon">
-                        <i class="fas fa-database"></i>
+                    <div class="project-image">
+                        <img src="src/img/projects/testing-program.png" alt="zSeries Testing Application">
                     </div>
                     <div class="project-content">
                         <h3 data-i18n="projects.project2.title">Aplicativo zSeries Testing</h3>
@@ -440,8 +438,8 @@
                 </div>
 
                 <div class="project-card">
-                    <div class="project-icon">
-                        <i class="fas fa-calculator"></i>
+                    <div class="project-image">
+                        <img src="src/img/projects/vsam-files.png" alt="Calculadora VSAM">
                     </div>
                     <div class="project-content">
                         <h3 data-i18n="projects.project3.title">Calculadora VSAM</h3>
@@ -494,6 +492,48 @@
                             <a href="https://github.com/WillianHuit/Portfolio" target="_blank" rel="noopener noreferrer">
                                 <i class="fab fa-github"></i> Ver código
                             </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="project-card">
+                    <div class="project-image">
+                        <img src="src/img/projects/co-munity.png" alt="Co-munity">
+                    </div>
+                    <div class="project-content">
+                        <h3 data-i18n="projects.project6.title">Co-munity</h3>
+                        <p data-i18n="projects.project6.description">
+                            Plataforma web en desarrollo para gestión comunitaria y colaboración social, 
+                            facilitando la comunicación y organización de comunidades.
+                        </p>
+                        <div class="project-tags">
+                            <span class="tag">Web App</span>
+                            <span class="tag">En desarrollo</span>
+                            <span class="tag">Community</span>
+                        </div>
+                        <div class="project-links">
+                            <a href="https://willianhuit.github.io/co-munity/" target="_blank" rel="noopener noreferrer">
+                                <i class="fas fa-external-link-alt"></i> Ver demo
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="project-card">
+                    <div class="project-image">
+                        <img src="src/img/projects/chess.png" alt="Plataforma de Ajedrez Maya">
+                    </div>
+                    <div class="project-content">
+                        <h3 data-i18n="projects.project7.title">Plataforma de Ajedrez Maya</h3>
+                        <p data-i18n="projects.project7.description">
+                            Plataforma interactiva para aprender y jugar ajedrez con temática histórica de Mayas vs Españoles, 
+                            ofreciendo una experiencia educativa única sobre la cultura maya.
+                        </p>
+                        <div class="project-tags">
+                            <span class="tag">Ajedrez</span>
+                            <span class="tag">Educativo</span>
+                            <span class="tag">En desarrollo</span>
+                            <span class="tag">Cultural</span>
                         </div>
                     </div>
                 </div>
@@ -582,27 +622,15 @@
                     </div>
                 </div>
                 <div class="contact-form-wrapper">
-                    <form class="contact-form" id="contactForm">
-                        <div class="form-group">
-                            <label for="name" data-i18n="contact.form.name">Nombre</label>
-                            <input type="text" id="name" name="name" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="email" data-i18n="contact.form.email">Email</label>
-                            <input type="email" id="email" name="email" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="subject" data-i18n="contact.form.subject">Asunto</label>
-                            <input type="text" id="subject" name="subject" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="message" data-i18n="contact.form.message">Mensaje</label>
-                            <textarea id="message" name="message" rows="5" required></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary" data-i18n="contact.form.send">
-                            <i class="fas fa-paper-plane"></i> Enviar Mensaje
-                        </button>
-                    </form>
+                    <iframe 
+                        src="https://docs.google.com/forms/d/e/1FAIpQLSexEQrgbz_AA-uvftxpGjgABwB1GKq5uV5e-IB0RfP5Bk_KJw/viewform?embedded=true" 
+                        width="100%" 
+                        height="800" 
+                        frameborder="0" 
+                        marginheight="0" 
+                        marginwidth="0">
+                        Cargando…
+                    </iframe>
                 </div>
             </div>
         </div>

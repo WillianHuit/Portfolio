@@ -89,6 +89,14 @@ const translations = {
             project5: {
                 title: "Portfolio Personal",
                 description: "Portfolio profesional desarrollado con HTML, CSS y JavaScript, implementando sistema de internacionalización y modo oscuro."
+            },
+            project6: {
+                title: "Co-munity",
+                description: "Plataforma web en desarrollo para gestión comunitaria y colaboración social, facilitando la comunicación y organización de comunidades."
+            },
+            project7: {
+                title: "Plataforma de Ajedrez Maya",
+                description: "Plataforma interactiva para aprender y jugar ajedrez con temática histórica de Mayas vs Españoles, ofreciendo una experiencia educativa única sobre la cultura maya."
             }
         },
         
@@ -214,6 +222,14 @@ const translations = {
             project5: {
                 title: "Personal Portfolio",
                 description: "Professional portfolio developed with HTML, CSS and JavaScript, implementing internationalization system and dark mode."
+            },
+            project6: {
+                title: "Co-munity",
+                description: "Web platform in development for community management and social collaboration, facilitating communication and organization of communities."
+            },
+            project7: {
+                title: "Mayan Chess Platform",
+                description: "Interactive platform to learn and play chess with historical theme of Mayans vs Spanish, offering a unique educational experience about Mayan culture."
             }
         },
         
