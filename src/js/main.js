@@ -17,6 +17,23 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ===========================
+// Loading Screen
+// ===========================
+window.addEventListener('load', () => {
+    const loadingScreen = document.getElementById('loading-screen');
+    
+    // Esperar un mínimo de tiempo para mostrar la animación
+    setTimeout(() => {
+        loadingScreen.classList.add('hidden');
+        
+        // Remover del DOM después de la transición
+        setTimeout(() => {
+            loadingScreen.remove();
+        }, 500);
+    }, 1500); // Mínimo 1.5 segundos de loading
+});
+
+// ===========================
 // Sistema de Tema (Dark Mode)
 // ===========================
 function initTheme() {

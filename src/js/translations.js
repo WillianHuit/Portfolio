@@ -1,6 +1,11 @@
 // Sistema de traducciones para el portfolio
 const translations = {
     es: {
+        // Loading
+        loading: {
+            text: "Cargando portafolio..."
+        },
+        
         // Navegación
         nav: {
             home: "Inicio",
@@ -147,6 +152,11 @@ const translations = {
         }
     },
     en: {
+        // Loading
+        loading: {
+            text: "Loading portfolio..."
+        },
+        
         // Navigation
         nav: {
             home: "Home",
