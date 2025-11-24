@@ -1,318 +1,650 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-	<title>Willian Huit - Portfolio</title>
-	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-	<link rel="stylesheet" type="text/css" href="src/css/styles.css">
-	<meta name="viewport" charset="utf-8" content="width=device-width, initial-scale=1.0">
-	<link rel="icon" type="image/gif" href="src/img/favicon.ico">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Portfolio profesional de Willian Eduardo Huit Tepen - Programador especializado en desarrollo web y sistemas">
+    <title>Willian Huit | Programador</title>
+    <link rel="stylesheet" href="src/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body id="content">
-	<p id="lenguage" style="display: none;">English</p>
-	<div id="menu" class="menu-in">
-		<div class="btn-settings">
-			<a onclick="showConfig()">
-				<span class="material-icons mouse-hand up">settings</span>
-			</a>
-		</div>
-	
-		<div class="container-menu">
-			<h1 class="menu-title">Menu</h1>
-			<div class="menu-option">
-				<label>Theme: </label>
-				<a id="T1" onclick="themeChange(this)" class="option select">
-					Light
-				</a>
-				-
-				<a id="T2" onclick="themeChange(this)" class="option">
-					Dark
-				</a>
-			</div>
-			<div class="menu-option">
-				<label>Language: </label>
-				<a id="L1" onclick="lenguaChange(this)" class="option select">
-					English
-				</a>
-				-
-				<a id="L2" onclick="lenguaChange(this)"  class="option">
-					Spanish
-				</a>
-			</div>
-		</div>
-</div>
-	<div id="navbar" class="nav-bar bar-transparent">
-		<div class="nav-icon">WH </div>
-		<div class="principal-bar">
-			<div class="nav-icon-m">WH </div>
-			<span onclick="showMenu()" class="material-icons mouse-hand">menu</span>
-		</div>
-		<div id="expand" class="nav-items">
-			<a id="item" onclick="menuHide()" class="home active" href="#home">Home</a>
-			<a id="item" onclick="menuHide()" class="about" href="#about">About</a>
-			<a id="item" onclick="menuHide()" class="services" href="#services">Services</a>
-			<a id="item" onclick="menuHide()" class="projects" href="#projects">Projects</a>
-			<a id="item" onclick="menuHide()" class="desings" href="#desings">Desings</a>
-			<a id="item" class="hide-box" onclick="showConfig()">Settings</a>
-			<a id="item" class="btn-h" onclick="showConfig()">
-				<span class="material-icons mouse-hand">settings</span>
-			</a>
-		</div>
-	</div>
-	<section id="home" class="main-section">
-		<div class="main-conteiner">
-			<div class="information-card">
-				<div class="container-center">
-					<img class="img-profile" src="src/img/profile.png">
-				</div>
-				<div class="text-box">
-					Hello, I am
-					<div class="main-text">
-						<h1>Willian Huit</h1>
-					</div>
-					Web developer
-				</div>
-			</div>
-		</div>
-		<img class="main-image" src="src/img/main-image.jpg">
-	</section>
-	<section id="about">
-		
-		<div class="title">
-			<h1>About me</h1>
-		</div>
-		<div class="container">
-			<div class="group-box">
-			<h2>Who am I?</h2>
-			
-				<p>
-				I am a passionate Front End developer, lover of simple and modern designs. I am a self-taught person and whenever I can I try to learn new technologies.</p>
+<body>
+    <!-- Navegación -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <span class="logo-text">WH</span>
+            </div>
+            
+            <ul class="nav-menu" id="navMenu">
+                <li class="nav-item">
+                    <a href="#home" class="nav-link active" data-i18n="nav.home">Inicio</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#about" class="nav-link" data-i18n="nav.about">Sobre Mí</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#experience" class="nav-link" data-i18n="nav.experience">Experiencia</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#skills" class="nav-link" data-i18n="nav.skills">Habilidades</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#projects" class="nav-link" data-i18n="nav.projects">Proyectos</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#contact" class="nav-link" data-i18n="nav.contact">Contacto</a>
+                </li>
+            </ul>
+            
+            <div class="nav-controls">
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button class="lang-toggle" id="langToggle" aria-label="Change language">
+                    <span class="lang-text">EN</span>
+                </button>
+                <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
 
-				<p>I am currently looking to be part of a project that allows me to leave my mark on the web and make me grow professionally.
-				</p>
-				<br/>
-				<div>
-					<img alt="Unirse a discord" id="https://discord.gg/cwuGWYRaAd" onclick="newPage(this)" onc class="icons-1" src="src/img/icons/discord.png">
-					<img alt="Ver facebook" id="https://www.facebook.com/WillianHuit98" onclick="newPage(this)" class="icons-1" src="src/svg/facebook.svg">
-					<img alt="Ver canal de Youtube" id="https://www.youtube.com/channel/UCEqDXwD06xKTvkPtqvyLxZQ" onclick="newPage(this)" class="icons-1" src="src/img/icons/youtube.png">
+    <!-- Partículas de fondo -->
+    <canvas id="particles"></canvas>
 
-				</div>
-			
-		</div>
-		<div class="group-box">
-			<h2>Skills</h2>
-			<div class="container-box">
-					<div class="text-skills">
-						<img class="svg-icon" src="src/svg/c.svg">
-						C#
-						<br>
-						<br>
-					</div>
-					<div class="text-skills">
-						<img class="svg-icon" src="src/svg/css.svg">
-						CSS
-						<br>
-						<br>
-					</div>
-					<div class="text-skills">
-						<img class="svg-icon" src="src/svg/Github.svg">
-						GitHub
-						<br>
-						<br>
-					</div>
-					
-					
-				</div>
-			<div class="container-box">
-				<div class="text-skills">
-						<img class="svg-icon" src="src/svg/html.svg">
-						HTML
-						<br>
-						<br>
-					</div>
-					<div class="text-skills">
-						<img class="svg-icon" src="src/svg/js.svg">
-						Javascript
-						<br>
-						<br>
-					</div>
-					<div class="text-skills">
-						<img class="svg-icon" src="src/svg/ps.svg">
-						Photoshop
-						<br>
-						<br>
-					</div>
-					
-					
-				
-			</div>
-			<div class="container-box">
-				<div class="text-skills">
-						<img class="svg-icon" src="src/svg/sql.svg">
-						SQL
-					</div>
-					<div class="text-skills">
-						<img class="svg-icon" src="src/svg/unity.svg">
-						Unity
-					</div>
-					<div class="text-skills">
-						<img style="opacity: 0" class="svg-icon" src="src/svg/unity.svg">
-						
-						
-					</div>
-					
-					
-					
-					
-			</div>
-		</div>
-		</div>
-	</section>
-	<section id="services">
-		<h1>Services</h1>
-		<div class="container-box">
-			<div class="card-service">
-				<span class="material-icons">
-					language
-				</span>
-				<h3>Web Design</h3>
-				<p>I can build your website design for your company or personal project with html, javascript and css.</p>
-			</div>
-			<div class="card-service">
-				<span class="material-icons">
-					build
-				</span>
-				<h3>Application</h3>
-				<p>Do you want to optimize your company?</p>
-				<p>I can create a program to streamline processes.</p>
-			</div>
-			<div class="card-service">
-				<span class="material-icons">
-					view_in_ar
-				</span>
-				<h3>Mobile App</h3>
-				<p>I can create applications for android mobile devices.</p>
-			</div>
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <div class="hero-text">
+                <p class="hero-greeting" data-i18n="hero.greeting">Hola, soy</p>
+                <h1 class="hero-name">Willian Eduardo Huit Tepen</h1>
+                <h2 class="hero-title">
+                    <span data-i18n="hero.role">Programador Principiante</span>
+                    <span class="typing-cursor">|</span>
+                </h2>
+                <p class="hero-description" data-i18n="hero.description">
+                    Especializado en desarrollo web, COBOL y análisis de sistemas. 
+                    Apasionado por crear soluciones tecnológicas innovadoras.
+                </p>
+                <div class="hero-buttons">
+                    <a href="#contact" class="btn btn-primary" data-i18n="hero.contact">
+                        <i class="fas fa-envelope"></i> Contáctame
+                    </a>
+                    <a href="#projects" class="btn btn-secondary" data-i18n="hero.projects">
+                        <i class="fas fa-folder-open"></i> Ver Proyectos
+                    </a>
+                </div>
+                <div class="social-links">
+                    <a href="https://github.com/WillianHuit" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+                        <i class="fab fa-github"></i>
+                    </a>
+                    <a href="https://gt.linkedin.com/in/willian-huit" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin"></i>
+                    </a>
+                    <a href="mailto:willian.huit.soporte@gmail.com" aria-label="Email">
+                        <i class="fas fa-envelope"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="hero-image">
+                <div class="image-wrapper">
+                    <div class="image-bg"></div>
+                    <div class="profile-placeholder">
+                        <i class="fas fa-user"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="scroll-indicator">
+            <div class="mouse"></div>
+        </div>
+    </section>
 
-		</div>
-		<div class="container-box">
-			<div class="card-service">
-				<span class="material-icons">
-					color_lens
-				</span>
-				<h3>Design</h3>
-				<p>I can create the logo for your company or for your personal projects.</p>
-			</div>
-			<div class="card-service">
-				<span class="material-icons">
-					tips_and_updates
-				</span>
-				<h3>Project manager</h3>
-				<p>I can help you structure your project and create a work plan.</p>
-			</div>
-			<div class="card-service">
-				<span class="material-icons">
-					sports_esports
-				</span>
-				<h3>Games</h3>
-				<p>Do you have any ideas for a video game? I can create games for windows and mobile devices.</p>
-			</div>
-			
-		</div>
-	</section>
-	<section id="projects">
-		<h1>Projects</h1>
-		<div class="container-box">
-			<div class="card-projects">
-					<div class="info-project-hide">
-						<div class="padding-space">
-							<label style="font-weight: bold;">Sweet Cakes</label>
-						<p>Sweet cakes is a page with a parallax effect to promote video games, desserts, trips, etc.</p>
-					
-							<div>
-								<a class="btn-source" id = "https://willianhuit.github.io/IndieGames/" onclick="newPage(this)">View</a>
-								<a class="btn-source" id = "https://github.com/WillianHuit/IndieGames" onclick="newPage(this)">GitHub</a>
-							</div>
-						
-						</div>
-					</div>
-				<img class="img-project" src="src/img/projects/sweetcakes.png">
+    <!-- Sobre Mí -->
+    <section id="about" class="about section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title" data-i18n="about.title">Perfil Profesional</h2>
+                <div class="title-underline"></div>
+            </div>
+            <div class="about-content">
+                <div class="about-text">
+                    <p data-i18n="about.description">
+                        Programador en formación y coordinador de proyectos con experiencia en desarrollo web, 
+                        análisis lógico, documentación técnica y mejora de procesos. He liderado actividades y 
+                        equipos en proyectos culturales y educativos, gestionando plataformas, formularios, 
+                        bases de datos y experiencia de usuario.
+                    </p>
+                    <div class="about-stats">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-code"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>2+</h3>
+                                <p data-i18n="about.stat1">Años Programando</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-project-diagram"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>10+</h3>
+                                <p data-i18n="about.stat2">Proyectos Completados</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>5+</h3>
+                                <p data-i18n="about.stat3">Equipos Liderados</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-			</div>
-			<div class="card-projects">
-				<div class="info-project-hide">
-						<div class="padding-space">
-							<label style="font-weight: bold;">Gallery Picture</label>
-						<p>Simple gallery to display souvenirs or promote yourself as a photographer. It has options to interact with the images.</p>
-					
-							<div>
-								<a id = "https://willianhuit.github.io/GalleryPicture/" onclick="newPage(this)" class="btn-source">View</a>
-								<a id = "https://github.com/WillianHuit/GalleryPicture" onclick="newPage(this)" class="btn-source">GitHub</a>
-							</div>
-						
-						</div>
-					</div>
-				<img class="img-project" src="src/img/projects/gallerypicture.png">
-			</div>
-			
-		</div>
-		<div class="container-box">
-			<div class="card-projects">
-				<div class="info-project-hide">
-						<div class="padding-space">
-							<label style="font-weight: bold;">FloatBoo</label>
-						<p>Mobile game about a ghost, belonging to the casual category.</p>
-					
-							<div>
-								<a class="btn-source" id="https://play.google.com/store/apps/details?id=com.dodskod.floatboo" onclick="newPage(this)" class="btn-source">View in PlayStore</a>
-							</div>
-						
-						</div>
-					</div>
-				<img class="img-project" src="src/img/projects/floatboo.png">
-			</div>
-			<div class="card-projects">
-				<div class="info-project-hide">
-						<div class="padding-space">
-							<label style="font-weight: bold;">Dodskod Helper (BETA)</label>
-						<p>Dodskod Helper is a command response bot, programmed in NodeJS, using Visual Code. JSON format was used to store data.</p>
-					
-							<div>
-								<a id="https://sites.google.com/view/willian/dodskodhelper" onclick="newPage(this)" class="btn-source">View More</a>
-							</div>
-						
-						</div>
-					</div>
-				<img class="img-project" src="src/img/projects/dodskod.png">
-			</div>
-		</div>
-		<div>
-			<a id="https://www.facebook.com/WillianHuit98" onclick="newPage(this)" class="link-ref" href="#projects">See more...</a>
-		</div>
-	</section>
-	<section id="desings" class="desing-section">
-		<h1>Desings</h1>
-		<div class="container-box desing-m">
-			<div class="card-desings">
-				<img class="img-desings" src="src/img/desings/saha_f.jpg">
-			</div>
-			<div class="card-desings">
-				<img class="img-desings" src="src/img/desings/forest_f.png">
-			</div>
-			<div class="card-desings">
-				<img class="img-desings" src="src/img/desings/flaotboo.png">
-			</div>
-			<div class="card-desings">
-				<img class="img-desings" src="src/img/desings/bakery_f.png">
-			</div>
-		</div>
-		
-		<div>
-			<a id="https://www.instagram.com/willian.huit/" onclick="newPage(this)" class="link-ref" href="#desings">See more...</a>
-		</div>
-	</section>
-	<footer>
-		Developer and designded by   &nbsp<a href="#">Willian Huit</a>. ©<label id="year">20xx</label> &nbsp all rights reserved
-	</footer>
-	<script type="text/javascript" src="src/js/main.js"></script>
+    <!-- Experiencia -->
+    <section id="experience" class="experience section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title" data-i18n="experience.title">Experiencia</h2>
+                <div class="title-underline"></div>
+            </div>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-date" data-i18n="experience.current">Actual</div>
+                        <h3 data-i18n="experience.job1.title">Programador Principiante</h3>
+                        <p class="timeline-company">Independiente</p>
+                        <ul class="timeline-tasks">
+                            <li data-i18n="experience.job1.task1">Diseño y desarrollo de aplicaciones en COBOL para procesamiento batch y sistemas en línea</li>
+                            <li data-i18n="experience.job1.task2">Análisis de historias de usuarios para implementación</li>
+                            <li data-i18n="experience.job1.task3">Desarrollo de herramientas y automatizaciones para IBM zSeries</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-date">2020 - 2024</div>
+                        <h3 data-i18n="experience.job2.title">Coordinador de Actividades</h3>
+                        <p class="timeline-company">IYF Guatemala</p>
+                        <ul class="timeline-tasks">
+                            <li data-i18n="experience.job2.task1">Organización de eventos masivos con más de 500 participantes</li>
+                            <li data-i18n="experience.job2.task2">Liderazgo y capacitación de equipos de voluntarios</li>
+                            <li data-i18n="experience.job2.task3">Creación de plataformas web, formularios y documentación técnica</li>
+                            <li data-i18n="experience.job2.task4">Automatizaciones con Google Apps Script y manejo de bases de datos</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Habilidades -->
+    <section id="skills" class="skills section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title" data-i18n="skills.title">Habilidades Técnicas</h2>
+                <div class="title-underline"></div>
+            </div>
+            <div class="skills-grid">
+                <!-- Lenguajes de Programación -->
+                <div class="skill-category">
+                    <h3 class="category-title" data-i18n="skills.languages">Lenguajes de Programación</h3>
+                    <div class="skill-items">
+                        <div class="skill-item">
+                            <div class="skill-icon">
+                                <i class="fab fa-js"></i>
+                            </div>
+                            <div class="skill-info">
+                                <h4>JavaScript</h4>
+                                <div class="skill-bar">
+                                    <div class="skill-progress" data-progress="75"></div>
+                                </div>
+                                <span class="skill-level" data-i18n="skills.intermediate">Intermedio</span>
+                            </div>
+                        </div>
+                        <div class="skill-item">
+                            <div class="skill-icon">
+                                <i class="fab fa-python"></i>
+                            </div>
+                            <div class="skill-info">
+                                <h4>Python</h4>
+                                <div class="skill-bar">
+                                    <div class="skill-progress" data-progress="50"></div>
+                                </div>
+                                <span class="skill-level" data-i18n="skills.basic">Básico</span>
+                            </div>
+                        </div>
+                        <div class="skill-item">
+                            <div class="skill-icon">
+                                <i class="fab fa-java"></i>
+                            </div>
+                            <div class="skill-info">
+                                <h4>Java</h4>
+                                <div class="skill-bar">
+                                    <div class="skill-progress" data-progress="50"></div>
+                                </div>
+                                <span class="skill-level" data-i18n="skills.basic">Básico</span>
+                            </div>
+                        </div>
+                        <div class="skill-item">
+                            <div class="skill-icon">
+                                <i class="fas fa-terminal"></i>
+                            </div>
+                            <div class="skill-info">
+                                <h4>COBOL</h4>
+                                <div class="skill-bar">
+                                    <div class="skill-progress" data-progress="60"></div>
+                                </div>
+                                <span class="skill-level" data-i18n="skills.intermediate">Intermedio</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Desarrollo Web -->
+                <div class="skill-category">
+                    <h3 class="category-title" data-i18n="skills.web">Desarrollo Web</h3>
+                    <div class="skill-items">
+                        <div class="skill-item">
+                            <div class="skill-icon">
+                                <i class="fab fa-html5"></i>
+                            </div>
+                            <div class="skill-info">
+                                <h4>HTML & CSS</h4>
+                                <div class="skill-bar">
+                                    <div class="skill-progress" data-progress="85"></div>
+                                </div>
+                                <span class="skill-level" data-i18n="skills.advanced">Avanzado</span>
+                            </div>
+                        </div>
+                        <div class="skill-item">
+                            <div class="skill-icon">
+                                <i class="fab fa-react"></i>
+                            </div>
+                            <div class="skill-info">
+                                <h4>Responsive Design</h4>
+                                <div class="skill-bar">
+                                    <div class="skill-progress" data-progress="80"></div>
+                                </div>
+                                <span class="skill-level" data-i18n="skills.advanced">Avanzado</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bases de Datos -->
+                <div class="skill-category">
+                    <h3 class="category-title" data-i18n="skills.database">Bases de Datos</h3>
+                    <div class="skill-items">
+                        <div class="skill-item">
+                            <div class="skill-icon">
+                                <i class="fas fa-database"></i>
+                            </div>
+                            <div class="skill-info">
+                                <h4>SQL / MySQL / SQL Server</h4>
+                                <div class="skill-bar">
+                                    <div class="skill-progress" data-progress="55"></div>
+                                </div>
+                                <span class="skill-level" data-i18n="skills.basic">Básico</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Herramientas -->
+                <div class="skill-category">
+                    <h3 class="category-title" data-i18n="skills.tools">Herramientas</h3>
+                    <div class="skill-items">
+                        <div class="skill-item">
+                            <div class="skill-icon">
+                                <i class="fab fa-git-alt"></i>
+                            </div>
+                            <div class="skill-info">
+                                <h4>Git & GitHub</h4>
+                                <div class="skill-bar">
+                                    <div class="skill-progress" data-progress="70"></div>
+                                </div>
+                                <span class="skill-level" data-i18n="skills.intermediate">Intermedio</span>
+                            </div>
+                        </div>
+                        <div class="skill-item">
+                            <div class="skill-icon">
+                                <i class="fas fa-code"></i>
+                            </div>
+                            <div class="skill-info">
+                                <h4>VS Code</h4>
+                                <div class="skill-bar">
+                                    <div class="skill-progress" data-progress="85"></div>
+                                </div>
+                                <span class="skill-level" data-i18n="skills.advanced">Avanzado</span>
+                            </div>
+                        </div>
+                        <div class="skill-item">
+                            <div class="skill-icon">
+                                <i class="fas fa-pencil-ruler"></i>
+                            </div>
+                            <div class="skill-info">
+                                <h4>Figma</h4>
+                                <div class="skill-bar">
+                                    <div class="skill-progress" data-progress="65"></div>
+                                </div>
+                                <span class="skill-level" data-i18n="skills.intermediate">Intermedio</span>
+                            </div>
+                        </div>
+                        <div class="skill-item">
+                            <div class="skill-icon">
+                                <i class="fab fa-google"></i>
+                            </div>
+                            <div class="skill-info">
+                                <h4>Google Apps Script</h4>
+                                <div class="skill-bar">
+                                    <div class="skill-progress" data-progress="60"></div>
+                                </div>
+                                <span class="skill-level" data-i18n="skills.basic">Básico</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fortalezas -->
+            <div class="strengths">
+                <h3 class="category-title" data-i18n="skills.strengths">Fortalezas Personales</h3>
+                <div class="strengths-grid">
+                    <div class="strength-card">
+                        <i class="fas fa-users-cog"></i>
+                        <h4 data-i18n="skills.strength1">Organización y liderazgo</h4>
+                    </div>
+                    <div class="strength-card">
+                        <i class="fas fa-comments"></i>
+                        <h4 data-i18n="skills.strength2">Comunicación clara</h4>
+                    </div>
+                    <div class="strength-card">
+                        <i class="fas fa-users"></i>
+                        <h4 data-i18n="skills.strength3">Trabajo en equipo</h4>
+                    </div>
+                    <div class="strength-card">
+                        <i class="fas fa-bolt"></i>
+                        <h4 data-i18n="skills.strength4">Aprendizaje rápido</h4>
+                    </div>
+                    <div class="strength-card">
+                        <i class="fas fa-rocket"></i>
+                        <h4 data-i18n="skills.strength5">Proactividad</h4>
+                    </div>
+                    <div class="strength-card">
+                        <i class="fas fa-lightbulb"></i>
+                        <h4 data-i18n="skills.strength6">Creatividad técnica</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Proyectos -->
+    <section id="projects" class="projects section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title" data-i18n="projects.title">Proyectos Relevantes</h2>
+                <div class="title-underline"></div>
+            </div>
+            <div class="projects-grid">
+                <div class="project-card">
+                    <div class="project-icon">
+                        <i class="fas fa-laptop-code"></i>
+                    </div>
+                    <div class="project-content">
+                        <h3 data-i18n="projects.project1.title">Compilador IBM zSeries</h3>
+                        <p data-i18n="projects.project1.description">
+                            Compilador integrado con IDE de IBM Developer for zSeries para realizar 
+                            compilaciones masivas de forma eficiente y automatizada.
+                        </p>
+                        <div class="project-tags">
+                            <span class="tag">COBOL</span>
+                            <span class="tag">IBM zSeries</span>
+                            <span class="tag">Automation</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="project-card">
+                    <div class="project-icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <div class="project-content">
+                        <h3 data-i18n="projects.project2.title">Aplicativo zSeries Testing</h3>
+                        <p data-i18n="projects.project2.description">
+                            Aplicativo para apoyo de lectura de data y pruebas varias con zSeries, 
+                            facilitando el testing y validación de sistemas mainframe.
+                        </p>
+                        <div class="project-tags">
+                            <span class="tag">Testing</span>
+                            <span class="tag">Data Analysis</span>
+                            <span class="tag">zSeries</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="project-card">
+                    <div class="project-icon">
+                        <i class="fas fa-calculator"></i>
+                    </div>
+                    <div class="project-content">
+                        <h3 data-i18n="projects.project3.title">Calculadora VSAM</h3>
+                        <p data-i18n="projects.project3.description">
+                            Calculadora para generación de archivos VSAM e índices alternos, 
+                            optimizando la gestión de almacenamiento en sistemas mainframe.
+                        </p>
+                        <div class="project-tags">
+                            <span class="tag">VSAM</span>
+                            <span class="tag">Mainframe</span>
+                            <span class="tag">Tool</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="project-card">
+                    <div class="project-icon">
+                        <i class="fas fa-project-diagram"></i>
+                    </div>
+                    <div class="project-content">
+                        <h3 data-i18n="projects.project4.title">Sistemas IYF Guatemala</h3>
+                        <p data-i18n="projects.project4.description">
+                            Desarrollo de sistemas completos incluyendo formularios web, automatizaciones, 
+                            bases de datos y documentación técnica para organización sin fines de lucro.
+                        </p>
+                        <div class="project-tags">
+                            <span class="tag">Web Development</span>
+                            <span class="tag">Automation</span>
+                            <span class="tag">Google Apps Script</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="project-card">
+                    <div class="project-icon">
+                        <i class="fas fa-briefcase"></i>
+                    </div>
+                    <div class="project-content">
+                        <h3 data-i18n="projects.project5.title">Portfolio Personal</h3>
+                        <p data-i18n="projects.project5.description">
+                            Portfolio profesional desarrollado con HTML, CSS y JavaScript, 
+                            implementando sistema de internacionalización y modo oscuro.
+                        </p>
+                        <div class="project-tags">
+                            <span class="tag">HTML</span>
+                            <span class="tag">CSS</span>
+                            <span class="tag">JavaScript</span>
+                        </div>
+                        <div class="project-links">
+                            <a href="https://github.com/WillianHuit/Portfolio" target="_blank" rel="noopener noreferrer">
+                                <i class="fab fa-github"></i> Ver código
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Educación -->
+    <section id="education" class="education section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title" data-i18n="education.title">Educación</h2>
+                <div class="title-underline"></div>
+            </div>
+            <div class="education-content">
+                <div class="education-card">
+                    <div class="education-icon">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <div class="education-info">
+                        <h3 data-i18n="education.degree">Ingeniería</h3>
+                        <p class="education-institution" data-i18n="education.institution">Estudiante Universitario</p>
+                        <p class="education-status" data-i18n="education.current">Actual</p>
+                    </div>
+                </div>
+                <div class="education-card">
+                    <div class="education-icon">
+                        <i class="fas fa-certificate"></i>
+                    </div>
+                    <div class="education-info">
+                        <h3 data-i18n="education.courses">Cursos y Certificaciones</h3>
+                        <ul class="courses-list">
+                            <li data-i18n="education.course1">Desarrollo Web</li>
+                            <li data-i18n="education.course2">Lógica de Programación</li>
+                            <li data-i18n="education.course3">Google Apps Script</li>
+                            <li data-i18n="education.course4">Gestión Básica de Proyectos</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contacto -->
+    <section id="contact" class="contact section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title" data-i18n="contact.title">Contáctame</h2>
+                <div class="title-underline"></div>
+                <p class="section-description" data-i18n="contact.description">
+                    ¿Tienes un proyecto en mente? ¡Hablemos! Estoy disponible para colaboraciones y nuevas oportunidades.
+                </p>
+            </div>
+            <div class="contact-content">
+                <div class="contact-info">
+                    <div class="contact-card">
+                        <div class="contact-icon">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div class="contact-details">
+                            <h3 data-i18n="contact.email">Email</h3>
+                            <a href="mailto:willian.huit.soporte@gmail.com">willian.huit.soporte@gmail.com</a>
+                        </div>
+                    </div>
+                    <div class="contact-card">
+                        <div class="contact-icon">
+                            <i class="fab fa-linkedin"></i>
+                        </div>
+                        <div class="contact-details">
+                            <h3>LinkedIn</h3>
+                            <a href="https://gt.linkedin.com/in/willian-huit" target="_blank" rel="noopener noreferrer">
+                                Willian Huit
+                            </a>
+                        </div>
+                    </div>
+                    <div class="contact-card">
+                        <div class="contact-icon">
+                            <i class="fab fa-github"></i>
+                        </div>
+                        <div class="contact-details">
+                            <h3>GitHub</h3>
+                            <a href="https://github.com/WillianHuit" target="_blank" rel="noopener noreferrer">
+                                @WillianHuit
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="contact-form-wrapper">
+                    <form class="contact-form" id="contactForm">
+                        <div class="form-group">
+                            <label for="name" data-i18n="contact.form.name">Nombre</label>
+                            <input type="text" id="name" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email" data-i18n="contact.form.email">Email</label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="subject" data-i18n="contact.form.subject">Asunto</label>
+                            <input type="text" id="subject" name="subject" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="message" data-i18n="contact.form.message">Mensaje</label>
+                            <textarea id="message" name="message" rows="5" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary" data-i18n="contact.form.send">
+                            <i class="fas fa-paper-plane"></i> Enviar Mensaje
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <h3>Willian Huit</h3>
+                    <p data-i18n="footer.tagline">Desarrollando soluciones, creando futuro</p>
+                </div>
+                <div class="footer-links">
+                    <a href="#home" data-i18n="nav.home">Inicio</a>
+                    <a href="#about" data-i18n="nav.about">Sobre Mí</a>
+                    <a href="#experience" data-i18n="nav.experience">Experiencia</a>
+                    <a href="#skills" data-i18n="nav.skills">Habilidades</a>
+                    <a href="#projects" data-i18n="nav.projects">Proyectos</a>
+                    <a href="#contact" data-i18n="nav.contact">Contacto</a>
+                </div>
+                <div class="footer-social">
+                    <a href="https://github.com/WillianHuit" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+                        <i class="fab fa-github"></i>
+                    </a>
+                    <a href="https://gt.linkedin.com/in/willian-huit" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin"></i>
+                    </a>
+                    <a href="mailto:willian.huit.soporte@gmail.com" aria-label="Email">
+                        <i class="fas fa-envelope"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span id="currentYear"></span> Willian Eduardo Huit Tepen. <span data-i18n="footer.rights">Todos los derechos reservados.</span></p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="src/js/translations.js"></script>
+    <script src="src/js/language.js"></script>
+    <script src="src/js/main.js"></script>
 </body>
 </html>
