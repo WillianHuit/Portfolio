@@ -3,15 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Portfolio profesional de Willian Eduardo Huit Tepen - Programador especializado en desarrollo web y sistemas">
-    <title>Willian Huit | Programador</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Portfolio profesional de Willian Eduardo Huit Tepen - Programador especializado en desarrollo web, COBOL, IBM zSeries y análisis de sistemas. Experiencia en proyectos de automatización y gestión de bases de datos.">
+    <meta name="keywords" content="Willian Huit, programador, desarrollador web, COBOL, IBM zSeries, portfolio, desarrollo web, JavaScript, HTML, CSS, Guatemala, programador Guatemala">
+    <meta name="author" content="Willian Eduardo Huit Tepen">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://willianhuit.github.io/Portfolio/">
+    
+    <!-- Open Graph Meta Tags (Facebook, LinkedIn) -->
+    <meta property="og:title" content="Willian Huit | Programador & Desarrollador Web">
+    <meta property="og:description" content="Portfolio profesional de Willian Eduardo Huit Tepen - Especializado en desarrollo web, COBOL y análisis de sistemas.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://willianhuit.github.io/Portfolio/">
+    <meta property="og:image" content="https://willianhuit.github.io/Portfolio/src/img/willian-huit.jpg">
+    <meta property="og:locale" content="es_GT">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Willian Huit | Programador & Desarrollador Web">
+    <meta name="twitter:description" content="Portfolio profesional - Especializado en desarrollo web, COBOL y análisis de sistemas.">
+    <meta name="twitter:image" content="https://willianhuit.github.io/Portfolio/src/img/willian-huit.jpg">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="src/img/favicon.ico">
+    
+    <title>Willian Huit | Programador & Desarrollador Web - Portfolio</title>
+    
+    <!-- Stylesheets -->
     <link rel="stylesheet" href="src/css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "Willian Eduardo Huit Tepen",
+      "jobTitle": "Programador",
+      "url": "https://willianhuit.github.io/Portfolio/",
+      "image": "https://willianhuit.github.io/Portfolio/src/img/willian-huit.jpg",
+      "sameAs": [
+        "https://github.com/WillianHuit",
+        "https://gt.linkedin.com/in/willian-huit"
+      ],
+      "knowsAbout": ["Desarrollo Web", "COBOL", "IBM zSeries", "JavaScript", "HTML", "CSS", "Python", "SQL"],
+      "email": "willian.huit.soporte@gmail.com",
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "GT"
+      }
+    }
+    </script>
 </head>
 <body>
     <!-- Navegación -->
-    <nav class="navbar" id="navbar">
+    <nav class="navbar" id="navbar" role="navigation" aria-label="Navegación principal">
         <div class="nav-container">
             <div class="nav-logo">
                 <span class="logo-text">WH</span>
@@ -58,7 +106,7 @@
     <canvas id="particles"></canvas>
 
     <!-- Hero Section -->
-    <section id="home" class="hero">
+    <header id="home" class="hero">
         <div class="hero-content">
             <div class="hero-text">
                 <p class="hero-greeting" data-i18n="hero.greeting">Hola, soy</p>
@@ -101,13 +149,13 @@
             </div>
         </div>
        
-    </section>
+    </header>
 
     <!-- Sobre Mí -->
-    <section id="about" class="about section">
+    <section id="about" class="about section" aria-labelledby="about-title">
         <div class="container">
             <div class="section-header">
-                <h2 class="section-title" data-i18n="about.title">Perfil Profesional</h2>
+                <h2 id="about-title" class="section-title" data-i18n="about.title">Perfil Profesional</h2>
                 <div class="title-underline"></div>
             </div>
             <div class="about-content">
@@ -153,10 +201,10 @@
     </section>
 
     <!-- Experiencia -->
-    <section id="experience" class="experience section">
+    <section id="experience" class="experience section" aria-labelledby="experience-title">
         <div class="container">
             <div class="section-header">
-                <h2 class="section-title" data-i18n="experience.title">Experiencia</h2>
+                <h2 id="experience-title" class="section-title" data-i18n="experience.title">Experiencia</h2>
                 <div class="title-underline"></div>
             </div>
             <div class="timeline">
@@ -192,10 +240,10 @@
     </section>
 
     <!-- Habilidades -->
-    <section id="skills" class="skills section">
+    <section id="skills" class="skills section" aria-labelledby="skills-title">
         <div class="container">
             <div class="section-header">
-                <h2 class="section-title" data-i18n="skills.title">Habilidades Técnicas</h2>
+                <h2 id="skills-title" class="section-title" data-i18n="skills.title">Habilidades Técnicas</h2>
                 <div class="title-underline"></div>
             </div>
             <div class="skills-grid">
@@ -394,10 +442,10 @@
     </section>
 
     <!-- Proyectos -->
-    <section id="projects" class="projects section">
+    <section id="projects" class="projects section" aria-labelledby="projects-title">
         <div class="container">
             <div class="section-header">
-                <h2 class="section-title" data-i18n="projects.title">Proyectos Relevantes</h2>
+                <h2 id="projects-title" class="section-title" data-i18n="projects.title">Proyectos Relevantes</h2>
                 <div class="title-underline"></div>
             </div>
             <div class="projects-grid">
@@ -542,10 +590,10 @@
     </section>
 
     <!-- Educación -->
-    <section id="education" class="education section">
+    <section id="education" class="education section" aria-labelledby="education-title">
         <div class="container">
             <div class="section-header">
-                <h2 class="section-title" data-i18n="education.title">Educación</h2>
+                <h2 id="education-title" class="section-title" data-i18n="education.title">Educación</h2>
                 <div class="title-underline"></div>
             </div>
             <div class="education-content">
@@ -578,10 +626,10 @@
     </section>
 
     <!-- Contacto -->
-    <section id="contact" class="contact section">
+    <section id="contact" class="contact section" aria-labelledby="contact-title">
         <div class="container">
             <div class="section-header">
-                <h2 class="section-title" data-i18n="contact.title">Contáctame</h2>
+                <h2 id="contact-title" class="section-title" data-i18n="contact.title">Contáctame</h2>
                 <div class="title-underline"></div>
                 <p class="section-description" data-i18n="contact.description">
                     ¿Tienes un proyecto en mente? ¡Hablemos! Estoy disponible para colaboraciones y nuevas oportunidades.
