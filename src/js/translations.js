@@ -8,6 +8,7 @@ const translations = {
             experience: "Experiencia",
             skills: "Habilidades",
             projects: "Proyectos",
+            certifications: "Certificaciones",
             contact: "Contacto"
         },
         
@@ -17,6 +18,7 @@ const translations = {
             role: "Programador Principiante",
             description: "Especializado en desarrollo web, COBOL y análisis de sistemas. Apasionado por crear soluciones tecnológicas innovadoras.",
             contact: "Contáctame",
+            downloadCV: "Descargar CV",
             projects: "Ver Proyectos"
         },
         
@@ -40,7 +42,8 @@ const translations = {
                 task3: "Desarrollo de herramientas y automatizaciones para IBM zSeries"
             },
             job2: {
-                title: "Coordinador de Actividades",
+                title: "Coordinador de Actividades - Voluntariado",
+                date: "2020 - Actual (Fines de semana)",
                 task1: "Organización de eventos masivos con más de 500 participantes",
                 task2: "Liderazgo y capacitación de equipos de voluntarios",
                 task3: "Creación de plataformas web, formularios y documentación técnica",
@@ -113,6 +116,16 @@ const translations = {
             course4: "Gestión Básica de Proyectos"
         },
         
+        // Certifications
+        certifications: {
+            title: "Certificaciones",
+            description: "Formación continua en tecnología y habilidades profesionales",
+            technical: "Desarrollo Técnico",
+            emerging: "Tecnologías Emergentes",
+            soft: "Habilidades Blandas",
+            view: "Ver certificado"
+        },
+        
         // Contact
         contact: {
             title: "Contáctame",
@@ -141,6 +154,7 @@ const translations = {
             experience: "Experience",
             skills: "Skills",
             projects: "Projects",
+            certifications: "Certifications",
             contact: "Contact"
         },
         
@@ -150,6 +164,7 @@ const translations = {
             role: "Junior Programmer",
             description: "Specialized in web development, COBOL and systems analysis. Passionate about creating innovative technological solutions.",
             contact: "Contact Me",
+            downloadCV: "Download CV",
             projects: "View Projects"
         },
         
@@ -173,7 +188,8 @@ const translations = {
                 task3: "Development of tools and automation for IBM zSeries"
             },
             job2: {
-                title: "Activities Coordinator",
+                title: "Activities Coordinator - Volunteer",
+                date: "2020 - Current (Weekends)",
                 task1: "Organization of massive events with over 500 participants",
                 task2: "Leadership and training of volunteer teams",
                 task3: "Creation of web platforms, forms, and technical documentation",
@@ -244,6 +260,16 @@ const translations = {
             course2: "Programming Logic",
             course3: "Google Apps Script",
             course4: "Basic Project Management"
+        },
+        
+        // Certifications
+        certifications: {
+            title: "Certifications",
+            description: "Continuous training in technology and professional skills",
+            technical: "Technical Development",
+            emerging: "Emerging Technologies",
+            soft: "Soft Skills",
+            view: "View certificate"
         },
         
         // Contact

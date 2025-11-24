@@ -188,12 +188,23 @@ ul {
 }
 
 .btn-secondary {
+    background: var(--secondary-color);
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-xl);
+}
+
+.btn-outline {
     background: transparent;
     color: var(--primary-color);
     border: 2px solid var(--primary-color);
 }
 
-.btn-secondary:hover {
+.btn-outline:hover {
     background: var(--primary-color);
     color: white;
     transform: translateY(-2px);
@@ -988,6 +999,87 @@ body.dark-mode .navbar {
 }
 
 /* ===========================
+   Certifications Section
+   =========================== */
+.certifications-category {
+    margin-bottom: var(--spacing-xl);
+}
+
+.certifications-category:last-child {
+    margin-bottom: 0;
+}
+
+.certifications-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--spacing-lg);
+    margin-top: var(--spacing-lg);
+}
+
+.certification-card {
+    background: var(--bg-primary);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-md);
+    transition: all var(--transition-normal);
+    display: flex;
+    gap: var(--spacing-md);
+    border: 2px solid transparent;
+}
+
+.certification-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-xl);
+    border-color: var(--primary-color);
+}
+
+.certification-icon {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    min-width: 60px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.certification-content {
+    flex: 1;
+}
+
+.certification-content h4 {
+    font-size: 1.125rem;
+    margin-bottom: var(--spacing-xs);
+    color: var(--text-primary);
+    line-height: 1.4;
+}
+
+.certification-provider {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    margin-bottom: var(--spacing-sm);
+}
+
+.certification-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    color: var(--primary-color);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all var(--transition-normal);
+}
+
+.certification-link:hover {
+    color: var(--secondary-color);
+    gap: calc(var(--spacing-xs) + 2px);
+}
+
+.certification-link i {
+    font-size: 0.75rem;
+}
+
+/* ===========================
    Contact Section
    =========================== */
 .contact-content {
@@ -1241,6 +1333,19 @@ body.dark-mode .navbar {
     
     .contact-form-wrapper iframe {
         height: 700px;
+    }
+    
+    .certifications-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .certification-card {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .certification-icon {
+        justify-content: center;
     }
     
     .footer-content {
