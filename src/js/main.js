@@ -76,6 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initSkillBars();
     initTyping();
     initProjectTilt();
+    initEasterEgg();
     updateYear();
 });
 
@@ -678,6 +679,48 @@ function initProjectTilt() {
             }
             card.style.transform = '';
         });
+    });
+}
+
+// ===========================
+// Easter egg: cinco clics en el logo
+// ===========================
+// Es la unica puerta al arcade, y se eligio precisamente porque funciona
+// igual en escritorio y en tactil (un codigo Konami no serviria en movil).
+// A partir del tercer clic el logo late, para que quien lo descubra por
+// casualidad entienda que va por buen camino en vez de rendirse.
+function initEasterEgg() {
+    const logo = document.querySelector('.nav-logo');
+    if (!logo) return;
+
+    const NEEDED = 5;
+    const WINDOW_MS = 3000;
+    let count = 0;
+    let timer = null;
+
+    logo.classList.add('logo-secret');
+    logo.setAttribute('title', '');
+
+    function reset() {
+        count = 0;
+        logo.classList.remove('logo-warm', 'logo-hot');
+    }
+
+    logo.addEventListener('click', () => {
+        count++;
+        clearTimeout(timer);
+        timer = setTimeout(reset, WINDOW_MS);
+
+        logo.classList.toggle('logo-warm', count >= 3 && count < NEEDED);
+        logo.classList.toggle('logo-hot', count === NEEDED - 1);
+
+        if (count >= NEEDED) {
+            clearTimeout(timer);
+            reset();
+            logo.classList.add('logo-open');
+            // Deja que se vea el destello antes de cambiar de pagina
+            setTimeout(() => { window.location.href = 'arcade.html'; }, 420);
+        }
     });
 }
 

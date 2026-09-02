@@ -2351,3 +2351,47 @@ html.dark-mode .mesh-blob {
 
     .hero-mesh { display: none; }
 }
+
+/* ===========================
+   Easter egg: pista visual en el logo
+   ===========================
+   Cinco clics en el logo llevan al arcade. Desde el tercero el logo late,
+   para que quien lo descubra sin buscarlo note que algo responde. El cursor
+   no cambia a puntero: sigue siendo un secreto, no un boton anunciado. */
+.logo-secret {
+    user-select: none;
+    -webkit-user-select: none;
+    transition: transform var(--transition-normal), filter var(--transition-normal);
+}
+
+/* La pista NO usa transform: escalar el logo movia el objetivo del clic,
+   y con cinco clics seguidos eso hace fallar tiros. Pulsa un brillo, que
+   deja la caja del elemento exactamente donde estaba. */
+.logo-warm {
+    animation: logoGlow 0.75s ease-in-out infinite;
+}
+
+.logo-hot {
+    animation: logoGlow 0.34s ease-in-out infinite;
+}
+
+/* Aqui si se puede deformar: ya no quedan clics por acertar, va la navegacion */
+.logo-open {
+    animation: none;
+    transform: scale(1.35) rotate(-8deg);
+    filter: drop-shadow(0 0 24px var(--accent-color));
+}
+
+@keyframes logoGlow {
+    0%, 100% { filter: none; }
+    50%      { filter: drop-shadow(0 0 12px var(--accent-color)) brightness(1.3); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .logo-warm,
+    .logo-hot,
+    .logo-open {
+        animation: none !important;
+        transform: none !important;
+    }
+}

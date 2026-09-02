@@ -20,6 +20,7 @@ build. Se sirve tal cual desde GitHub Pages.
 ```
 Portfolio/
 ├── index.html              # Página completa (incluye el sprite SVG de iconos)
+├── arcade.html             # Easter egg: el juego "Sacbé"
 ├── 404.html                # Página de error de GitHub Pages
 ├── robots.txt
 ├── sitemap.xml
@@ -29,7 +30,9 @@ Portfolio/
     ├── js/
     │   ├── translations.js # Textos ES/EN
     │   ├── language.js     # Gestor de idioma (LanguageManager)
-    │   └── main.js         # Tema, navegación, partículas y animaciones
+    │   ├── main.js         # Tema, navegación, partículas y animaciones
+    │   └── arcade.js       # El juego (solo lo carga arcade.html)
+    ├── vendor/three.module.min.js   # three.js r160, auto-alojado
     ├── img/                # Foto, iconos y capturas de proyectos
     └── pdf/                # CV y certificados
 ```
@@ -132,6 +135,34 @@ habilidades · tilt 3D con spotlight en los proyectos (solo con ratón) ·
 partículas que se repelen del cursor · títulos revelándose letra por letra ·
 flip 3D en las certificaciones · marquee de tecnologías · malla de degradado en
 el hero · cambio de tema con revelación circular (View Transitions API).
+
+## Easter egg: «Sacbé»
+
+Cinco clics seguidos en el logo `WH` de la barra llevan a `arcade.html`, un
+endless runner voxel sobre una calzada maya. Desde el tercer clic el logo
+emite un brillo, para que quien lo descubra por casualidad entienda que va
+por buen camino. La ventana entre clics es de 3 s y se reinicia sola.
+
+Lo que importa mantener si se toca:
+
+- **No sobrecarga la página principal.** `index.html` no referencia ni
+  `arcade.js` ni three.js: el juego (192 KB) solo se descarga si alguien lo
+  encuentra. El disparador añade 1,1 KB al total inicial.
+- **Todo el escenario usa una única `BoxGeometry` compartida** y va en
+  `InstancedMesh`. Son ~25 draw calls y ~4.900 triángulos por frame.
+- **La calzada y los templos son periódicos.** Desplazarlos es mover su
+  `Group` con un módulo, no recolocar 180 instancias por paso de simulación.
+  Es la razón de que `ROAD_PERIOD` y `TEMPLE_PERIOD` existan: si se cambia el
+  espaciado hay que mantener la periodicidad o la costura se ve.
+- **En `InstancedMesh` el color del material multiplica al de instancia.** Por
+  eso los materiales con `setColorAt` van en blanco: ponerles el mismo tono lo
+  elevaría al cuadrado y saldría oscurecido.
+- **La cámara sale toda de `cam`**, que se recalcula según la relación de
+  aspecto. En vertical se inclina más, o media pantalla se va en cielo vacío.
+- **La pista del logo no usa `transform`.** Escalarlo movía el objetivo del
+  clic y hacía fallar tiros; pulsa un brillo, que deja la caja donde estaba.
+- El aviso de `prefers-reduced-motion` es voluntario: un runner es movimiento
+  puro y no se puede atenuar, así que se avisa y decide el jugador.
 
 ## Idiomas y URLs
 

@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#1b2b26">
+
+    <title>Sacbé | Willian Huit</title>
+
+    <link rel="icon" type="image/x-icon" href="src/img/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="src/img/apple-touch-icon.png">
+
+    <!-- Solo los dos pesos que usa la interfaz del juego. No se carga
+         styles.css: esta pagina es independiente y no necesita las 2400
+         lineas del sitio. -->
+    <link rel="preload" as="font" type="font/woff2" href="src/fonts/poppins-700-latin.woff2" crossorigin>
+    <style>
+        @font-face {
+            font-family: 'Poppins';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: url('src/fonts/poppins-400-latin.woff2') format('woff2');
+            unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+                           U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191,
+                           U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+        }
+
+        @font-face {
+            font-family: 'Poppins';
+            font-style: normal;
+            font-weight: 700;
+            font-display: swap;
+            src: url('src/fonts/poppins-700-latin.woff2') format('woff2');
+            unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+                           U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191,
+                           U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+        }
+
+        :root {
+            /* Paleta maya: caliza, jade, ocre, obsidiana.
+               El violeta de marca queda solo para acentos de interfaz. */
+            --jade: #2ec4a0;
+            --jade-deep: #14776a;
+            --limestone: #efe6d2;
+            --ochre: #c8862f;
+            --obsidian: #10201c;
+            --night: #1b2b26;
+            --brand: #8b5cf6;
+            --danger: #ef4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            background: var(--obsidian);
+            color: var(--limestone);
+            font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        canvas { display: block; touch-action: none; }
+
+        /* ===== Capas de interfaz ===== */
+        .layer {
+            position: fixed;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            padding: 1.5rem;
+            text-align: center;
+            background: radial-gradient(circle at 50% 40%, rgba(27, 43, 38, 0.92), rgba(16, 32, 28, 0.98));
+            backdrop-filter: blur(3px);
+            z-index: 10;
+        }
+
+        .layer[hidden] { display: none !important; }
+
+        .panel { max-width: 34rem; }
+
+        .glyph-mark {
+            font-size: 2.75rem;
+            letter-spacing: 0.3em;
+            color: var(--jade);
+            margin-bottom: 0.5rem;
+        }
+
+        h1 {
+            font-size: clamp(2.5rem, 9vw, 4rem);
+            letter-spacing: 0.06em;
+            line-height: 1;
+            margin-bottom: 0.35rem;
+        }
+
+        .tagline {
+            color: var(--jade);
+            font-size: 0.8rem;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+        }
+
+        .blurb {
+            font-size: 0.95rem;
+            line-height: 1.65;
+            opacity: 0.82;
+            margin-bottom: 1.75rem;
+        }
+
+        /* ===== Controles ===== */
+        .keys {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+            gap: 0.6rem;
+            margin-bottom: 1.75rem;
+            font-size: 0.8rem;
+        }
+
+        .key-row {
+            background: rgba(46, 196, 160, 0.07);
+            border: 1px solid rgba(46, 196, 160, 0.22);
+            border-radius: 0.5rem;
+            padding: 0.7rem 0.5rem;
+        }
+
+        .key-row b {
+            display: block;
+            color: var(--jade);
+            font-size: 0.95rem;
+            margin-bottom: 0.15rem;
+        }
+
+        /* ===== Botones ===== */
+        .btn {
+            font: inherit;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            border: none;
+            border-radius: 0.55rem;
+            padding: 0.95rem 2.4rem;
+            cursor: pointer;
+            background: linear-gradient(135deg, var(--jade), var(--jade-deep));
+            color: #04120e;
+            transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+        }
+
+        .btn:hover, .btn:focus-visible {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px -10px rgba(46, 196, 160, 0.8);
+            filter: brightness(1.08);
+        }
+
+        .btn-ghost {
+            background: none;
+            color: var(--limestone);
+            border: 1px solid rgba(239, 230, 210, 0.3);
+            padding: 0.8rem 1.6rem;
+        }
+
+        .btn-ghost:hover, .btn-ghost:focus-visible {
+            border-color: var(--jade);
+            color: var(--jade);
+            box-shadow: none;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.7rem;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 1.5rem;
+            font-size: 0.82rem;
+            color: rgba(239, 230, 210, 0.55);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+        }
+
+        .back-link:hover { color: var(--jade); border-bottom-color: var(--jade); }
+
+        /* ===== Aviso de movimiento (prefers-reduced-motion) ===== */
+        .notice {
+            border: 1px solid rgba(200, 134, 47, 0.45);
+            background: rgba(200, 134, 47, 0.1);
+            border-radius: 0.6rem;
+            padding: 1.1rem 1.25rem;
+            text-align: left;
+            font-size: 0.88rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .notice b { color: var(--ochre); }
+
+        /* ===== HUD durante la partida ===== */
+        .hud {
+            position: fixed;
+            inset: 0;
+            padding: 1rem 1.15rem;
+            pointer-events: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            z-index: 5;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .hud[hidden] { display: none !important; }
+
+        .hud-box {
+            background: rgba(16, 32, 28, 0.55);
+            border: 1px solid rgba(46, 196, 160, 0.2);
+            border-radius: 0.5rem;
+            padding: 0.5rem 0.85rem;
+            font-size: 0.8rem;
+            line-height: 1.5;
+            backdrop-filter: blur(4px);
+        }
+
+        .hud-right { text-align: right; }
+
+        .hud-label {
+            font-size: 0.62rem;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            opacity: 0.6;
+            display: block;
+        }
+
+        .hud-value { font-size: 1.15rem; font-weight: 700; }
+
+        .lives { font-size: 1.1rem; letter-spacing: 0.12em; color: var(--jade); }
+        .lives .spent { opacity: 0.22; }
+
+        .jade-count { color: var(--jade); }
+
+        /* ===== Marcador final ===== */
+        .score-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+            margin: 1.5rem 0;
+        }
+
+        .score-cell {
+            background: rgba(46, 196, 160, 0.07);
+            border: 1px solid rgba(46, 196, 160, 0.2);
+            border-radius: 0.55rem;
+            padding: 0.9rem 0.4rem;
+        }
+
+        .score-cell .hud-label { margin-bottom: 0.25rem; }
+        .score-cell strong { font-size: 1.5rem; }
+
+        .record {
+            color: var(--ochre);
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            min-height: 1.2em;
+        }
+
+        /* ===== Aviso de pausa ===== */
+        .pause-tag {
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: var(--jade);
+            z-index: 8;
+            pointer-events: none;
+        }
+
+        .pause-tag[hidden] { display: none !important; }
+
+        /* Botón de sonido, única cosa clicable sobre el juego */
+        .sound-toggle {
+            position: fixed;
+            right: 1.15rem;
+            bottom: 1.15rem;
+            z-index: 6;
+            width: 2.9rem;
+            height: 2.9rem;
+            border-radius: 50%;
+            border: 1px solid rgba(46, 196, 160, 0.3);
+            background: rgba(16, 32, 28, 0.6);
+            color: var(--jade);
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .sound-toggle:hover { border-color: var(--jade); }
+        .sound-toggle[hidden] { display: none !important; }
+
+        @media (max-width: 480px) {
+            .hud-box { font-size: 0.72rem; padding: 0.4rem 0.6rem; }
+            .hud-value { font-size: 1rem; }
+            .btn { padding: 0.85rem 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- ===== Pantalla inicial ===== -->
+    <div class="layer" id="menu">
+        <div class="panel">
+            <p class="glyph-mark" aria-hidden="true">◈ ◇ ◈</p>
+            <h1>SACBÉ</h1>
+            <p class="tagline">La calzada blanca</p>
+
+            <!-- Solo aparece si el navegador pide menos movimiento -->
+            <div class="notice" id="motionNotice" hidden>
+                <b>Aviso de movimiento.</b> Tu sistema está configurado para reducir
+                las animaciones. Este juego es movimiento continuo y no se puede
+                atenuar sin dejar de funcionar. Entra solo si te sientes cómodo.
+            </div>
+
+            <p class="blurb">
+                Los mayas unían sus ciudades con <b>sacbeob</b>: calzadas elevadas de
+                piedra caliza blanca. Corre por una de ellas, esquiva las estelas,
+                deslízate bajo los dinteles caídos, salta los cenotes y recoge todo
+                el jade que puedas.
+            </p>
+
+            <div class="keys">
+                <div class="key-row"><b>← →</b> cambiar de carril</div>
+                <div class="key-row"><b>↑ / Espacio</b> saltar</div>
+                <div class="key-row"><b>↓</b> deslizarse</div>
+                <div class="key-row"><b>Táctil</b> desliza el dedo</div>
+            </div>
+
+            <div class="actions">
+                <button class="btn" id="playBtn" type="button">Jugar</button>
+                <button class="btn btn-ghost" id="soundPref" type="button" aria-pressed="true">
+                    Sonido: activado
+                </button>
+            </div>
+
+            <a class="back-link" href="index.html">← volver al portafolio</a>
+        </div>
+    </div>
+
+    <!-- ===== Fin de partida ===== -->
+    <div class="layer" id="over" hidden>
+        <div class="panel">
+            <p class="glyph-mark" aria-hidden="true">◈</p>
+            <h1 id="overTitle">FIN</h1>
+            <p class="record" id="recordTag"></p>
+
+            <div class="score-grid">
+                <div class="score-cell">
+                    <span class="hud-label">Distancia</span>
+                    <strong id="finalDist">0</strong>
+                </div>
+                <div class="score-cell">
+                    <span class="hud-label">Jade</span>
+                    <strong id="finalJade" class="jade-count">0</strong>
+                </div>
+                <div class="score-cell">
+                    <span class="hud-label">Puntos</span>
+                    <strong id="finalScore">0</strong>
+                </div>
+            </div>
+
+            <p class="blurb" style="margin-bottom:1.25rem">
+                Mejor marca: <b id="bestScore">0</b> puntos
+            </p>
+
+            <div class="actions">
+                <button class="btn" id="againBtn" type="button">Otra vez</button>
+                <a class="btn btn-ghost" href="index.html">Salir</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Sin WebGL ===== -->
+    <div class="layer" id="unsupported" hidden>
+        <div class="panel">
+            <p class="glyph-mark" aria-hidden="true">◇</p>
+            <h1>Sin WebGL</h1>
+            <p class="blurb">
+                Tu navegador no puede dibujar gráficos 3D, así que este easter egg
+                no va a funcionar aquí. Prueba en otro navegador o en un equipo
+                distinto.
+            </p>
+            <a class="btn" href="index.html">Volver al portafolio</a>
+        </div>
+    </div>
+
+    <!-- ===== HUD ===== -->
+    <div class="hud" id="hud" hidden>
+        <div class="hud-box">
+            <span class="hud-label">Vidas</span>
+            <span class="lives" id="lives">◆ ◆ ◆</span>
+        </div>
+        <div class="hud-box hud-right">
+            <span class="hud-label">Distancia</span>
+            <span class="hud-value" id="dist">0</span> m
+            <span class="hud-label" style="margin-top:.35rem">Jade</span>
+            <span class="hud-value jade-count" id="jade">0</span>
+        </div>
+    </div>
+
+    <p class="pause-tag" id="pauseTag" hidden>Pausa</p>
+
+    <button class="sound-toggle" id="soundBtn" type="button" hidden
+            aria-label="Silenciar sonido">♪</button>
+
+    <script type="module" src="src/js/arcade.js"></script>
+</body>
+</html>

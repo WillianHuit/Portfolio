@@ -1,2 +1,13 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Dependencias de terceros: se guardan byte a byte como llegaron del CDN,
+# sin normalizar finales de linea, para que coincidan con el original.
+src/vendor/** -text
+
+# Binarios, por si la deteccion automatica falla
+*.woff2 binary
+*.jpg   binary
+*.png   binary
+*.ico   binary
+*.pdf   binary
