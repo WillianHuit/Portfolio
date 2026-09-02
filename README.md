@@ -139,9 +139,16 @@ el hero · cambio de tema con revelación circular (View Transitions API).
 ## Easter egg: «Sacbé»
 
 Cinco clics seguidos en el logo `WH` de la barra llevan a `arcade.html`, un
-endless runner voxel sobre una calzada maya. Desde el tercer clic el logo
-emite un brillo, para que quien lo descubra por casualidad entienda que va
-por buen camino. La ventana entre clics es de 3 s y se reinicia sola.
+endless runner voxel sobre una calzada maya. Al pasar el ratón por el logo
+aparecen cinco rombos que se van rellenando con cada clic: hacen descubrible
+el secreto sin explicarlo y dicen cuántos faltan. En táctil, donde no hay
+hover, el primer toque los deja visibles. La ventana entre clics es de 3 s y
+se reinicia sola.
+
+El juego: tres vidas, escudo de jade que absorbe un golpe, multiplicador por
+racha de jade, hitos cada 250 m, jaguar que se acerca conforme pierdes vidas,
+quetzal de acompañante y un ciclo de ambiente que pasa por amanecer, mediodía,
+atardecer y noche cada 900 m.
 
 Lo que importa mantener si se toca:
 
@@ -161,6 +168,21 @@ Lo que importa mantener si se toca:
   aspecto. En vertical se inclina más, o media pantalla se va en cielo vacío.
 - **La pista del logo no usa `transform`.** Escalarlo movía el objetivo del
   clic y hacía fallar tiros; pulsa un brillo, que deja la caja donde estaba.
+- **Las colisiones comparan la posición real del jugador, no su índice de
+  carril.** El índice cambia de golpe al pulsar mientras el cuerpo aún se
+  desplaza (~0,2 s, que a velocidad máxima son 6 unidades): usarlo producía
+  esquivas fantasma y golpes injustos.
+- **El paso fijo es de 60 Hz con tope de 6 pasos por frame.** A 120 Hz con
+  tope de 8 el juego entraba en cámara lenta por debajo de ~15 fps.
+- **La sombra de contacto no es decorativa**: sin ella no hay forma de juzgar
+  el aterrizaje ni si vas lo bastante alto para librar un cenote.
+- **La cercanía del jaguar ES el indicador de vidas.** Cuenta lo mismo que los
+  rombos del HUD sin obligar a apartar la vista de la calzada.
+- **`COMBO_STEP` está en 3, no en 5.** Midiendo con un jugador activo, el
+  máximo de jade en una carrera de 500 m era 4: con el umbral en 5 el
+  multiplicador era inalcanzable y la mecánica no existía.
+- Los obstáculos se reciclan en `DESPAWN_Z = 11` y la cámara está en 14: con
+  el valor anterior pasaban por encima ocupando media pantalla.
 - El aviso de `prefers-reduced-motion` es voluntario: un runner es movimiento
   puro y no se puede atenuar, así que se avisa y decide el jugador.
 

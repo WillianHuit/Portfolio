@@ -241,7 +241,95 @@
 
         .jade-count { color: var(--jade); }
 
-        /* ===== Marcador final ===== */
+        .shield {
+            display: block;
+            margin-top: 0.3rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            color: var(--ochre);
+        }
+
+        .shield[hidden] { display: none !important; }
+
+        .hud-best { font-size: 0.95rem; font-weight: 700; opacity: 0.75; }
+
+        .combo {
+            display: inline-block;
+            margin-left: 0.4rem;
+            padding: 0.05rem 0.4rem;
+            border-radius: 0.3rem;
+            background: var(--ochre);
+            color: #2a1a05;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .combo[hidden] { display: none !important; }
+
+        /* ===== Hito ===== */
+        .milestone {
+            position: fixed;
+            left: 50%;
+            top: 24%;
+            transform: translate(-50%, 0);
+            z-index: 7;
+            pointer-events: none;
+            font-size: clamp(1.8rem, 6vw, 3rem);
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            color: var(--limestone);
+            text-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+        }
+
+        .milestone[hidden] { display: none !important; }
+
+        .milestone.show { animation: milestonePop 1.9s ease-out forwards; }
+
+        @keyframes milestonePop {
+            0%   { opacity: 0; transform: translate(-50%, 18px) scale(0.85); }
+            18%  { opacity: 1; transform: translate(-50%, 0) scale(1); }
+            72%  { opacity: 1; transform: translate(-50%, 0) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -22px) scale(1.05); }
+        }
+
+        /* ===== Vineta de velocidad ===== */
+        /* Se cierra conforme aceleras. Es la unica pista de que la velocidad
+           sube de 15 a 31: sin ella el jugador no percibe la progresion. */
+        .speed-veil {
+            position: fixed;
+            inset: 0;
+            z-index: 4;
+            pointer-events: none;
+            opacity: 0;
+            background: radial-gradient(ellipse at 50% 55%,
+                        transparent 42%, rgba(8, 22, 18, 0.72) 100%);
+            transition: opacity 400ms linear;
+        }
+
+        /* ===== Boton de pausa (tactil) ===== */
+        .pause-btn {
+            position: fixed;
+            left: 1.15rem;
+            bottom: 1.15rem;
+            z-index: 6;
+            width: 2.9rem;
+            height: 2.9rem;
+            border-radius: 50%;
+            border: 1px solid rgba(46, 196, 160, 0.3);
+            background: rgba(16, 32, 28, 0.6);
+            color: var(--jade);
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+        }
+
+        .pause-btn[hidden] { display: none !important; }
+
+        /* ===== Marcador final =====
         .score-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -406,14 +494,27 @@
         <div class="hud-box">
             <span class="hud-label">Vidas</span>
             <span class="lives" id="lives">◆ ◆ ◆</span>
+            <span class="shield" id="shield" hidden>⬡ Escudo</span>
         </div>
         <div class="hud-box hud-right">
             <span class="hud-label">Distancia</span>
             <span class="hud-value" id="dist">0</span> m
             <span class="hud-label" style="margin-top:.35rem">Jade</span>
             <span class="hud-value jade-count" id="jade">0</span>
+            <span class="combo" id="combo" hidden>×2</span>
+            <span class="hud-label" style="margin-top:.35rem">Récord</span>
+            <span class="hud-best" id="hudBest">0</span>
         </div>
     </div>
+
+    <!-- Aviso de hito cada 500 m -->
+    <p class="milestone" id="milestone" hidden></p>
+
+    <!-- Vineta que se cierra con la velocidad: el aviso de que aceleras -->
+    <div class="speed-veil" id="speedVeil" aria-hidden="true"></div>
+
+    <!-- Pausa para tactil: por teclado ya existe P/Esc -->
+    <button class="pause-btn" id="pauseBtn" type="button" hidden aria-label="Pausar">II</button>
 
     <p class="pause-tag" id="pauseTag" hidden>Pausa</p>
 
