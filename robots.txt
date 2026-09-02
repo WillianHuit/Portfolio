@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://willianhuit.github.io/Portfolio/sitemap.xml

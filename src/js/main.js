@@ -96,8 +96,8 @@ function initTheme() {
 
 function syncThemeIcon(btn) {
     btn.innerHTML = currentTheme === 'dark'
-        ? '<i class="fas fa-sun"></i>'
-        : '<i class="fas fa-moon"></i>';
+        ? '<svg class="icon" aria-hidden="true" focusable="false"><use href="#i-sun"></use></svg>'
+        : '<svg class="icon" aria-hidden="true" focusable="false"><use href="#i-moon"></use></svg>';
 }
 
 function applyTheme(btn) {
@@ -605,21 +605,24 @@ function initTyping() {
             return;
         }
 
+        // Arranca con el primer rol ya escrito: si empezara en vacio, el hueco
+        // del titulo se veria sin texto durante el primer segundo de carga.
         let index = 0;
-        let chars = 0;
-        let deleting = false;
+        let chars = roles[0].length;
+        let deleting = true;
+        el.textContent = roles[0];
 
         function tick() {
             const word = roles[index % roles.length];
             chars += deleting ? -1 : 1;
-            el.textContent = word.slice(0, chars);
+            el.textContent = word.slice(0, Math.max(chars, 0));
 
             let delay = deleting ? 45 : 95;
 
-            if (!deleting && chars === word.length) {
+            if (!deleting && chars >= word.length) {
                 delay = 1800;          // pausa con la palabra completa
                 deleting = true;
-            } else if (deleting && chars === 0) {
+            } else if (deleting && chars <= 0) {
                 deleting = false;
                 index++;
                 delay = 350;
@@ -628,7 +631,7 @@ function initTyping() {
             timer = setTimeout(tick, delay);
         }
 
-        tick();
+        timer = setTimeout(tick, 2200);   // deja leer el primer rol
     }
 
     document.addEventListener('languagechanged', run);

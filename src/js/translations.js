@@ -13,8 +13,18 @@ const translations = {
             experience: "Experiencia",
             skills: "Habilidades",
             projects: "Proyectos",
+            education: "Educación",
             certifications: "Certificaciones",
             contact: "Contacto"
+        },
+
+        // Etiquetas para lectores de pantalla
+        a11y: {
+            theme: "Cambiar tema",
+            language: "Cambiar idioma",
+            menu: "Menú de navegación",
+            scrollDown: "Ir a la siguiente sección",
+            backToTop: "Volver arriba"
         },
         
         // Hero
@@ -141,14 +151,7 @@ const translations = {
         contact: {
             title: "Contáctame",
             description: "¿Tienes un proyecto en mente? ¡Hablemos! Estoy disponible para colaboraciones y nuevas oportunidades.",
-            email: "Email",
-            form: {
-                name: "Nombre",
-                email: "Email",
-                subject: "Asunto",
-                message: "Mensaje",
-                send: "Enviar Mensaje"
-            }
+            email: "Email"
         },
         
         // Footer
@@ -170,8 +173,18 @@ const translations = {
             experience: "Experience",
             skills: "Skills",
             projects: "Projects",
+            education: "Education",
             certifications: "Certifications",
             contact: "Contact"
+        },
+
+        // Screen reader labels
+        a11y: {
+            theme: "Toggle theme",
+            language: "Change language",
+            menu: "Navigation menu",
+            scrollDown: "Go to next section",
+            backToTop: "Back to top"
         },
         
         // Hero
@@ -298,14 +311,7 @@ const translations = {
         contact: {
             title: "Contact Me",
             description: "Have a project in mind? Let's talk! I'm available for collaborations and new opportunities.",
-            email: "Email",
-            form: {
-                name: "Name",
-                email: "Email",
-                subject: "Subject",
-                message: "Message",
-                send: "Send Message"
-            }
+            email: "Email"
         },
         
         // Footer

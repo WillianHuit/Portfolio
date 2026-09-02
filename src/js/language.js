@@ -57,6 +57,14 @@ class LanguageManager {
                 element.textContent = translation;
             }
         });
+
+        // Las etiquetas para lectores de pantalla tambien se traducen
+        document.querySelectorAll('[data-i18n-aria]').forEach(element => {
+            const label = this.getTranslation(element.getAttribute('data-i18n-aria'));
+            if (typeof label === 'string') {
+                element.setAttribute('aria-label', label);
+            }
+        });
     }
     
     getTranslation(key) {
@@ -101,9 +109,11 @@ class LanguageManager {
         }
         
         if (toggleBtn) {
-            toggleBtn.setAttribute('aria-label', 
+            toggleBtn.setAttribute('aria-label',
                 this.currentLanguage === 'es' ? 'Switch to English' : 'Cambiar a Español'
             );
+            // Ya tiene su etiqueta definitiva: que updateContent no la sobrescriba
+            toggleBtn.removeAttribute('data-i18n-aria');
         }
     }
 }
