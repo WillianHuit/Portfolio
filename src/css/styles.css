@@ -2359,10 +2359,51 @@ html.dark-mode .mesh-blob {
    para que quien lo descubra sin buscarlo note que algo responde. El cursor
    no cambia a puntero: sigue siendo un secreto, no un boton anunciado. */
 .logo-secret {
+    position: relative;
+    cursor: pointer;
     user-select: none;
     -webkit-user-select: none;
     transition: transform var(--transition-normal), filter var(--transition-normal);
 }
+
+/* Contador de rombos bajo el logo: la pista visible del easter egg.
+   Aparece al pasar el raton y se rellena con cada clic, de modo que el
+   secreto se descubre sin necesidad de explicarlo. */
+.logo-hint {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 4px;
+    margin-top: 5px;
+    opacity: 0;
+    transition: opacity var(--transition-normal);
+    pointer-events: none;
+}
+
+.logo-secret:hover .logo-hint,
+.logo-secret:focus-visible .logo-hint,
+.logo-touched .logo-hint {
+    opacity: 1;
+}
+
+.logo-hint i {
+    width: 6px;
+    height: 6px;
+    transform: rotate(45deg);
+    border: 1px solid var(--primary-color);
+    opacity: 0.55;
+    transition: background var(--transition-fast), border-color var(--transition-fast),
+                opacity var(--transition-fast);
+}
+
+.logo-hint i.on {
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+    opacity: 1;
+}
+
 
 /* La pista NO usa transform: escalar el logo movia el objetivo del clic,
    y con cinco clics seguidos eso hace fallar tiros. Pulsa un brillo, que

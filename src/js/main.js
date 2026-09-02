@@ -699,11 +699,27 @@ function initEasterEgg() {
     let timer = null;
 
     logo.classList.add('logo-secret');
-    logo.setAttribute('title', '');
+
+    // Contador de rombos: aparece al pasar el raton por encima y se rellena
+    // con cada clic. Hace descubrible el secreto sin escribir instrucciones,
+    // y de paso dice cuantos faltan en vez de dejar al usuario a ciegas.
+    // Se construye desde JS porque es puramente decorativo: asi no ensucia
+    // el HTML de quien nunca lo vera.
+    const hint = document.createElement('span');
+    hint.className = 'logo-hint';
+    hint.setAttribute('aria-hidden', 'true');
+    for (let i = 0; i < NEEDED; i++) hint.appendChild(document.createElement('i'));
+    logo.appendChild(hint);
+    const pips = hint.querySelectorAll('i');
+
+    function paint() {
+        pips.forEach((pip, i) => pip.classList.toggle('on', i < count));
+    }
 
     function reset() {
         count = 0;
-        logo.classList.remove('logo-warm', 'logo-hot');
+        paint();
+        logo.classList.remove('logo-warm', 'logo-hot', 'logo-touched');
     }
 
     logo.addEventListener('click', () => {
@@ -711,13 +727,18 @@ function initEasterEgg() {
         clearTimeout(timer);
         timer = setTimeout(reset, WINDOW_MS);
 
+        // En tactil no hay hover, asi que el primer toque deja el contador
+        // visible: es la unica forma de que el secreto sea descubrible ahi.
+        logo.classList.add('logo-touched');
+        paint();
+
         logo.classList.toggle('logo-warm', count >= 3 && count < NEEDED);
         logo.classList.toggle('logo-hot', count === NEEDED - 1);
 
         if (count >= NEEDED) {
             clearTimeout(timer);
-            reset();
             logo.classList.add('logo-open');
+            paint();
             // Deja que se vea el destello antes de cambiar de pagina
             setTimeout(() => { window.location.href = 'arcade.html'; }, 420);
         }
