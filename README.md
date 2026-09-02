@@ -10,8 +10,8 @@ build. Se sirve tal cual desde GitHub Pages.
 - **Sin framework ni build**: HTML, CSS y JS planos. Se abre `index.html` y funciona.
 - **Bilingüe (ES/EN)**: sistema i18n propio, cambio instantáneo sin recargar.
 - **Modo claro/oscuro** con detección de la preferencia del sistema.
-- **Cero dependencias de red en tiempo de ejecución** salvo la tipografía:
-  los iconos van incrustados como sprite SVG.
+- **Cero dependencias externas**: los iconos van como sprite SVG incrustado y
+  la tipografía auto-alojada. La página no pide nada a ningún tercero.
 - **Accesible**: respeta `prefers-reduced-motion`, etiquetas ARIA traducidas y
   degradación completa sin JavaScript.
 
@@ -24,7 +24,8 @@ Portfolio/
 ├── robots.txt
 ├── sitemap.xml
 └── src/
-    ├── css/styles.css      # Hoja de estilos principal (~2200 líneas)
+    ├── css/styles.css      # Hoja de estilos principal (~2400 líneas)
+    ├── fonts/              # Poppins auto-alojada (woff2, subsets latin)
     ├── js/
     │   ├── translations.js # Textos ES/EN
     │   ├── language.js     # Gestor de idioma (LanguageManager)
@@ -104,8 +105,9 @@ Estas decisiones no son arbitrarias; deshacerlas degrada métricas medidas:
 | Decisión | Motivo |
 |---|---|
 | Iconos como sprite SVG en vez del CDN | El CSS + las dos webfonts de Font Awesome eran 275 KB para 30 iconos. |
-| Google Fonts con `media="print"` → `onload` | Cargado de forma bloqueante retrasaba `DOMContentLoaded` de 119 ms a 2124 ms. |
-| `@font-face 'Poppins Fallback'` con `size-adjust` | Poppins llega en asíncrono; sin métricas ajustadas el intercambio de fuente provocaba CLS de 0.39. |
+| Poppins auto-alojada en `src/fonts/` con `preload` | Google Fonts exigía dos viajes a un tercero (el CSS tardaba ~2.3 s y solo entonces se pedían los `.woff2`). Ahora es un viaje al propio origen. |
+| Del paquete de Poppins solo `latin` y `latin-ext` | Se descartó `devanagari`: 4 archivos innecesarios. Los `unicode-range` originales se conservan para que `latin-ext` solo se baje si hace falta. |
+| `@font-face 'Poppins Fallback'` con `size-adjust` | Red de seguridad si el `.woff2` falla. Sin métricas ajustadas el intercambio de fuente provocaba CLS de 0.39. El valor se calibró midiendo el ancho de avance real. |
 | `.icon { width: 1.25em; height: 1em }` | Reserva la caja del icono desde el primer pintado. |
 | El loader **no** espera a `window.load` | `load` esperaba al iframe de Google Forms; la pantalla podía quedarse 3.8 s. Ahora usa `DOMContentLoaded` con tope duro de 2 s. |
 | Imágenes a 800 px | La foto del hero pesaba 2.3 MB a 3000×3000 px mostrándose a 400×400. |
@@ -114,9 +116,11 @@ Estas decisiones no son arbitrarias; deshacerlas degrada métricas medidas:
 
 Estado actual (Chrome, medido en local):
 
-- Peso de la carga inicial: **~31 KB** de red + ~35 KB de HTML/CSS/JS comprimido
-- `DOMContentLoaded`: **~430 ms**
-- CLS en móvil: **≤ 0.03**
+- Peso de la carga inicial: **~170 KB** (HTML/CSS/JS comprimidos + foto + 4 fuentes)
+- `DOMContentLoaded`: **~445 ms** · `window.load`: **~450 ms**
+- La pantalla de carga se retira a los **~840 ms**
+- CLS en móvil: **0.000**
+- Peticiones a terceros: **0**
 
 ## Animaciones
 
@@ -128,6 +132,16 @@ habilidades · tilt 3D con spotlight en los proyectos (solo con ratón) ·
 partículas que se repelen del cursor · títulos revelándose letra por letra ·
 flip 3D en las certificaciones · marquee de tecnologías · malla de degradado en
 el hero · cambio de tema con revelación circular (View Transitions API).
+
+## Idiomas y URLs
+
+El idioma se resuelve en este orden: `?lang=es|en` → `localStorage` → idioma del
+navegador. El parámetro existe para poder compartir un enlace directo en un
+idioma y para dar a los buscadores una URL indexable por idioma, que es lo que
+respaldan los `<link rel="alternate" hreflang>` del `<head>` y del `sitemap.xml`:
+
+- Español: `https://willianhuit.github.io/Portfolio/`
+- Inglés: `https://willianhuit.github.io/Portfolio/?lang=en`
 
 ## Despliegue
 

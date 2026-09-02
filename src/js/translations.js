@@ -30,12 +30,12 @@ const translations = {
         // Hero
         hero: {
             greeting: "Hola, soy",
-            role: "Programador Principiante",
+            role: "Desarrollador de Software",
             roles: [
                 "Programador COBOL",
                 "Desarrollador Web",
                 "Analista de Sistemas",
-                "Entusiasta del Mainframe"
+                "Desarrollador React"
             ],
             description: "Especializado en desarrollo web, COBOL y análisis de sistemas. Apasionado por crear soluciones tecnológicas innovadoras.",
             contact: "Contáctame",
@@ -47,7 +47,7 @@ const translations = {
         about: {
             title: "Perfil Profesional",
             description: "Programador en formación y coordinador de proyectos con experiencia en desarrollo web, análisis lógico, documentación técnica y mejora de procesos. He liderado actividades y equipos en proyectos culturales y educativos, gestionando plataformas, formularios, bases de datos y experiencia de usuario.",
-            stat1: "Años Programando",
+            stat1: "Años en el área",
             stat2: "Proyectos Completados",
             stat3: "Equipos Liderados"
         },
@@ -55,9 +55,9 @@ const translations = {
         // Experience
         experience: {
             title: "Experiencia",
-            current: "Actual",
             job1: {
-                title: "Programador Principiante",
+                date: "2023 - Actual",
+                title: "Programador",
                 task1: "Diseño y desarrollo de aplicaciones en COBOL para procesamiento batch y sistemas en línea",
                 task2: "Análisis de historias de usuarios para implementación",
                 task3: "Desarrollo de herramientas y automatizaciones para IBM zSeries"
@@ -128,8 +128,8 @@ const translations = {
         education: {
             title: "Educación",
             degree: "Ingeniería",
-            institution: "Estudiante Universitario",
-            current: "Actual",
+            institution: "Universidad Galileo",
+            current: "Graduación prevista: 2027",
             courses: "Cursos y Certificaciones",
             course1: "Desarrollo Web",
             course2: "Lógica de Programación",
@@ -190,12 +190,12 @@ const translations = {
         // Hero
         hero: {
             greeting: "Hi, I'm",
-            role: "Junior Programmer",
+            role: "Software Developer",
             roles: [
                 "COBOL Programmer",
                 "Web Developer",
                 "Systems Analyst",
-                "Mainframe Enthusiast"
+                "React Developer"
             ],
             description: "Specialized in web development, COBOL and systems analysis. Passionate about creating innovative technological solutions.",
             contact: "Contact Me",
@@ -207,7 +207,7 @@ const translations = {
         about: {
             title: "Professional Profile",
             description: "Programmer in training and project coordinator with experience in web development, logical analysis, technical documentation, and process improvement. I have led activities and teams in cultural and educational projects, managing platforms, forms, databases, and user experience.",
-            stat1: "Years Programming",
+            stat1: "Years in the field",
             stat2: "Completed Projects",
             stat3: "Teams Led"
         },
@@ -215,9 +215,9 @@ const translations = {
         // Experience
         experience: {
             title: "Experience",
-            current: "Current",
             job1: {
-                title: "Junior Programmer",
+                date: "2023 - Present",
+                title: "Programmer",
                 task1: "Design and development of COBOL applications for batch processing and online systems",
                 task2: "Analysis of user stories for implementation",
                 task3: "Development of tools and automation for IBM zSeries"
@@ -288,8 +288,8 @@ const translations = {
         education: {
             title: "Education",
             degree: "Engineering",
-            institution: "University Student",
-            current: "Current",
+            institution: "Universidad Galileo",
+            current: "Expected graduation: 2027",
             courses: "Courses and Certifications",
             course1: "Web Development",
             course2: "Programming Logic",

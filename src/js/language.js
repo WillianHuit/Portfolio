@@ -19,10 +19,17 @@ class LanguageManager {
     }
     
     getStoredLanguage() {
+        // ?lang= tiene prioridad: permite compartir un enlace directo en un
+        // idioma concreto y le da a los buscadores una URL indexable por idioma
+        // (es lo que respaldan los <link rel="alternate" hreflang>).
+        const param = new URLSearchParams(location.search).get('lang');
+        if (param === 'es' || param === 'en') return param;
+
         try {
             const stored = localStorage.getItem('language');
             if (stored) return stored;
         } catch (e) {}
+
         // Misma deteccion que el script anti-FOUC del <head>
         const nav = (navigator.language || 'es').toLowerCase();
         return nav.indexOf('en') === 0 ? 'en' : 'es';
