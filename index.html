@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="no-js">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -27,13 +27,46 @@
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="src/img/favicon.ico">
+    <meta name="theme-color" content="#6366f1" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#111827" media="(prefers-color-scheme: dark)">
+
+    <!-- Resource hints: abre las conexiones a los CDN antes de que el CSS las pida -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preload" as="image" href="src/img/willian-huit.jpg" fetchpriority="high">
+
+    <!-- Anti-FOUC: aplica tema e idioma ANTES del primer pintado -->
+    <script>
+    (function () {
+        try {
+            var t = localStorage.getItem('theme');
+            if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            if (t === 'dark') document.documentElement.classList.add('dark-mode');
+            var l = localStorage.getItem('language');
+            if (!l) l = (navigator.language || 'es').toLowerCase().indexOf('en') === 0 ? 'en' : 'es';
+            document.documentElement.setAttribute('lang', l);
+        } catch (e) {}
+        document.documentElement.classList.remove('no-js');
+    })();
+    </script>
     
     <title>Willian Huit | Programador & Desarrollador Web - Portfolio</title>
     
     <!-- Stylesheets -->
+    <!-- Solo el CSS propio bloquea el render. Los dos CDN se cargaban de forma
+         bloqueante y retrasaban DOMContentLoaded ~2 s; ahora entran en asincrono
+         con el truco media="print" -> onload. Se piden solo los pesos que se usan. -->
     <link rel="stylesheet" href="src/css/styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" media="print" onload="this.media='all'; this.onload=null;"
+          href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" media="print" onload="this.media='all'; this.onload=null;"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <noscript>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    </noscript>
     
     <!-- JSON-LD Structured Data -->
     <script type="application/ld+json">
@@ -125,6 +158,7 @@
                 </button>
             </div>
         </div>
+        <div class="scroll-progress" id="scrollProgress"></div>
     </nav>
 
     <!-- Partículas de fondo -->
@@ -137,7 +171,7 @@
                 <p class="hero-greeting" data-i18n="hero.greeting">Hola, soy</p>
                 <h1 class="hero-name">Willian Eduardo Huit Tepen</h1>
                 <h2 class="hero-title">
-                    <span data-i18n="hero.role">Programador Principiante</span>
+                    <span class="typing-text" id="typingText" data-i18n="hero.role" data-i18n-manual>Programador Principiante</span>
                     <span class="typing-cursor">|</span>
                 </h2>
                 <p class="hero-description" data-i18n="hero.description">
@@ -145,14 +179,14 @@
                     Apasionado por crear soluciones tecnológicas innovadoras.
                 </p>
                 <div class="hero-buttons">
-                    <a href="#contact" class="btn btn-primary" data-i18n="hero.contact">
-                        <i class="fas fa-envelope"></i> Contáctame
+                    <a href="#contact" class="btn btn-primary">
+                        <i class="fas fa-envelope"></i> <span data-i18n="hero.contact">Contáctame</span>
                     </a>
-                    <a href="src/pdf/CV_Willian_Huit.pdf" class="btn btn-secondary" download data-i18n="hero.downloadCV">
-                        <i class="fas fa-download"></i> Descargar CV
+                    <a href="src/pdf/CV_Willian_Huit.pdf" class="btn btn-secondary" download>
+                        <i class="fas fa-download"></i> <span data-i18n="hero.downloadCV">Descargar CV</span>
                     </a>
-                    <a href="#projects" class="btn btn-outline" data-i18n="hero.projects">
-                        <i class="fas fa-folder-open"></i> Ver Proyectos
+                    <a href="#projects" class="btn btn-outline">
+                        <i class="fas fa-folder-open"></i> <span data-i18n="hero.projects">Ver Proyectos</span>
                     </a>
                 </div>
                 <div class="social-links">
@@ -171,12 +205,15 @@
                 <div class="image-wrapper">
                     <div class="image-bg"></div>
                     <div class="profile-placeholder">
-                        <img src="src/img/willian-huit.jpg" alt="Willian Eduardo Huit Tepen" class="profile-image" onerror="this.onerror=null; this.src='src/images/placeholder.jpg';">
+                        <img src="src/img/willian-huit.jpg" alt="Willian Eduardo Huit Tepen" class="profile-image"
+                             width="800" height="800" fetchpriority="high" decoding="async">
                     </div>
                 </div>
             </div>
         </div>
-       
+        <a href="#about" class="scroll-indicator" aria-label="Ir a la siguiente seccion">
+            <div class="mouse"></div>
+        </a>
     </header>
 
     <!-- Sobre Mí -->
@@ -200,7 +237,7 @@
                                 <i class="fas fa-code"></i>
                             </div>
                             <div class="stat-info">
-                                <h3>2+</h3>
+                                <h3 class="stat-number" data-count="2" data-suffix="+">0</h3>
                                 <p data-i18n="about.stat1">Años Programando</p>
                             </div>
                         </div>
@@ -209,7 +246,7 @@
                                 <i class="fas fa-project-diagram"></i>
                             </div>
                             <div class="stat-info">
-                                <h3>10+</h3>
+                                <h3 class="stat-number" data-count="10" data-suffix="+">0</h3>
                                 <p data-i18n="about.stat2">Proyectos Completados</p>
                             </div>
                         </div>
@@ -218,7 +255,7 @@
                                 <i class="fas fa-users"></i>
                             </div>
                             <div class="stat-info">
-                                <h3>5+</h3>
+                                <h3 class="stat-number" data-count="5" data-suffix="+">0</h3>
                                 <p data-i18n="about.stat3">Equipos Liderados</p>
                             </div>
                         </div>
@@ -479,7 +516,7 @@
             <div class="projects-grid">
                 <div class="project-card">
                     <div class="project-image">
-                        <img src="src/img/projects/IBM-idz.jpg" alt="Compilador IBM zSeries">
+                        <img src="src/img/projects/IBM-idz.jpg" alt="Compilador IBM zSeries" width="380" height="253" loading="lazy" decoding="async">
                     </div>
                     <div class="project-content">
                         <h3 data-i18n="projects.project1.title">Compilador IBM zSeries</h3>
@@ -497,7 +534,7 @@
 
                 <div class="project-card">
                     <div class="project-image">
-                        <img src="src/img/projects/testing-program.png" alt="zSeries Testing Application">
+                        <img src="src/img/projects/testing-program.jpg" alt="zSeries Testing Application" width="800" height="395" loading="lazy" decoding="async">
                     </div>
                     <div class="project-content">
                         <h3 data-i18n="projects.project2.title">Aplicativo zSeries Testing</h3>
@@ -515,7 +552,7 @@
 
                 <div class="project-card">
                     <div class="project-image">
-                        <img src="src/img/projects/vsam-files.png" alt="Calculadora VSAM">
+                        <img src="src/img/projects/vsam-files.jpg" alt="Calculadora VSAM" width="800" height="396" loading="lazy" decoding="async">
                     </div>
                     <div class="project-content">
                         <h3 data-i18n="projects.project3.title">Calculadora VSAM</h3>
@@ -574,7 +611,7 @@
 
                 <div class="project-card">
                     <div class="project-image">
-                        <img src="src/img/projects/co-munity.png" alt="Co-munity">
+                        <img src="src/img/projects/co-munity.jpg" alt="Co-munity" width="800" height="373" loading="lazy" decoding="async">
                     </div>
                     <div class="project-content">
                         <h3 data-i18n="projects.project6.title">Co-munity</h3>
@@ -597,7 +634,7 @@
 
                 <div class="project-card">
                     <div class="project-image">
-                        <img src="src/img/projects/chess.png" alt="Plataforma de Ajedrez Maya">
+                        <img src="src/img/projects/chess.jpg" alt="Plataforma de Ajedrez Maya" width="800" height="396" loading="lazy" decoding="async">
                     </div>
                     <div class="project-content">
                         <h3 data-i18n="projects.project7.title">Plataforma de Ajedrez Maya</h3>
@@ -873,6 +910,8 @@
                 </div>
                 <div class="contact-form-wrapper">
                     <iframe 
+                        loading="lazy"
+                        title="Formulario de contacto"
                         src="https://docs.google.com/forms/d/e/1FAIpQLSexEQrgbz_AA-uvftxpGjgABwB1GKq5uV5e-IB0RfP5Bk_KJw/viewform?embedded=true" 
                         width="100%" 
                         height="800" 
@@ -921,9 +960,18 @@
         </div>
     </footer>
 
+    <!-- Boton volver arriba -->
+    <button class="back-to-top" id="backToTop" aria-label="Volver arriba">
+        <svg class="btt-ring" viewBox="0 0 44 44" aria-hidden="true">
+            <circle class="btt-ring-bg" cx="22" cy="22" r="20"></circle>
+            <circle class="btt-ring-fg" cx="22" cy="22" r="20"></circle>
+        </svg>
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
     <!-- Scripts -->
-    <script src="src/js/translations.js"></script>
-    <script src="src/js/language.js"></script>
-    <script src="src/js/main.js"></script>
+    <script defer src="src/js/translations.js"></script>
+    <script defer src="src/js/language.js"></script>
+    <script defer src="src/js/main.js"></script>
 </body>
 </html>

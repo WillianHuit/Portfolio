@@ -12,14 +12,26 @@ class LanguageManager {
         
         // Configurar el botón de cambio de idioma
         this.setupLanguageToggle();
+
+        document.dispatchEvent(new CustomEvent('languagechanged', {
+            detail: { lang: this.currentLanguage }
+        }));
     }
     
     getStoredLanguage() {
-        return localStorage.getItem('language') || 'es';
+        try {
+            const stored = localStorage.getItem('language');
+            if (stored) return stored;
+        } catch (e) {}
+        // Misma deteccion que el script anti-FOUC del <head>
+        const nav = (navigator.language || 'es').toLowerCase();
+        return nav.indexOf('en') === 0 ? 'en' : 'es';
     }
     
     setStoredLanguage(lang) {
-        localStorage.setItem('language', lang);
+        try {
+            localStorage.setItem('language', lang);
+        } catch (e) {}
     }
     
     loadLanguage(lang) {
@@ -28,16 +40,20 @@ class LanguageManager {
         this.updateContent();
         this.updateHtmlLang();
         this.updateLanguageButton();
+        document.dispatchEvent(new CustomEvent('languagechanged', { detail: { lang } }));
     }
     
     updateContent() {
         const elements = document.querySelectorAll('[data-i18n]');
         
         elements.forEach(element => {
+            // Los nodos con data-i18n-manual los controla otro modulo (typing del hero)
+            if (element.hasAttribute('data-i18n-manual')) return;
+
             const key = element.getAttribute('data-i18n');
             const translation = this.getTranslation(key);
-            
-            if (translation) {
+
+            if (typeof translation === 'string') {
                 element.textContent = translation;
             }
         });
@@ -51,7 +67,6 @@ class LanguageManager {
             if (translation && translation[k]) {
                 translation = translation[k];
             } else {
-                console.warn(`Translation not found for key: ${key}`);
                 return null;
             }
         }
@@ -98,5 +113,6 @@ let languageManager;
 
 document.addEventListener('DOMContentLoaded', () => {
     languageManager = new LanguageManager();
+    window.languageManager = languageManager;
     languageManager.init();
 });

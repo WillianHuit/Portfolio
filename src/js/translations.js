@@ -21,6 +21,12 @@ const translations = {
         hero: {
             greeting: "Hola, soy",
             role: "Programador Principiante",
+            roles: [
+                "Programador COBOL",
+                "Desarrollador Web",
+                "Analista de Sistemas",
+                "Entusiasta del Mainframe"
+            ],
             description: "Especializado en desarrollo web, COBOL y análisis de sistemas. Apasionado por crear soluciones tecnológicas innovadoras.",
             contact: "Contáctame",
             downloadCV: "Descargar CV",
@@ -172,6 +178,12 @@ const translations = {
         hero: {
             greeting: "Hi, I'm",
             role: "Junior Programmer",
+            roles: [
+                "COBOL Programmer",
+                "Web Developer",
+                "Systems Analyst",
+                "Mainframe Enthusiast"
+            ],
             description: "Specialized in web development, COBOL and systems analysis. Passionate about creating innovative technological solutions.",
             contact: "Contact Me",
             downloadCV: "Download CV",
@@ -303,3 +315,6 @@ const translations = {
         }
     }
 };
+
+// Exponer para el resto de modulos (const de nivel superior no crea window.translations)
+window.translations = translations;

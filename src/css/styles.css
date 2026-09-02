@@ -1,4 +1,20 @@
 /* ===========================
+   Fuente de respaldo con metricas ajustadas
+   ===========================
+   Poppins se carga en asincrono para no bloquear el render. Sin esto, al
+   llegar la fuente el texto se re-maquetaba y provocaba un salto de layout
+   (CLS ~0.39 medido en movil). Estas metricas hacen que Arial ocupe casi
+   exactamente lo mismo que Poppins, asi el intercambio es imperceptible. */
+@font-face {
+    font-family: 'Poppins Fallback';
+    src: local('Arial');
+    size-adjust: 114.25%;
+    ascent-override: 91.9%;
+    descent-override: 30.6%;
+    line-gap-override: 0%;
+}
+
+/* ===========================
    Variables CSS
    =========================== */
 :root {
@@ -45,17 +61,40 @@
     --transition-slow: 500ms;
     
     /* Fuentes */
-    --font-primary: 'Poppins', sans-serif;
+    /* Poppins llega en asincrono: la pila de respaldo evita el salto de fuente */
+    --font-primary: 'Poppins', 'Poppins Fallback', system-ui, -apple-system,
+                    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
 /* Modo Oscuro */
-body.dark-mode {
+html.dark-mode {
     --text-primary: #f9fafb;
     --text-secondary: #d1d5db;
     --text-light: #9ca3af;
     --bg-primary: #111827;
     --bg-secondary: #1f2937;
     --bg-tertiary: #374151;
+}
+
+/* ===========================
+   Reserva de espacio para los iconos
+   ===========================
+   El CSS de Font Awesome se carga en asincrono para no bloquear el render.
+   Hasta que llega, cada <i> es una caja vacia sin dimensiones: al aparecer
+   los glifos, las secciones con muchos iconos se re-maquetaban de golpe
+   (CLS ~0.39 medido en la seccion de certificaciones). Declarar aqui la
+   misma caja que usara Font Awesome deja el hueco reservado desde el
+   primer pintado, asi el intercambio no mueve nada. */
+.fa,
+.fas, .far, .fab, .fal,
+.fa-solid, .fa-regular, .fa-brands {
+    display: inline-block;
+    width: 1.25em;
+    height: 1em;
+    line-height: 1;
+    text-align: center;
+    font-style: normal;
+    vertical-align: -0.125em;
 }
 
 /* ===========================
@@ -405,7 +444,7 @@ ul {
     transition: all var(--transition-normal);
 }
 
-body.dark-mode .navbar {
+html.dark-mode .navbar {
     background: rgba(17, 24, 39, 0.95);
 }
 
@@ -1556,7 +1595,7 @@ body.dark-mode .navbar {
         transition: left var(--transition-normal);
     }
     
-    body.dark-mode .nav-menu {
+    html.dark-mode .nav-menu {
         background: rgba(17, 24, 39, 0.98);
     }
     
@@ -1635,4 +1674,352 @@ body.dark-mode .navbar {
         width: 250px;
         height: 250px;
     }
+}
+
+/* ===========================
+   Reveal al hacer scroll
+   Se declara en CSS (no en JS) para que el contenido nunca
+   quede invisible si el script falla o tarda en cargar.
+   =========================== */
+.section {
+    opacity: 1;
+    transform: none;
+}
+
+html:not(.no-js) .section.reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+html:not(.no-js) .section.reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Stagger para tarjetas dentro de una seccion visible */
+.stagger-item {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+
+.stagger-item.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ===========================
+   Barra de progreso de scroll
+   =========================== */
+.scroll-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    width: 100%;
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), var(--accent-color));
+    will-change: transform;
+}
+
+/* ===========================
+   Boton volver arriba con anillo de progreso
+   =========================== */
+.back-to-top {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 48px;
+    height: 48px;
+    border: none;
+    border-radius: 50%;
+    background: var(--bg-primary);
+    color: var(--primary-color);
+    box-shadow: var(--shadow-lg);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    font-size: 1rem;
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px) scale(0.8);
+    transition: opacity var(--transition-normal), visibility var(--transition-normal),
+                transform var(--transition-normal), background var(--transition-normal);
+}
+
+.back-to-top.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+}
+
+.back-to-top:hover {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: #fff;
+    transform: translateY(-4px) scale(1.05);
+}
+
+.btt-ring {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+    pointer-events: none;
+}
+
+.btt-ring circle {
+    fill: none;
+    stroke-width: 2.5;
+}
+
+.btt-ring-bg {
+    stroke: rgba(127, 127, 127, 0.2);
+}
+
+.btt-ring-fg {
+    stroke: var(--primary-color);
+    stroke-linecap: round;
+    stroke-dasharray: 126;
+    stroke-dashoffset: 126;
+    transition: stroke-dashoffset 0.1s linear;
+}
+
+.back-to-top:hover .btt-ring-fg {
+    stroke: #fff;
+}
+
+/* ===========================
+   Contadores animados
+   =========================== */
+.stat-number {
+    font-variant-numeric: tabular-nums;
+}
+
+/* ===========================
+   Tarjetas de proyecto: tilt 3D + spotlight
+   =========================== */
+.projects-grid {
+    perspective: 1200px;
+}
+
+.project-card {
+    position: relative;
+    transform-style: preserve-3d;
+    will-change: transform;
+}
+
+/* El spotlight sigue al cursor mediante --mx / --my (definidas en JS) */
+.project-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--border-radius-lg);
+    background: radial-gradient(
+        420px circle at var(--mx, 50%) var(--my, 50%),
+        rgba(99, 102, 241, 0.16),
+        transparent 60%
+    );
+    opacity: 0;
+    transition: opacity var(--transition-normal);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.project-card:hover::before {
+    opacity: 1;
+}
+
+.project-card > * {
+    position: relative;
+    z-index: 2;
+}
+
+/* El hover de traslacion se maneja desde JS al aplicar el tilt */
+.project-card.tilting:hover {
+    transform: none;
+}
+
+/* ===========================
+   Skill bars: brillo al llenarse
+   =========================== */
+.skill-bar {
+    position: relative;
+    overflow: hidden;
+}
+
+.skill-progress {
+    position: relative;
+    overflow: hidden;
+}
+
+.skill-progress.animated::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+    transform: translateX(-100%);
+    animation: skillShimmer 1.6s ease-out 0.4s;
+}
+
+@keyframes skillShimmer {
+    to { transform: translateX(200%); }
+}
+
+/* En flex y no flotado: con nombres largos ("SQL / MySQL / SQL Server")
+   el porcentaje flotado se caia a su propia linea. */
+.skill-info h4 {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--spacing-xs);
+}
+
+.skill-percent {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+}
+
+/* ===========================
+   Timeline: la linea se dibuja al hacer scroll
+   =========================== */
+.timeline-item .timeline-dot {
+    transform: scale(0);
+    transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.timeline-item.is-visible .timeline-dot {
+    transform: scale(1);
+}
+
+/* ===========================
+   Titulos de seccion: reveal por letra
+   =========================== */
+.section-title .char {
+    display: inline-block;
+    opacity: 0;
+    transform: translateY(0.4em) rotateX(-40deg);
+    transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+}
+
+.section-title.is-visible .char {
+    opacity: 1;
+    transform: translateY(0) rotateX(0);
+}
+
+/* ===========================
+   Transicion circular del tema (View Transitions API)
+   =========================== */
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+    z-index: 1;
+}
+
+::view-transition-new(root) {
+    z-index: 2147483646;
+}
+
+html.theme-transition-active::view-transition-old(root) {
+    z-index: 2147483646;
+}
+
+html.theme-transition-active::view-transition-new(root) {
+    z-index: 1;
+}
+
+/* ===========================
+   Accesibilidad: respetar prefers-reduced-motion
+   =========================== */
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    /* El contenido diferido debe quedar visible, no atrapado en su estado inicial */
+    html:not(.no-js) .section.reveal,
+    .stagger-item,
+    .section-title .char {
+        opacity: 1 !important;
+        transform: none !important;
+    }
+
+    .timeline-item .timeline-dot {
+        transform: scale(1) !important;
+    }
+
+    #particles,
+    .loading-particles {
+        display: none;
+    }
+}
+
+/* ===========================
+   Estado de carga
+   =========================== */
+body.is-loading {
+    overflow: hidden;
+}
+
+/* Sin JS la pantalla de carga nunca se ocultaria: se esconde de entrada. */
+html.no-js .loading-screen {
+    display: none;
+}
+
+/* ===========================
+   Typing rotativo del hero
+   =========================== */
+/* Era un contenedor flex: el cursor contaba como item propio y en movil
+   saltaba a su propia linea. En flujo inline sigue pegado al texto y este
+   puede partirse de forma natural. El min-height reserva el hueco para que
+   la maquetacion no se mueva mientras el texto se escribe y se borra. */
+.hero-title {
+    display: block;
+    min-height: 2.6em;
+}
+
+.typing-text {
+    display: inline;
+}
+
+.typing-cursor {
+    display: inline;
+    margin-left: 0.08em;
+}
+
+/* Los botones del hero partian su etiqueta en dos lineas */
+.btn {
+    white-space: nowrap;
+}
+
+/* ===========================
+   Scroll indicator (marcado restaurado)
+   =========================== */
+.scroll-indicator {
+    display: block;
+    cursor: pointer;
+    z-index: 5;
+}
+
+.scroll-indicator:hover .mouse {
+    border-color: var(--primary-color);
 }
