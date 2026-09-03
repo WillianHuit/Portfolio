@@ -65,11 +65,17 @@
         canvas { display: block; touch-action: none; }
 
         /* ===== Capas de interfaz ===== */
+        /* align-content en vez de place-items: con la tienda abierta el panel
+           puede ser mas alto que la ventana, y con place-items el borde
+           superior quedaba fuera de alcance al hacer scroll. */
         .layer {
             position: fixed;
             inset: 0;
             display: grid;
-            place-items: center;
+            justify-items: center;
+            align-content: center;
+            overflow-y: auto;
+            overscroll-behavior: contain;
             padding: 1.5rem;
             text-align: center;
             background: radial-gradient(circle at 50% 40%, rgba(27, 43, 38, 0.92), rgba(16, 32, 28, 0.98));
@@ -80,6 +86,7 @@
         .layer[hidden] { display: none !important; }
 
         .panel { max-width: 34rem; }
+        .panel-wide { max-width: 54rem; width: 100%; }
 
         .glyph-mark {
             font-size: 2.75rem;
@@ -93,6 +100,12 @@
             letter-spacing: 0.06em;
             line-height: 1;
             margin-bottom: 0.35rem;
+        }
+
+        h2 {
+            font-size: clamp(1.5rem, 5vw, 2.1rem);
+            letter-spacing: 0.06em;
+            line-height: 1;
         }
 
         .tagline {
@@ -111,12 +124,14 @@
         }
 
         /* ===== Controles ===== */
+        /* 12rem y no 8.5: con los rotulos actuales caben tres por fila y la
+           cuarta tecla quedaba sola colgando. A 12rem la rejilla es 2x2. */
         .keys {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
             gap: 0.6rem;
-            margin-bottom: 1.75rem;
-            font-size: 0.8rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.78rem;
         }
 
         .key-row {
@@ -129,7 +144,7 @@
         .key-row b {
             display: block;
             color: var(--jade);
-            font-size: 0.95rem;
+            font-size: 0.92rem;
             margin-bottom: 0.15rem;
         }
 
@@ -185,6 +200,16 @@
 
         .back-link:hover { color: var(--jade); border-bottom-color: var(--jade); }
 
+        /* Punto de partida elegido, bajo los botones del menu */
+        .route-note {
+            margin-top: 1.1rem;
+            font-size: 0.78rem;
+            letter-spacing: 0.06em;
+            opacity: 0.7;
+        }
+
+        .route-note b { color: var(--jade); }
+
         /* ===== Aviso de movimiento (prefers-reduced-motion) ===== */
         .notice {
             border: 1px solid rgba(200, 134, 47, 0.45);
@@ -213,6 +238,9 @@
         }
 
         .hud[hidden] { display: none !important; }
+
+        .hud-col { display: flex; flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+        .hud-col.right { align-items: flex-end; }
 
         .hud-box {
             background: rgba(16, 32, 28, 0.55);
@@ -267,7 +295,81 @@
 
         .combo[hidden] { display: none !important; }
 
-        /* ===== Hito ===== */
+        /* ===== Minimapa =====
+           Silueta de Guatemala con los ocho puntos de la ruta. Es la unica
+           forma de saber donde estas sin apartar la vista de la calzada: el
+           nombre del departamento por si solo no situa a nadie. */
+        .minimap { width: 9.4rem; text-align: left; }
+        .minimap[hidden] { display: none !important; }
+
+        .mm-svg { width: 100%; height: auto; display: block; margin: 0.3rem 0 0.4rem; }
+
+        .mm-land {
+            fill: rgba(46, 196, 160, 0.10);
+            stroke: rgba(46, 196, 160, 0.5);
+            stroke-width: 1.8;
+            stroke-linejoin: round;
+        }
+
+        .mm-dot { fill: rgba(239, 230, 210, 0.28); }
+        .mm-dot.seen { fill: rgba(46, 196, 160, 0.75); }
+
+        .mm-you { fill: var(--ochre); stroke: #2a1a05; stroke-width: 1.2; }
+
+        .mm-name { display: block; font-size: 0.84rem; line-height: 1.2; font-weight: 700; }
+
+        .mm-dept {
+            display: block;
+            font-size: 0.6rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            opacity: 0.6;
+        }
+
+        .mm-bar {
+            height: 3px;
+            border-radius: 2px;
+            background: rgba(239, 230, 210, 0.15);
+            margin-top: 0.4rem;
+            overflow: hidden;
+        }
+
+        .mm-bar i { display: block; height: 100%; width: 0; background: var(--jade); }
+
+        /* ===== Poderes activos =====
+           Los cinco huecos existen siempre y se ocultan con [hidden]: crear y
+           destruir nodos en mitad de la partida provoca reflow justo cuando
+           el jugador esta esquivando. */
+        .powers { display: flex; gap: 0.35rem; }
+        .powers[hidden] { display: none !important; }
+
+        .pw {
+            position: relative;
+            width: 2.1rem;
+            height: 2.1rem;
+            border-radius: 0.42rem;
+            display: grid;
+            place-items: center;
+            background: rgba(16, 32, 28, 0.62);
+            border: 1px solid var(--c);
+            color: var(--c);
+            font-size: 1rem;
+            font-weight: 700;
+            overflow: hidden;
+            backdrop-filter: blur(4px);
+        }
+
+        .pw[hidden] { display: none !important; }
+
+        .pw i {
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            height: 2.5px;
+            background: var(--c);
+        }
+
+        /* ===== Hito de distancia ===== */
         .milestone {
             position: fixed;
             left: 50%;
@@ -292,6 +394,47 @@
             18%  { opacity: 1; transform: translate(-50%, 0) scale(1); }
             72%  { opacity: 1; transform: translate(-50%, 0) scale(1); }
             100% { opacity: 0; transform: translate(-50%, -22px) scale(1.05); }
+        }
+
+        /* ===== Bandera de region =====
+           Sale mas abajo y dura mas que el hito, para que ambos puedan
+           coincidir en el mismo metro sin pisarse. */
+        .banner {
+            position: fixed;
+            left: 50%;
+            top: 39%;
+            transform: translate(-50%, 0);
+            z-index: 7;
+            pointer-events: none;
+            opacity: 0;
+            text-align: center;
+        }
+
+        .banner[hidden] { display: none !important; }
+        .banner.show { animation: bannerPop 2.7s ease-out forwards; }
+
+        .banner b {
+            display: block;
+            font-size: clamp(1.5rem, 5.5vw, 2.5rem);
+            letter-spacing: 0.08em;
+            color: var(--limestone);
+            text-shadow: 0 4px 24px rgba(0, 0, 0, 0.55);
+        }
+
+        .banner span {
+            display: block;
+            font-size: 0.76rem;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: var(--jade);
+            margin-top: 0.45rem;
+        }
+
+        @keyframes bannerPop {
+            0%   { opacity: 0; transform: translate(-50%, 26px); }
+            14%  { opacity: 1; transform: translate(-50%, 0); }
+            80%  { opacity: 1; transform: translate(-50%, 0); }
+            100% { opacity: 0; transform: translate(-50%, -16px); }
         }
 
         /* ===== Vineta de velocidad ===== */
@@ -329,7 +472,9 @@
 
         .pause-btn[hidden] { display: none !important; }
 
-        /* ===== Marcador final =====
+        /* ===== Marcador final ===== */
+        /* Este bloque estaba entero dentro de un comentario sin cerrar, asi
+           que la pantalla de fin salia sin rejilla ni estilo. */
         .score-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -369,11 +514,21 @@
             color: var(--jade);
             z-index: 8;
             pointer-events: none;
+            text-align: center;
+        }
+
+        .pause-tag small {
+            display: block;
+            font-size: 0.6rem;
+            letter-spacing: 0.18em;
+            opacity: 0.6;
+            margin-top: 0.6rem;
+            color: var(--limestone);
         }
 
         .pause-tag[hidden] { display: none !important; }
 
-        /* Botón de sonido, única cosa clicable sobre el juego */
+        /* Boton de sonido, unica cosa clicable sobre el juego */
         .sound-toggle {
             position: fixed;
             right: 1.15rem;
@@ -395,10 +550,164 @@
         .sound-toggle:hover { border-color: var(--jade); }
         .sound-toggle[hidden] { display: none !important; }
 
-        @media (max-width: 480px) {
+        /* ===== Taller: skins, mejoras y ruta ===== */
+        .shop-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .bank {
+            background: rgba(46, 196, 160, 0.1);
+            border: 1px solid rgba(46, 196, 160, 0.3);
+            border-radius: 0.5rem;
+            padding: 0.45rem 0.9rem;
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+
+        .bank b { color: var(--jade); font-size: 1.1rem; }
+
+        .tabs {
+            display: flex;
+            gap: 0.4rem;
+            justify-content: center;
+            margin-bottom: 1.15rem;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            font: inherit;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            border: 1px solid rgba(239, 230, 210, 0.22);
+            background: none;
+            color: rgba(239, 230, 210, 0.7);
+            border-radius: 0.45rem;
+            padding: 0.55rem 1.15rem;
+            cursor: pointer;
+        }
+
+        .tab[aria-selected="true"] {
+            border-color: var(--jade);
+            color: var(--jade);
+            background: rgba(46, 196, 160, 0.1);
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(11.5rem, 1fr));
+            gap: 0.7rem;
+            text-align: left;
+        }
+
+        .cards[hidden] { display: none !important; }
+
+        .card {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            background: rgba(46, 196, 160, 0.06);
+            border: 1px solid rgba(46, 196, 160, 0.18);
+            border-radius: 0.6rem;
+            padding: 0.85rem 0.8rem;
+        }
+
+        .card.on { border-color: var(--jade); background: rgba(46, 196, 160, 0.14); }
+
+        /* Lo que aun no es tuyo se atenua, pero NUNCA su boton: atenuar la
+           tarjeta entera hacia parecer deshabilitada una compra que si podias
+           permitirte. El estado real del boton lo dice :disabled. */
+        .card.locked > b,
+        .card.locked > p,
+        .card.locked > .card-swatch { opacity: 0.6; }
+
+        .card-swatch {
+            display: flex;
+            gap: 0.22rem;
+            margin-bottom: 0.15rem;
+        }
+
+        .card-swatch span {
+            width: 1.05rem;
+            height: 1.05rem;
+            border-radius: 0.22rem;
+            border: 1px solid rgba(0, 0, 0, 0.3);
+        }
+
+        .card b { font-size: 0.92rem; line-height: 1.2; }
+
+        .card p {
+            font-size: 0.72rem;
+            line-height: 1.45;
+            opacity: 0.72;
+            flex: 1;
+        }
+
+        .card-lvl {
+            display: flex;
+            gap: 0.2rem;
+            margin: 0.1rem 0;
+        }
+
+        .card-lvl i {
+            width: 100%;
+            height: 3px;
+            border-radius: 2px;
+            background: rgba(239, 230, 210, 0.18);
+        }
+
+        .card-lvl i.full { background: var(--jade); }
+
+        .card button {
+            font: inherit;
+            font-size: 0.74rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            border: 1px solid rgba(46, 196, 160, 0.45);
+            background: rgba(46, 196, 160, 0.14);
+            color: var(--jade);
+            border-radius: 0.4rem;
+            padding: 0.45rem 0.5rem;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .card button:hover:not(:disabled) { background: var(--jade); color: #04120e; }
+
+        .card button:disabled {
+            cursor: default;
+            opacity: 0.45;
+            border-color: rgba(239, 230, 210, 0.2);
+            color: rgba(239, 230, 210, 0.6);
+            background: none;
+        }
+
+        .card button.equipped {
+            background: var(--jade);
+            color: #04120e;
+            border-color: var(--jade);
+            opacity: 1;
+        }
+
+        .shop-hint {
+            font-size: 0.75rem;
+            opacity: 0.55;
+            margin-top: 1.1rem;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 560px) {
             .hud-box { font-size: 0.72rem; padding: 0.4rem 0.6rem; }
             .hud-value { font-size: 1rem; }
             .btn { padding: 0.85rem 1.8rem; }
+            .minimap { width: 7.2rem; }
+            .mm-name { font-size: 0.74rem; }
+            .pw { width: 1.8rem; height: 1.8rem; font-size: 0.85rem; }
+            .cards { grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); }
         }
     </style>
 </head>
@@ -418,27 +727,67 @@
             </div>
 
             <p class="blurb">
-                Los mayas unían sus ciudades con <b>sacbeob</b>: calzadas elevadas de
-                piedra caliza blanca. Corre por una de ellas, esquiva las estelas,
-                deslízate bajo los dinteles caídos, salta los cenotes y recoge todo
-                el jade que puedas.
+                Los mayas unían sus ciudades con <b>sacbeob</b>: calzadas de piedra
+                caliza blanca. La tuya cruza Guatemala entera —de Tikal a Monterrico,
+                pasando por Semuc Champey, Río Dulce, Antigua, Atitlán, Chichicastenango
+                y el Tajumulco—. Esquiva lo que se cruce, recoge jade y llega lo más
+                lejos que puedas.
             </p>
 
             <div class="keys">
                 <div class="key-row"><b>← →</b> cambiar de carril</div>
-                <div class="key-row"><b>↑ / Espacio</b> saltar</div>
-                <div class="key-row"><b>↓</b> deslizarse</div>
-                <div class="key-row"><b>Táctil</b> desliza el dedo</div>
+                <div class="key-row"><b>↑ / Espacio</b> saltar (mantén para más alto)</div>
+                <div class="key-row"><b>↓</b> deslizarte, o caer en picado</div>
+                <div class="key-row"><b>Táctil</b> desliza o toca</div>
             </div>
 
             <div class="actions">
                 <button class="btn" id="playBtn" type="button">Jugar</button>
+                <button class="btn btn-ghost" id="shopBtn" type="button">Taller</button>
                 <button class="btn btn-ghost" id="soundPref" type="button" aria-pressed="true">
                     Sonido: activado
                 </button>
             </div>
 
+            <p class="route-note">
+                Salida: <b id="menuRoute">Tikal · Petén</b> ·
+                jade guardado: <b id="menuBank">0</b> ·
+                récord: <b id="menuBest">0</b>
+            </p>
+
             <a class="back-link" href="index.html">← volver al portafolio</a>
+        </div>
+    </div>
+
+    <!-- ===== Taller: skins, mejoras y punto de salida ===== -->
+    <div class="layer" id="shop" hidden>
+        <div class="panel panel-wide">
+            <div class="shop-head">
+                <h2>Taller</h2>
+                <p class="bank">Jade guardado: <b id="shopBank">0</b></p>
+            </div>
+
+            <div class="tabs" role="tablist">
+                <button class="tab" id="tabBtnSkins" type="button" role="tab"
+                        aria-selected="true" data-tab="skins">Trajes</button>
+                <button class="tab" id="tabBtnUpg" type="button" role="tab"
+                        aria-selected="false" data-tab="upg">Mejoras</button>
+                <button class="tab" id="tabBtnRoute" type="button" role="tab"
+                        aria-selected="false" data-tab="route">Ruta</button>
+            </div>
+
+            <div class="cards" id="tabSkins"></div>
+            <div class="cards" id="tabUpg" hidden></div>
+            <div class="cards" id="tabRoute" hidden></div>
+
+            <p class="shop-hint" id="shopHint">
+                El jade que recoges se guarda al terminar cada partida. Los tramos
+                de la ruta se abren al llegar a ellos corriendo.
+            </p>
+
+            <div class="actions" style="margin-top:1.5rem">
+                <button class="btn" id="shopClose" type="button">Volver</button>
+            </div>
         </div>
     </div>
 
@@ -465,11 +814,14 @@
             </div>
 
             <p class="blurb" style="margin-bottom:1.25rem">
-                Mejor marca: <b id="bestScore">0</b> puntos
+                Llegaste hasta <b id="finalRegion">Tikal</b>.<br>
+                Mejor marca: <b id="bestScore">0</b> puntos ·
+                jade guardado: <b id="finalBank" class="jade-count">0</b>
             </p>
 
             <div class="actions">
                 <button class="btn" id="againBtn" type="button">Otra vez</button>
+                <button class="btn btn-ghost" id="overShopBtn" type="button">Taller</button>
                 <a class="btn btn-ghost" href="index.html">Salir</a>
             </div>
         </div>
@@ -491,24 +843,56 @@
 
     <!-- ===== HUD ===== -->
     <div class="hud" id="hud" hidden>
-        <div class="hud-box">
-            <span class="hud-label">Vidas</span>
-            <span class="lives" id="lives">◆ ◆ ◆</span>
-            <span class="shield" id="shield" hidden>⬡ Escudo</span>
+        <div class="hud-col">
+            <div class="hud-box">
+                <span class="hud-label">Vidas</span>
+                <span class="lives" id="lives">◆ ◆ ◆</span>
+                <span class="shield" id="shield" hidden>⬡ Escudo</span>
+            </div>
+
+            <div class="hud-box minimap" id="minimap">
+                <span class="hud-label">Dónde estás</span>
+                <svg class="mm-svg" viewBox="0 0 108 116" aria-hidden="true">
+                    <!-- Silueta simplificada de Guatemala: Petén arriba,
+                         el Caribe a la derecha y el Pacífico abajo. -->
+                    <path class="mm-land" d="M34.8 6.8 L80.9 6.8 L80.9 55.1 L87.2 54.9
+                        L104.2 59.4 L94.7 68.6 L80.9 77.9 L75.9 91.9 L66.7 93.0
+                        L57.1 104.5 L29.6 104.5 L3.8 89.0 L4.5 74.9 L16.3 50.6
+                        L48.4 50.6 L34.6 29.8 Z"/>
+                    <g id="mmDots"></g>
+                    <circle id="mmYou" class="mm-you" cx="69.2" cy="21.8" r="3.6"/>
+                </svg>
+                <b class="mm-name" id="mmName">Tikal</b>
+                <span class="mm-dept" id="mmDept">Petén</span>
+                <div class="mm-bar"><i id="mmFill"></i></div>
+            </div>
+
+            <div class="powers" id="powers">
+                <span class="pw" id="pwMagnet" style="--c:#a86ad9" hidden>⌾<i></i></span>
+                <span class="pw" id="pwFlight" style="--c:#7fd4ff" hidden>⩓<i></i></span>
+                <span class="pw" id="pwDouble" style="--c:#4affd0" hidden>✦<i></i></span>
+                <span class="pw" id="pwAmber"  style="--c:#e0a02c" hidden>◉<i></i></span>
+            </div>
         </div>
-        <div class="hud-box hud-right">
-            <span class="hud-label">Distancia</span>
-            <span class="hud-value" id="dist">0</span> m
-            <span class="hud-label" style="margin-top:.35rem">Jade</span>
-            <span class="hud-value jade-count" id="jade">0</span>
-            <span class="combo" id="combo" hidden>×2</span>
-            <span class="hud-label" style="margin-top:.35rem">Récord</span>
-            <span class="hud-best" id="hudBest">0</span>
+
+        <div class="hud-col right">
+            <div class="hud-box hud-right">
+                <span class="hud-label">Distancia</span>
+                <span class="hud-value" id="dist">0</span> m
+                <span class="hud-label" style="margin-top:.35rem">Jade</span>
+                <span class="hud-value jade-count" id="jade">0</span>
+                <span class="combo" id="combo" hidden>×2</span>
+                <span class="hud-label" style="margin-top:.35rem">Récord</span>
+                <span class="hud-best" id="hudBest">0</span>
+            </div>
         </div>
     </div>
 
-    <!-- Aviso de hito cada 500 m -->
+    <!-- Aviso de hito cada 250 m -->
     <p class="milestone" id="milestone" hidden></p>
+
+    <!-- Bandera al entrar en un departamento nuevo -->
+    <p class="banner" id="banner" hidden><b></b><span></span></p>
 
     <!-- Vineta que se cierra con la velocidad: el aviso de que aceleras -->
     <div class="speed-veil" id="speedVeil" aria-hidden="true"></div>
@@ -516,7 +900,7 @@
     <!-- Pausa para tactil: por teclado ya existe P/Esc -->
     <button class="pause-btn" id="pauseBtn" type="button" hidden aria-label="Pausar">II</button>
 
-    <p class="pause-tag" id="pauseTag" hidden>Pausa</p>
+    <p class="pause-tag" id="pauseTag" hidden>Pausa<small>P o Esc para seguir</small></p>
 
     <button class="sound-toggle" id="soundBtn" type="button" hidden
             aria-label="Silenciar sonido">♪</button>

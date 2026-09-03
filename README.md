@@ -145,10 +145,29 @@ el secreto sin explicarlo y dicen cuántos faltan. En táctil, donde no hay
 hover, el primer toque los deja visibles. La ventana entre clics es de 3 s y
 se reinicia sola.
 
-El juego: tres vidas, escudo de jade que absorbe un golpe, multiplicador por
-racha de jade, hitos cada 250 m, jaguar que se acerca conforme pierdes vidas,
-quetzal de acompañante y un ciclo de ambiente que pasa por amanecer, mediodía,
-atardecer y noche cada 900 m.
+**La ruta.** El recorrido cruza Guatemala en ocho tramos de 500 m: Tikal
+(Petén) → Semuc Champey (Alta Verapaz) → Río Dulce (Izabal) → Antigua
+(Sacatepéquez) → Atitlán (Sololá) → Chichicastenango (Quiché) → Tajumulco
+(San Marcos) → Monterrico (Santa Rosa), y vuelta a empezar. Cada tramo trae
+su cielo, su niebla, su luz, el material de su calzada, el color de sus
+obstáculos y su propio hito en el horizonte —templo escalonado, karst,
+palmera, arco colonial, volcán, mercado, pico nevado—. Un minimapa en el HUD
+dibuja la silueta del país y va moviendo el marcador.
+
+**El juego.** Tres vidas (hasta cinco con mejoras), escudo que absorbe un
+golpe, multiplicador por racha de jade, hitos cada 250 m, jaguar que se acerca
+conforme pierdes vidas y quetzal de acompañante.
+
+**Poderes** que aparecen en la calzada: escudo, imán de jade, jade doble,
+ámbar de Verapaz (ralentiza el mundo sin ralentizarte a ti) y vuelo del
+quetzal (te eleva y sobrevuelas todo unos segundos).
+
+**Taller.** El jade recogido se guarda al morir y se gasta en seis trajes
+(Ajaw, Tejedora, Guerrero Jaguar, Quetzal, Chapín, Ceniza) y ocho mejoras
+permanentes: vidas, escudo de salida, imán, duración de poderes, valor del
+jade, agilidad de carril, salto doble y frecuencia de poderes. Los tramos se
+abren al llegar a ellos corriendo, y una vez abiertos se puede salir desde
+cualquiera de ellos.
 
 Lo que importa mantener si se toca:
 
@@ -157,13 +176,36 @@ Lo que importa mantener si se toca:
   encuentra. El disparador añade 1,1 KB al total inicial.
 - **Todo el escenario usa una única `BoxGeometry` compartida** y va en
   `InstancedMesh`. Son ~25 draw calls y ~4.900 triángulos por frame.
-- **La calzada y los templos son periódicos.** Desplazarlos es mover su
+- **La calzada y el horizonte son periódicos.** Desplazarlos es mover su
   `Group` con un módulo, no recolocar 180 instancias por paso de simulación.
-  Es la razón de que `ROAD_PERIOD` y `TEMPLE_PERIOD` existan: si se cambia el
+  Es la razón de que `ROAD_PERIOD` y `LAND_PERIOD` existan: si se cambia el
   espaciado hay que mantener la periodicidad o la costura se ve.
 - **En `InstancedMesh` el color del material multiplica al de instancia.** Por
   eso los materiales con `setColorAt` van en blanco: ponerles el mismo tono lo
   elevaría al cuadrado y saldría oscurecido.
+- **Los materiales de calzada y obstáculos son compartidos.** Antes cada uno
+  de los obstáculos del pool creaba los suyos (más de 180 en total); ahora son
+  seis. Es también lo que hace posible retematizar la escena entera por
+  departamento cambiando un puñado de colores, sin tocar geometría.
+- **El paisaje no se cambia de golpe al pasar de departamento: se interpola
+  cubo a cubo.** Todas las siluetas ocupan los mismos `LAND_PARTS` huecos y
+  las piezas sobrantes quedan a escala cero, así que el templo de Tikal se
+  convierte en el karst de Semuc creciendo. Un cambio instantáneo se leía como
+  un fallo de carga. La interpolación cuesta 336 matrices, pero solo se
+  recalcula cuando la mezcla cambia de verdad: durante el 62 % de cada tramo
+  vale exactamente 0 y no se repinta nada.
+- **El cambio de carril es un tween con final garantizado, no un lerp
+  exponencial.** El lerp nunca llegaba del todo al carril y dejaba el cuerpo a
+  medio camino, lo que volvía confusas las colisiones.
+- **El salto es de altura variable** (`JUMP_CUT` al soltar) y la bajada pesa
+  más que la subida (`FALL_GRAVITY`): un salto de arco fijo y simétrico se
+  siente flotante y hace difícil calcular dónde vas a caer.
+- **Abajo en el aire es un picado que encadena con el deslizamiento.** Antes
+  solo restaba algo de velocidad vertical y el deslizamiento caducaba antes de
+  aterrizar, así que no servía para nada.
+- **El HUD se repinta solo cuando algo cambia.** `renderHud` corría en cada
+  frame reescribiendo el `innerHTML` de las vidas 60 veces por segundo, para
+  un texto que casi nunca cambia.
 - **La cámara sale toda de `cam`**, que se recalcula según la relación de
   aspecto. En vertical se inclina más, o media pantalla se va en cielo vacío.
 - **La pista del logo no usa `transform`.** Escalarlo movía el objetivo del
@@ -183,6 +225,24 @@ Lo que importa mantener si se toca:
   multiplicador era inalcanzable y la mecánica no existía.
 - Los obstáculos se reciclan en `DESPAWN_Z = 11` y la cámara está en 14: con
   el valor anterior pasaban por encima ocupando media pantalla.
+- **`REGION_LENGTH` está en 500 m.** Con los 900 del ciclo de ambiente
+  anterior la mayoría de partidas moría sin salir del primer tramo, y el viaje
+  por el país no llegaba a existir. Poder elegir el punto de salida en el
+  taller es la otra mitad de lo mismo: hace visible un contenido que si no
+  solo veían los que llegan a 4.000 m.
+- **El ámbar frena el mundo pero no el reloj de los poderes.** Si frenase
+  también su propio temporizador se prolongaría a sí mismo.
+- **Al terminar el vuelo del quetzal se conceden 0,8 s de margen.** El jugador
+  cae desde casi cuatro unidades y aterrizaba encima de la estela que acababa
+  de sobrevolar, perdiendo una vida sin haber hecho nada mal.
+- **En pausa solo responden P, Esc y M.** Se podía cambiar de carril y saltar
+  con el juego detenido, y al reanudar el personaje aparecía donde no debía.
+- **El acumulador del paso fijo se vacía al empezar y al reanudar.** Si no, el
+  tiempo muerto de los menús se gastaba de golpe en pasos de simulación y el
+  mundo daba un salto de varios metros antes del primer frame.
+- **El gesto táctil se resuelve en `touchmove`, no en `touchend`.** Esperar a
+  que se levante el dedo metía hasta 200 ms en cada esquiva, que a velocidad
+  máxima son seis unidades.
 - El aviso de `prefers-reduced-motion` es voluntario: un runner es movimiento
   puro y no se puede atenuar, así que se avisa y decide el jugador.
 
