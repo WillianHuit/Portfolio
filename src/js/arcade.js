@@ -863,12 +863,19 @@ const sfx = {
 // ===========================================================================
 // Musica de fondo: vals de marimba
 // ===========================================================================
-// NOTA SOBRE LA PIEZA. La melodia y el cifrado de VALS.bars los aporto el
-// dueno del sitio. No he podido verificarla contra el original —no hay
-// transcripcion libre y fiable de "Luna de Xelaju" en la red, que es por lo
-// que en su dia se escribio una pieza propia—, asi que lo que suena es
-// exactamente lo que se entrego, ni mas ni menos. Si algo desafina, el sitio
-// donde mirar es ese array.
+// NOTA SOBRE LA PIEZA. El arreglo de VALS.bars lo aporto el dueno del sitio:
+// cincuenta y dos compases con melodia, cifrado y segunda voz escrita. No lo
+// he verificado contra el original —no hay transcripcion libre y fiable de
+// "Luna de Xelaju" en la red, que es por lo que en su dia se escribio una
+// pieza propia—, asi que lo que suena es exactamente lo que se entrego. Si
+// algo desafina, el sitio donde mirar es ese array.
+//
+// Cada compas puede traer:
+//   mel  la melodia, como [nota, tiempos]
+//   v2   una segunda voz con SU PROPIO ritmo, que no tiene por que coincidir
+//        con el de la melodia
+// Donde no hay v2 —los ocho compases de entrada— la segunda voz se calcula
+// sola a partir del acorde. Donde la hay, manda la escrita.
 //
 // La pieza empieza en SOL MENOR (con si bemol y mi bemol) y pasa a SOL MAYOR
 // en el compas trece. Eso obligo a dos cambios en el motor:
@@ -915,6 +922,8 @@ const CHORDS = {
     G7: { bass: 'G2',  notes: ['B3', 'D4', 'F4'],   tones: ['G', 'B', 'D', 'F'] },
     Eb: { bass: 'Eb3', notes: ['Eb4', 'G4', 'Bb4'], tones: ['Eb', 'G', 'Bb'] },
     E7: { bass: 'E3',  notes: ['G#3', 'B3', 'D4'],  tones: ['E', 'G#', 'B', 'D'] },
+    Gm7:{ bass: 'G2',  notes: ['Bb3', 'D4', 'F4'],  tones: ['G', 'Bb', 'D', 'F'] },
+    Bb: { bass: 'Bb2', notes: ['Bb3', 'D4', 'F4'],  tones: ['Bb', 'D', 'F'] },
     Dm: { bass: 'D3',  notes: ['D4', 'F4', 'A4'],   tones: ['D', 'F', 'A'] },
     F:  { bass: 'F2',  notes: ['F3', 'A3', 'C4'],   tones: ['F', 'A', 'C'] }
 };
@@ -923,38 +932,58 @@ const CHORDS = {
 const VALS = {
     bpm: 168,
     bars: [
-        { ch: 'Gm', mel: [['D5', 1], ['G5', 1.5], ['F5', 0.5]] },
-        { ch: 'Cm', mel: [['Eb5', 2], ['D5', 1]] },
-        { ch: 'D7', mel: [['C5', 1], ['A4', 1], ['F#4', 1]] },
-        { ch: 'Gm', mel: [['G4', 2], ['D5', 1]] },
-        { ch: 'Gm', mel: [['G5', 1], ['F5', 1], ['D5', 1]] },
-        { ch: 'Cm', mel: [['Eb5', 1.5], ['G5', 0.5], ['F5', 1]] },
-        { ch: 'D7', mel: [['A4', 1], ['C5', 1.5], ['A4', 0.5]] },
-        { ch: 'Gm', mel: [['Bb4', 2], ['G4', 1]] },
-        { ch: 'Cm', mel: [['C5', 1], ['Eb5', 1], ['G5', 1]] },
-        { ch: 'Gm', mel: [['F5', 1.5], ['D5', 0.5], ['Bb4', 1]] },
-        { ch: 'D7', mel: [['A4', 1], ['C5', 1], ['D5', 1]] },
-        { ch: 'Gm', mel: [['G4', 3]] },
-        { ch: 'G',  mel: [['B4', 1], ['D5', 1], ['G5', 1]] },
-        { ch: 'Em', mel: [['G5', 2], ['F#5', 1]] },
-        { ch: 'D7', mel: [['E5', 1.5], ['D5', 0.5], ['C5', 1]] },
-        { ch: 'G',  mel: [['B4', 2], ['D5', 1]] },
-        { ch: 'C',  mel: [['E5', 1], ['G5', 1], ['E5', 1]] },
-        { ch: 'Am', mel: [['A4', 1], ['C5', 1], ['E5', 1]] },
-        { ch: 'D7', mel: [['F#5', 1.5], ['E5', 0.5], ['D5', 1]] },
-        { ch: 'G',  mel: [['G4', 2], ['B4', 1]] },
-        { ch: 'G',  mel: [['D5', 1], ['G5', 1.5], ['F#5', 0.5]] },
-        { ch: 'Em', mel: [['E5', 2], ['G5', 1]] },
-        { ch: 'G7', mel: [['F5', 1.5], ['D5', 0.5], ['B4', 1]] },
-        { ch: 'C',  mel: [['C5', 2], ['E5', 1]] },
-        { ch: 'Eb', mel: [['G5', 1], ['Eb5', 1.5], ['Bb4', 0.5]] },
-        { ch: 'G',  mel: [['D5', 2], ['B4', 1]] },
-        { ch: 'E7', mel: [['G#4', 1], ['B4', 1], ['E5', 1]] },
-        { ch: 'Am', mel: [['C5', 1.5], ['A4', 0.5], ['E5', 1]] },
-        { ch: 'D7', mel: [['F#5', 2], ['E5', 1]] },
-        { ch: 'G',  mel: [['D5', 1], ['G5', 2]] },
-        { ch: 'Cm', mel: [['Eb5', 1.5], ['D5', 0.5], ['B4', 1]] },
-        { ch: 'G',  mel: [['G4', 3]] }
+        { ch: 'Gm', mel: [['D5', 0.5], ['Eb5', 0.5], ['D5', 0.5], ['Bb4', 0.5], ['D5', 0.5], ['Bb4', 0.5]] },
+        { ch: 'Gm', mel: [['D5', 0.5], ['Eb5', 0.5], ['D5', 0.5], ['Bb4', 0.5], ['D5', 0.5], ['Bb4', 0.5]] },
+        { ch: 'D7', mel: [['C5', 0.5], ['D5', 0.5], ['C5', 0.5], ['A4', 0.5], ['C5', 0.5], ['A4', 0.5]] },
+        { ch: 'D7', mel: [['C5', 0.5], ['D5', 0.5], ['C5', 0.5], ['A4', 0.5], ['C5', 0.5], ['A4', 0.5]] },
+        { ch: 'Gm', mel: [['G4', 0.5], ['A4', 0.5], ['Bb4', 0.5], ['C5', 0.5], ['D5', 0.5], ['Eb5', 0.5]] },
+        { ch: 'Gm', mel: [['F5', 0.5], ['Eb5', 0.5], ['D5', 0.5], ['C5', 0.5], ['Bb4', 0.5], ['A4', 0.5]] },
+        { ch: 'Cm', mel: [['C5', 0.5], ['D5', 0.5], ['Eb5', 0.5], ['F5', 0.5], ['G5', 0.5], ['F5', 0.5]] },
+        { ch: 'D7', mel: [['Eb5', 1], ['D5', 1], ['C5', 1]] },
+        { ch: 'Gm', mel: [['Bb4', 1.5], ['G4', 1.5]], v2: [['D4', 1], ['A4', 1], ['D5', 1]] },
+        { ch: 'Gm', mel: [['G4', 0.5], ['A4', 0.5], ['Bb4', 0.5], ['C5', 0.5], ['D5', 1]], v2: [['D4', 1], ['A4', 1], ['D5', 1]] },
+        { ch: 'Gm', mel: [['G5', 2], ['F5', 1]], v2: [['D4', 1], ['A4', 1], ['D5', 1]] },
+        { ch: 'D7', mel: [['F5', 0.5], ['Eb5', 0.5], ['D5', 0.5], ['C5', 0.5], ['A4', 1]], v2: [['D4', 1], ['A4', 1], ['D5', 1]] },
+        { ch: 'Gm', mel: [['D5', 1.5], ['C5', 0.5], ['Bb4', 1]], v2: [['G3', 3]] },
+        { ch: 'Eb', mel: [['Bb4', 2], ['G4', 1]], v2: [['Eb3', 3]] },
+        { ch: 'Cm', mel: [['C5', 1], ['Bb4', 1], ['A4', 1]], v2: [['Eb3', 1.5], ['G3', 1.5]] },
+        { ch: 'D7', mel: [['A4', 3]], v2: [['F#3', 1.5], ['C4', 1.5]] },
+        { ch: 'Gm', mel: [['Bb4', 2], ['A4', 1]], v2: [['D4', 1], ['G4', 1], ['D4', 1]] },
+        { ch: 'Cm', mel: [['G4', 1.5], ['Eb5', 0.5], ['D5', 1]], v2: [['C4', 1], ['Eb4', 1], ['C4', 1]] },
+        { ch: 'D7', mel: [['C5', 2], ['Bb4', 1]], v2: [['A3', 1], ['D4', 1], ['A3', 1]] },
+        { ch: 'Gm', mel: [['A4', 1], ['G4', 2]], v2: [['D4', 1], ['Bb3', 1], ['G3', 1]] },
+        { ch: 'Gm7', mel: [['D5', 2], ['Eb5', 1]], v2: [['F4', 1], ['Bb3', 1], ['D4', 1]] },
+        { ch: 'Cm', mel: [['D5', 1.5], ['C5', 0.5], ['Bb4', 1]], v2: [['Eb4', 1], ['G4', 1], ['Eb4', 1]] },
+        { ch: 'Eb', mel: [['G5', 2], ['F5', 1]], v2: [['Bb3', 1], ['Eb4', 1], ['G4', 1]] },
+        { ch: 'D7', mel: [['Eb5', 1.5], ['D5', 0.5], ['C5', 1]], v2: [['A3', 1], ['F#4', 1], ['A4', 1]] },
+        { ch: 'Cm', mel: [['Eb5', 1], ['D5', 1], ['C5', 1]], v2: [['G3', 1], ['C4', 1], ['Eb4', 1]] },
+        { ch: 'Bb', mel: [['Bb4', 2], ['D5', 1]], v2: [['F3', 1], ['Bb3', 1], ['D4', 1]] },
+        { ch: 'D7', mel: [['C5', 1.5], ['A4', 0.5], ['F#4', 1]], v2: [['A3', 1], ['D4', 1], ['C4', 1]] },
+        { ch: 'Gm', mel: [['G4', 3]], v2: [['Bb3', 1], ['D4', 2]] },
+        { ch: 'G',  mel: [['D5', 1], ['G5', 1.5], ['F#5', 0.5]], v2: [['B3', 1], ['D4', 1], ['B3', 1]] },
+        { ch: 'Em', mel: [['E5', 2], ['D5', 1]], v2: [['G3', 1], ['B3', 1], ['E4', 1]] },
+        { ch: 'D7', mel: [['C5', 1.5], ['B4', 0.5], ['A4', 1]], v2: [['F#3', 1], ['A3', 1], ['C4', 1]] },
+        { ch: 'G',  mel: [['B4', 2], ['D5', 1]], v2: [['G3', 1], ['D4', 1], ['B3', 1]] },
+        { ch: 'C',  mel: [['E5', 1], ['G5', 1], ['E5', 1]], v2: [['C4', 1], ['E4', 1], ['G4', 1]] },
+        { ch: 'Am', mel: [['D5', 2], ['C5', 1]], v2: [['A3', 1], ['C4', 1], ['E4', 1]] },
+        { ch: 'D7', mel: [['B4', 1.5], ['A4', 0.5], ['G4', 1]], v2: [['F#3', 1], ['A3', 1], ['D4', 1]] },
+        { ch: 'Em', mel: [['E5', 3]], v2: [['G3', 1], ['B3', 1], ['E4', 1]] },
+        { ch: 'G',  mel: [['D5', 1], ['G5', 2]], v2: [['B3', 1], ['D4', 1], ['G4', 1]] },
+        { ch: 'Em', mel: [['F#5', 1.5], ['E5', 0.5], ['D5', 1]], v2: [['E4', 1], ['G4', 1], ['B3', 1]] },
+        { ch: 'G7', mel: [['B4', 1], ['D5', 1], ['F5', 1]], v2: [['G3', 1], ['B3', 1], ['F4', 1]] },
+        { ch: 'C',  mel: [['E5', 2], ['C5', 1]], v2: [['C4', 1], ['G3', 1], ['E4', 1]] },
+        { ch: 'Cm', mel: [['Eb5', 1.5], ['C5', 0.5], ['G4', 1]], v2: [['C4', 1], ['Eb4', 1], ['G4', 1]] },
+        { ch: 'G',  mel: [['B4', 2], ['D5', 1]], v2: [['G3', 1], ['D4', 1], ['B3', 1]] },
+        { ch: 'E7', mel: [['G#4', 1], ['B4', 1], ['E5', 1]], v2: [['E4', 1], ['G#4', 1], ['D5', 1]] },
+        { ch: 'Am', mel: [['C5', 1.5], ['B4', 0.5], ['A4', 1]], v2: [['A3', 1], ['E4', 1], ['C4', 1]] },
+        { ch: 'D7', mel: [['F#5', 2], ['E5', 1]], v2: [['A3', 1], ['C4', 1], ['A3', 1]] },
+        { ch: 'G',  mel: [['D5', 1], ['G5', 2]], v2: [['B3', 1], ['G4', 2]] },
+        { ch: 'Cm', mel: [['Eb5', 1.5], ['D5', 0.5], ['Bb4', 1]], v2: [['C4', 1], ['Eb4', 1], ['G4', 1]] },
+        { ch: 'G',  mel: [['B4', 3]], v2: [['G3', 1], ['D4', 2]] },
+        { ch: 'Cm', mel: [['Eb5', 1.5], ['D5', 0.5], ['C5', 1]], v2: [['G3', 1], ['C4', 1], ['Eb4', 1]] },
+        { ch: 'G',  mel: [['B4', 2], ['A4', 1]], v2: [['G3', 1], ['D4', 1], ['B3', 1]] },
+        { ch: 'Cm', mel: [['G4', 1.5], ['Eb4', 0.5], ['D4', 1]], v2: [['C4', 3]] },
+        { ch: 'G',  mel: [['G4', 3]], v2: [['D4', 3]] }
     ]
 };
 
@@ -1025,39 +1054,62 @@ function harmonyBelow(n, ch) {
     return best;
 }
 
+// Un golpe de baqueta, con su repique si la nota es larga. Una barra de
+// madera no sostiene: lo que en un violin es una nota larga, en marimba es un
+// redoble. Solo a partir de dos tiempos: repicar tambien las de tiempo y
+// medio emborrona el ritmo punteado del vals, que es la mitad de su caracter.
+function strike(freq, t, dur, vol, len) {
+    const hits = len >= 2 ? Math.round(len * 2.5) : 1;
+    const step = dur / hits;
+    for (let k = 0; k < hits; k++) {
+        marimba(freq, t + k * step,
+                hits > 1 ? step * 1.6 : dur * 0.92,
+                k === 0 ? vol : vol * 0.6);
+    }
+}
+
 function scheduleBar(bar, t0, beat) {
     const ch = CHORDS[bar.ch];
+    const hasV2 = !!bar.v2;
 
-    // Bajo en el primer tiempo, acordes en el segundo y el tercero: el patron
-    // de acompanamiento del vals, y lo que hace que suene a vals y no a
-    // sucesion de notas.
+    // Bajo en el primer tiempo y acordes en el segundo y el tercero: el patron
+    // del vals, y lo que hace que suene a vals y no a sucesion de notas.
     marimba(hz(ch.bass), t0, beat * 1.5, 0.5);
+
+    // Cuando el arreglo trae su propia segunda voz, esos acordes bajan mucho
+    // de volumen: la v2 ya hace de relleno armonico, y sonando los dos a la
+    // vez el compas se emborrona. Pero no desaparecen, porque hay compases con
+    // v2 de nota tenida y sin ellos se perderia el pulso de vals.
+    const compVol = hasV2 ? 0.085 : 0.16;
     for (let b = 1; b < 3; b++) {
         for (const n of ch.notes) {
-            marimba(hz(n), t0 + b * beat, beat * 0.75, 0.16);
+            marimba(hz(n), t0 + b * beat, beat * 0.75, compVol);
         }
     }
 
     let t = t0;
     for (const [n, len] of bar.mel) {
         if (n) {
-            const dur = beat * len;
-            const low = harmonyBelow(n, ch);
-            // Una barra de madera no sostiene: lo que en un violin es una nota
-            // larga, en marimba es un redoble de baqueta. Solo a partir de dos
-            // tiempos: repicar tambien las de tiempo y medio emborronaba el
-            // ritmo punteado del vals, que es la mitad de su caracter.
-            const hits = len >= 2 ? Math.round(len * 2.5) : 1;
-            const step = dur / hits;
-            for (let k = 0; k < hits; k++) {
-                const at = t + k * step;
-                const d = (hits > 1 ? step * 1.6 : dur * 0.92);
-                const v = k === 0 ? 0.34 : 0.2;      // el primer golpe marca
-                marimba(hz(n), at, d, v);
-                if (low !== null) marimba(hzOf(low), at, d, v * 0.62);
+            strike(hz(n), t, beat * len, 0.34, len);
+            // La tercera automatica SOLO donde el arreglo no escribio nada.
+            // Si hay v2, manda la v2: inventarle una voz encima a un arreglo
+            // que ya trae la suya es pisarlo.
+            if (!hasV2) {
+                const low = harmonyBelow(n, ch);
+                if (low !== null) strike(hzOf(low), t, beat * len, 0.21, len);
             }
         }
         t += beat * len;
+    }
+
+    // Segunda voz escrita: lleva su propio ritmo, que no tiene por que
+    // coincidir con el de la melodia, asi que va en su propia linea de tiempo.
+    if (hasV2) {
+        let t2 = t0;
+        for (const [n, len] of bar.v2) {
+            if (n) strike(hz(n), t2, beat * len, 0.22, len);
+            t2 += beat * len;
+        }
     }
 }
 

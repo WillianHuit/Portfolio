@@ -181,9 +181,10 @@ guarda al morir. Los tramos se abren corriendo y luego se puede salir desde
 cualquiera de ellos.
 
 **Música.** Un vals de marimba sintetizado con osciladores, como el resto del
-sonido: cero archivos. Treinta y dos compases en 3/4 que empiezan en sol menor
-y pasan a sol mayor a mitad; el bucle dura 34 s. Se enciende y apaga por
-separado de los efectos (tecla `N`).
+sonido: cero archivos. Cincuenta y dos compases en 3/4 —entrada de corcheas,
+cuerpo en sol menor y segunda parte en sol mayor— con melodía, cifrado y
+**segunda voz escrita**; el bucle dura 56 s. Se enciende y apaga por separado
+de los efectos (tecla `N`).
 
 **Patrocinio (Cefas Panadería).** Todo sale del objeto `CEFAS` en `arcade.js`:
 cambiar de anunciante, de enlaces o de vídeos es tocar ese objeto y nada más.
@@ -319,7 +320,16 @@ Lo que importa mantener si se toca:
 - **La tabla de notas conoce los bemoles.** Tenía solo sostenidos, y un `Eb5`
   daba `undefined` → frecuencia `NaN` → nota muda. Los bemoles son alias de su
   sostenido.
-- **La segunda voz sale del ACORDE, no de una escala fija.** La primera
+- **La `v2` escrita manda sobre la calculada.** Cada compás puede traer una
+  segunda voz con su propio ritmo, que no tiene por qué coincidir con el de la
+  melodía, así que va en su propia línea de tiempo. Inventarle una tercera
+  encima a un arreglo que ya trae la suya sería pisarlo: la armonización
+  automática solo entra donde no hay `v2` (los ocho compases de entrada).
+- **Donde hay `v2`, los acordes del acompañamiento bajan a la mitad de la
+  mitad.** La segunda voz ya hace de relleno armónico y sonando los dos el
+  compás se emborrona. Pero no desaparecen: hay compases con `v2` de nota
+  tenida, y sin ellos se perdería el pulso de vals.
+- **La segunda voz calculada sale del ACORDE, no de una escala fija.** La primera
   versión bajaba dos grados de la menor y punto, lo cual servía mientras la
   pieza estuvo en la menor; con una que empieza en sol menor y se muda a sol
   mayor a mitad, esa cuenta devuelve notas de otra tonalidad. Buscándola entre
