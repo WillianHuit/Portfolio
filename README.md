@@ -139,112 +139,147 @@ el hero · cambio de tema con revelación circular (View Transitions API).
 ## Easter egg: «Sacbé»
 
 Cinco clics seguidos en el logo `WH` de la barra llevan a `arcade.html`, un
-endless runner voxel sobre una calzada maya. Al pasar el ratón por el logo
+endless runner voxel que cruza Guatemala. Al pasar el ratón por el logo
 aparecen cinco rombos que se van rellenando con cada clic: hacen descubrible
 el secreto sin explicarlo y dicen cuántos faltan. En táctil, donde no hay
 hover, el primer toque los deja visibles. La ventana entre clics es de 3 s y
 se reinicia sola.
 
-**La ruta.** El recorrido cruza Guatemala en ocho tramos de 500 m: Tikal
-(Petén) → Semuc Champey (Alta Verapaz) → Río Dulce (Izabal) → Antigua
-(Sacatepéquez) → Atitlán (Sololá) → Chichicastenango (Quiché) → Tajumulco
-(San Marcos) → Monterrico (Santa Rosa), y vuelta a empezar. Cada tramo trae
-su cielo, su niebla, su luz, el material de su calzada, el color de sus
-obstáculos y su propio hito en el horizonte —templo escalonado, karst,
-palmera, arco colonial, volcán, mercado, pico nevado—. Un minimapa en el HUD
-dibuja la silueta del país y va moviendo el marcador.
+**La ruta.** Doce tramos de 500 m, en circuito: Tikal y Flores (Petén) → Semuc
+Champey (Alta Verapaz) → Río Dulce (Izabal) → Esquipulas (Chiquimula) →
+Antigua (Sacatepéquez) → Volcán de Fuego (Chimaltenango) → Atitlán (Sololá) →
+Chichicastenango (Quiché) → Todos Santos (Huehuetenango) → Tajumulco (San
+Marcos) → Monterrico (Santa Rosa), y vuelta a empezar. Cada tramo trae su
+cielo, su niebla, su luz, **el material de su calzada**, el color de sus
+obstáculos, lo que crece en sus cunetas y su propio hito en el horizonte
+—templo escalonado, isla, karst, palmera, basílica, arco colonial, volcán,
+mercado, pico nevado—. Un minimapa en el HUD dibuja la silueta del país y va
+moviendo el marcador.
 
 **El juego.** Tres vidas (hasta cinco con mejoras), escudo que absorbe un
 golpe, multiplicador por racha de jade, hitos cada 250 m, jaguar que se acerca
 conforme pierdes vidas y quetzal de acompañante.
 
+**La calzada no es recta ni plana.** Gira, ondula y a partir de los 120 m
+aparecen tramos elevados: uno de los cinco repartos alto/bajo entre los tres
+carriles, cada carril alto con su rampa de subida y de bajada. Se sube por la
+rampa del propio carril o saltando; por el costado no se pasa.
+
+**Y algo viene de frente.** A partir de los 220 m entran amenazas que cierran
+distancia por su cuenta en vez de dejarse arrastrar por el mundo: el
+*camazotz*, el murciélago de Xibalbá, que vuela a la altura del pecho y se
+esquiva agachándose, y la *piedra rodante*, que solo se salta.
+
 **Poderes** que aparecen en la calzada: escudo, imán de jade, jade doble,
 ámbar de Verapaz (ralentiza el mundo sin ralentizarte a ti) y vuelo del
-quetzal (te eleva y sobrevuelas todo unos segundos).
+quetzal: el ave baja, te agarra con las garras y te sube a casi siete
+unidades, donde se siembra un rastro de jade serpenteante que desde el suelo
+no existe.
 
-**Taller.** El jade recogido se guarda al morir y se gasta en seis trajes
-(Ajaw, Tejedora, Guerrero Jaguar, Quetzal, Chapín, Ceniza) y ocho mejoras
-permanentes: vidas, escudo de salida, imán, duración de poderes, valor del
-jade, agilidad de carril, salto doble y frecuencia de poderes. Los tramos se
-abren al llegar a ellos corriendo, y una vez abiertos se puede salir desde
+**Taller.** Seis trajes y ocho mejoras permanentes, pagados con el jade que se
+guarda al morir. Los tramos se abren corriendo y luego se puede salir desde
 cualquiera de ellos.
+
+**Música.** Un vals de marimba sintetizado con osciladores, como el resto del
+sonido: cero archivos. Se enciende y apaga por separado de los efectos (tecla
+`N`).
 
 Lo que importa mantener si se toca:
 
 - **No sobrecarga la página principal.** `index.html` no referencia ni
-  `arcade.js` ni three.js: el juego (192 KB) solo se descarga si alguien lo
-  encuentra. El disparador añade 1,1 KB al total inicial.
-- **Todo el escenario usa una única `BoxGeometry` compartida** y va en
-  `InstancedMesh`. Son ~25 draw calls y ~4.900 triángulos por frame.
-- **La calzada y el horizonte son periódicos.** Desplazarlos es mover su
-  `Group` con un módulo, no recolocar 180 instancias por paso de simulación.
-  Es la razón de que `ROAD_PERIOD` y `LAND_PERIOD` existan: si se cambia el
-  espaciado hay que mantener la periodicidad o la costura se ve.
-- **En `InstancedMesh` el color del material multiplica al de instancia.** Por
-  eso los materiales con `setColorAt` van en blanco: ponerles el mismo tono lo
-  elevaría al cuadrado y saldría oscurecido.
-- **Los materiales de calzada y obstáculos son compartidos.** Antes cada uno
-  de los obstáculos del pool creaba los suyos (más de 180 en total); ahora son
-  seis. Es también lo que hace posible retematizar la escena entera por
-  departamento cambiando un puñado de colores, sin tocar geometría.
+  `arcade.js` ni three.js: el juego solo se descarga si alguien lo encuentra.
+  El disparador añade 1,1 KB al total inicial.
+- **El escenario repetido usa una única `BoxGeometry` compartida** y va en
+  `InstancedMesh`: calzada, sub-base, bordillos, matorral, hitos, sierra,
+  cielo y partículas son ocho draw calls entre todos, pasara lo que pasara. Lo
+  que sí cuenta son los objetos sueltos —tramos elevados, obstáculos,
+  recogidas, amenazas—: en el peor caso el frame ronda las 150 draw calls.
+- **Cuatro profundidades a cuatro velocidades.** Matorral al borde (1x), hitos
+  (0,82x), sierra del fondo (deriva lateral) y cielo (0,045x). Con una sola
+  capa el mundo se veía vacío y plano; con cuatro, la velocidad se lee sin
+  mirar el marcador.
+- **La sierra del fondo no se acerca nunca.** Una cordillera a kilómetros no
+  crece porque camines, y reciclarla en Z daba un salto de tamaño cada vuelta.
+  Lo que hace es derivar de lado, con un periodo más ancho que el cono de
+  visión para que el reciclado ocurra fuera de pantalla. Va sin niebla a
+  propósito: la niebla se cierra en 185 y la sierra vive más allá.
+- **La curva es puramente visual y por eso no cuesta nada.** Cada objeto tiene
+  una coordenada de trazado `s = distancia − z` que es invariante, así que su
+  desplazamiento lateral se calcula UNA vez al aparecer y luego solo se le
+  resta el del jugador.
+- **Pero la curva empieza a las 52 unidades, no en el metro cero.** La primera
+  versión curvaba desde los pies del jugador, y ahí el truco se rompía: un
+  tramo elevado es una pieza recta de hasta setenta unidades y no encajaba con
+  una calzada que se doblaba bajo ella. Con la máscara de distancia, la zona
+  donde se juega es recta —y por tanto todo casa— y el giro vive en el fondo,
+  que es donde se lee. La ondulación vertical va por la misma máscara.
+- **Cada losa consulta su propia región**, así que el cambio de firme es una
+  LÍNEA en el mundo que se ve venir de lejos, no un fundido global: llegar a
+  Antigua es ver aparecer el adoquín. La línea cae en la mitad de la
+  transición de cielo y luces.
+- **El color por sí solo no bastaba para distinguir las zonas**: Antigua y
+  Tikal salían iguales con distinto tono. `road: [cortes, filas, junta,
+  irregularidad]` es lo que convierte la calzada en losa grande de caliza, en
+  adoquín de seis por tres, en tablón de muelle o en arena sin juntas.
+- **Bajo la calzada va una sub-base.** Sin ella las juntas del adoquín son
+  agujeros por los que se ve el suelo de selva, y a ras de cámara la junta
+  central dibujaba una raya verde de punta a punta.
 - **El paisaje no se cambia de golpe al pasar de departamento: se interpola
   cubo a cubo.** Todas las siluetas ocupan los mismos `LAND_PARTS` huecos y
-  las piezas sobrantes quedan a escala cero, así que el templo de Tikal se
-  convierte en el karst de Semuc creciendo. Un cambio instantáneo se leía como
-  un fallo de carga. La interpolación cuesta 336 matrices, pero solo se
-  recalcula cuando la mezcla cambia de verdad: durante el 62 % de cada tramo
-  vale exactamente 0 y no se repinta nada.
-- **El cambio de carril es un tween con final garantizado, no un lerp
-  exponencial.** El lerp nunca llegaba del todo al carril y dejaba el cuerpo a
-  medio camino, lo que volvía confusas las colisiones.
-- **El salto es de altura variable** (`JUMP_CUT` al soltar) y la bajada pesa
-  más que la subida (`FALL_GRAVITY`): un salto de arco fijo y simétrico se
-  siente flotante y hace difícil calcular dónde vas a caer.
-- **Abajo en el aire es un picado que encadena con el deslizamiento.** Antes
-  solo restaba algo de velocidad vertical y el deslizamiento caducaba antes de
-  aterrizar, así que no servía para nada.
-- **El HUD se repinta solo cuando algo cambia.** `renderHud` corría en cada
-  frame reescribiendo el `innerHTML` de las vidas 60 veces por segundo, para
-  un texto que casi nunca cambia.
+  las piezas sobrantes quedan a escala cero.
+- **En `InstancedMesh` el color del material multiplica al de instancia.** Por
+  eso los materiales con `setColorAt` van en blanco.
+- **El desnivel es un problema de ruta, no una trampa.** Entrar por el costado
+  de un tramo elevado rechaza el cambio de carril con un topetazo, no cobra
+  una vida.
+- **Sobre terreno desigual no se generan dos obstáculos.** Ese patrón deja un
+  único carril libre, y si ese carril está arriba y el jugador abajo, el muro
+  lateral le cierra la única salida: golpe seguro sin haber fallado nada.
+- **`terrainAt` es la única fuente de verdad sobre la altura del suelo.** Las
+  alturas de colisión son RELATIVAS a esa base.
+- **Las amenazas no se tematizan.** Todo lo demás cambia de color doce veces
+  por vuelta, y una fuente de daño que a veces es clara sobre fondo oscuro y a
+  veces al revés se vuelve ilegible justo cuando importa.
+- **El detalle del personaje va en la ESPALDA.** El jugador corre de espaldas
+  a la cámara: los ojos no se ven nunca, y en cambio la nuca, la manta, el
+  morral y las plumas del tocado se ven en todo momento. Poner detalle en la
+  cara era trabajo invisible.
+- **Los iconos del taller son SVG en línea, no glifos Unicode.** La tipografía
+  solo trae el rango latino, así que cualquier símbolo raro cae en la fuente
+  de respaldo del sistema: el `⬡` del escudo se dibujaba como una «O» en
+  Windows. Los trajes no llevan glifo sino un muñeco pintado con sus propios
+  colores, que es icono y vista previa a la vez.
+- **La música no es «Luna de Xelajú».** El encargo era esa pieza, pero no hay
+  transcripción fiable y libre de la melodía (lo que circula son vídeos y
+  partituras de pago) y además Paco Pérez murió en 1951, así que la obra sigue
+  protegida en buena parte del mundo. Lo que suena es un vals **original** en
+  el molde del vals guatemalteco: 3/4, bajo en el primer tiempo y acordes en
+  el segundo y el tercero, marimba encima. Si algún día se quiere la pieza
+  real, basta con cambiar `VALS.bars`.
+- **La marimba se sintetiza como lo que es**: una barra golpeada. Un seno para
+  el fundamental y otro cuatro veces más agudo y muy corto para el golpe de la
+  baqueta. Sin el segundo suena a flauta.
+- **La música se programa con medio segundo de adelanto.** Web Audio suena por
+  su cuenta; así un frame lento no abre un hueco en el compás.
 - **La cámara sale toda de `cam`**, que se recalcula según la relación de
-  aspecto. En vertical se inclina más, o media pantalla se va en cielo vacío.
-- **La pista del logo no usa `transform`.** Escalarlo movía el objetivo del
-  clic y hacía fallar tiros; pulsa un brillo, que deja la caja donde estaba.
-- **Las colisiones comparan la posición real del jugador, no su índice de
-  carril.** El índice cambia de golpe al pulsar mientras el cuerpo aún se
-  desplaza (~0,2 s, que a velocidad máxima son 6 unidades): usarlo producía
-  esquivas fantasma y golpes injustos.
-- **El paso fijo es de 60 Hz con tope de 6 pasos por frame.** A 120 Hz con
-  tope de 8 el juego entraba en cámara lenta por debajo de ~15 fps.
+  aspecto. Al volar, cámara y punto de mira suben en la MISMA proporción, que
+  es lo que mantiene al personaje donde estaba en el encuadre.
+- **El cambio de carril es un tween con final garantizado, no un lerp
+  exponencial**, que nunca llegaba del todo al carril y volvía confusas las
+  colisiones.
+- **El salto es de altura variable** y la bajada pesa más que la subida: un
+  arco fijo y simétrico se siente flotante.
+- **El HUD se repinta solo cuando algo cambia.**
+- **El paso fijo es de 60 Hz con tope de 6 pasos por frame**, y el acumulador
+  se vacía al empezar y al reanudar.
+- **En pausa solo responden P, Esc, M y N.**
+- **El gesto táctil se resuelve en `touchmove`, no en `touchend`.**
 - **La sombra de contacto no es decorativa**: sin ella no hay forma de juzgar
-  el aterrizaje ni si vas lo bastante alto para librar un cenote.
-- **La cercanía del jaguar ES el indicador de vidas.** Cuenta lo mismo que los
-  rombos del HUD sin obligar a apartar la vista de la calzada.
-- **`COMBO_STEP` está en 3, no en 5.** Midiendo con un jugador activo, el
-  máximo de jade en una carrera de 500 m era 4: con el umbral en 5 el
-  multiplicador era inalcanzable y la mecánica no existía.
-- Los obstáculos se reciclan en `DESPAWN_Z = 11` y la cámara está en 14: con
-  el valor anterior pasaban por encima ocupando media pantalla.
-- **`REGION_LENGTH` está en 500 m.** Con los 900 del ciclo de ambiente
-  anterior la mayoría de partidas moría sin salir del primer tramo, y el viaje
-  por el país no llegaba a existir. Poder elegir el punto de salida en el
-  taller es la otra mitad de lo mismo: hace visible un contenido que si no
-  solo veían los que llegan a 4.000 m.
-- **El ámbar frena el mundo pero no el reloj de los poderes.** Si frenase
-  también su propio temporizador se prolongaría a sí mismo.
-- **Al terminar el vuelo del quetzal se conceden 0,8 s de margen.** El jugador
-  cae desde casi cuatro unidades y aterrizaba encima de la estela que acababa
-  de sobrevolar, perdiendo una vida sin haber hecho nada mal.
-- **En pausa solo responden P, Esc y M.** Se podía cambiar de carril y saltar
-  con el juego detenido, y al reanudar el personaje aparecía donde no debía.
-- **El acumulador del paso fijo se vacía al empezar y al reanudar.** Si no, el
-  tiempo muerto de los menús se gastaba de golpe en pasos de simulación y el
-  mundo daba un salto de varios metros antes del primer frame.
-- **El gesto táctil se resuelve en `touchmove`, no en `touchend`.** Esperar a
-  que se levante el dedo metía hasta 200 ms en cada esquiva, que a velocidad
-  máxima son seis unidades.
+  el aterrizaje. Va a la altura del suelo REAL, no del cero absoluto.
+- **La cercanía del jaguar ES el indicador de vidas.**
 - El aviso de `prefers-reduced-motion` es voluntario: un runner es movimiento
   puro y no se puede atenuar, así que se avisa y decide el jugador.
+
 
 ## Idiomas y URLs
 

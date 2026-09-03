@@ -103,18 +103,115 @@ const REGION_LENGTH = 500;
 // que cada departamento tenga identidad y no sea un degradado continuo.
 const REGION_BLEND = 0.62;
 
+// Celdas por losa de calzada. Dieciocho porque el adoquin de Antigua es de
+// seis por tres; los tramos que usan menos dejan las sobrantes a escala cero.
+const ROAD_CELLS = 18;
+// Punto del tramo en el que la calzada cambia de material. Coincide con la
+// mitad de la transicion de cielo y luces, de modo que el cambio de firme cae
+// donde el resto del paisaje ya esta a medio camino.
+const ROAD_SHIFT = 1 - (REGION_BLEND + (1 - REGION_BLEND) / 2);
+
+// --- Capas de parallax ---------------------------------------------------
+// Cuatro profundidades moviendose a velocidades distintas: matorral al borde
+// de la calzada (1x), hitos (0.82x), sierra del fondo (0.22x) y cielo
+// (0.05x). Con una sola capa el mundo se veia vacio y plano; con cuatro, la
+// velocidad se lee sin necesidad de mirar el marcador.
+const PROP_SLOTS = 44;              // 22 por lado
+const PROP_PARTS = 3;
+const PROP_SPACING = 10;
+const PROP_PERIOD = PROP_SLOTS / 2 * PROP_SPACING;
+const PROP_FROM = -220;
+
+const RIDGE_COUNT = 34;
+const RIDGE_PERIOD = 320;
+
+const SKY_COUNT = 28;
+const SKY_PERIOD = 460;
+
 const OBSTACLE_POOL = 30;
-const PICKUP_POOL = 56;
+// 96 y no 56: el rastro de jade del vuelo del quetzal siembra una veintena de
+// piezas de golpe, y con el pool anterior se comia el recorrido de a pie.
+const PICKUP_POOL = 96;
+const PLATFORM_POOL = 9;            // tres tramos de terreno a la vez, como mucho
+const HAZARD_POOL = 10;
 
 // Tipos de obstaculo. Los tres verbos del juego: esquivar, agacharse, saltar.
 const ESTELA = 0;   // monolito alto: hay que cambiar de carril
 const DINTEL = 1;   // viga elevada: hay que deslizarse
 const CENOTE = 2;   // sumidero: hay que saltar
 
-// Altura de crucero del vuelo. Tiene que quedar por encima del remate de la
-// estela mas alta (3,4 x 1,15 de proporcion regional, mas el capitel), o el
-// jugador la atraviesa por dentro: no le hace dano, pero se ve como un fallo.
-const FLY_Y = 4.5;
+// ---------------------------------------------------------------------------
+// Terreno a dos niveles
+// ---------------------------------------------------------------------------
+// La calzada base sigue siendo plana y periodica; lo que sube es un tramo
+// elevado por carril, con su rampa de entrada y su rampa de salida. Modelarlo
+// como objeto del pool y no como parte de la calzada es lo que permite
+// conservar el truco del modulo: la calzada no sabe que hay desniveles.
+const LEVEL_HIGH = 1.6;             // la "semi subida": se salta, pero se nota
+const RAMP_LEN = 8;                 // largo de cada rampa
+const PLAT_MIN = 30;                // largo del tramo llano, sin rampas
+const PLAT_MAX = 56;
+// Cuanto puede subir el jugador de un paso al cambiar de carril. Por encima de
+// esto el carril vecino es un muro y el cambio se rechaza: no hace dano, pero
+// obliga a buscar la rampa o a saltar.
+const STEP_UP = 0.55;
+// Caida minima para considerar que te has salido del tramo. Por debajo se
+// pega al suelo, que es lo que hace que las rampas se bajen andando en vez de
+// a saltitos.
+const STEP_DOWN = 0.4;
+
+// Los cinco perfiles de altura pedidos. Todos dejan al menos un carril bajo y
+// al menos uno alto: siempre hay eleccion, y siempre hay algo que sortear.
+const LANE_PATTERNS = [
+    [1, 0, 0],
+    [1, 1, 0],
+    [1, 0, 1],
+    [0, 1, 1],
+    [0, 0, 1]
+];
+
+// ---------------------------------------------------------------------------
+// Amenazas que vienen hacia ti
+// ---------------------------------------------------------------------------
+// A diferencia de los obstaculos, que estan quietos y el mundo se los lleva,
+// estas cierran distancia por su cuenta. Es lo que rompe la sensacion de que
+// la calzada solo te pasa por al lado.
+const CAMAZOTZ = 0;   // murcielago de Xibalba: vuela a la altura del pecho
+const RODANTE = 1;    // piedra que baja rodando por el carril
+
+const HAZ_SPEED = [15, 9];        // velocidad propia, sumada a la del mundo
+// Franja vertical que ocupa cada amenaza sobre su suelo. Debajo del
+// murcielago se pasa deslizandose; la piedra solo se salta.
+const HAZ_LOW = [1.25, 0];
+const HAZ_HIGH = [2.35, 1.45];
+
+// ---------------------------------------------------------------------------
+// Curvas y relieve lejano
+// ---------------------------------------------------------------------------
+// La calzada no gira de verdad: se desplaza lateralmente en funcion de la
+// distancia recorrida, y la camara sigue la tangente.
+//
+// PERO SOLO A PARTIR DE CIERTA DISTANCIA. La primera version curvaba desde el
+// metro cero, y ahi el truco se rompia: un tramo elevado es una pieza recta de
+// hasta setenta unidades, y sobre una calzada que se dobla bajo sus pies no
+// encajaba con el suelo que el jugador estaba pisando. Con la mascara, las
+// cincuenta unidades donde de verdad se juega son rectas —y por tanto todo
+// casa— y el giro vive en el fondo, que es donde se lee.
+const CURVE_NEAR = 52;              // hasta aqui, recto
+const CURVE_FULL = 158;             // a partir de aqui, curva entera
+const CURVE_A1 = 6.4, CURVE_L1 = 118;
+const CURVE_A2 = 3.8, CURVE_L2 = 263;
+const CURVE_FOLLOW = 0.66;          // cuanto compensa la camara el giro
+
+// Ondulacion vertical: la calzada sube y baja en la distancia, asi que a veces
+// el camino "viene de abajo" y aparece por encima de una loma. Igual que el
+// giro, es cero cerca del jugador, asi que el suelo que pisa sigue siendo
+// plano y nada de la fisica se entera.
+const CURVE_AY = 4.6, CURVE_LY = 197;
+
+// Altura de crucero del vuelo. Muy por encima de todo lo que hay en la
+// calzada, porque ahi arriba el juego es otro: filas de jade en el aire.
+const FLY_Y = 6.8;
 const AMBER_SCALE = 0.62;           // cuanto frena el ambar el mundo
 
 // Solo lo que sobrevive al cambio de departamento: el jade, el jaguar y el
@@ -130,12 +227,21 @@ const C = {
 };
 
 // ===========================================================================
-// La ruta: ocho puntos de Guatemala
+// La ruta: doce puntos de Guatemala
 // ===========================================================================
 // Cada tramo define su cielo, su niebla, su suelo, sus luces, el material de
-// la calzada, el color de los obstaculos y que se ve en el horizonte. Las
-// coordenadas mm son las del minimapa (viewBox 108x116), derivadas de la
-// posicion real de cada sitio.
+// la calzada, el color de los obstaculos, que crece a los lados y que se ve
+// en el horizonte. Las coordenadas mm son las del minimapa (viewBox 108x116),
+// derivadas de la posicion real de cada sitio.
+//
+// road: [cortes a lo ancho, filas a lo largo, junta, irregularidad]
+//   Es lo que convierte la calzada en losa grande de caliza, en adoquin, en
+//   tablon de muelle o en arena sin juntas. El color solo no bastaba: Antigua
+//   y Tikal salian iguales con distinto tono, y el adoquin es precisamente lo
+//   que se reconoce de Antigua.
+// prop: que crece o se amontona a los lados de la calzada.
+// ridge: silueta de la sierra del fondo, la capa mas lenta del parallax.
+// sky: 'cloud' de dia, 'star' de noche.
 const REGIONS = [
     {
         id: 'tikal', name: 'Tikal', dept: 'Petén', mm: [69.2, 21.8],
@@ -144,7 +250,20 @@ const REGIONS = [
         roadA: 0xefe6d2, roadB: 0xd9cdb2, kerb: 0xb9a888,
         stone: 0xa1937f, accent: 0xc8862f, hazard: 0x14776a, pit: 0x040d0b,
         land: 'temple', landA: 0xa1937f, landB: 0xc8862f,
+        ridge: 0x6e5c46, sky: 'cloud', skyC: 0xf3d3ae,
+        road: [1, 1, 0.94, 0], prop: 'jungle', propA: 0x2f6b4a, propB: 0x8a6a3f,
         ob: [1.0, 1.0, 1.0]
+    },
+    {
+        id: 'flores', name: 'Flores', dept: 'Petén', mm: [62.4, 29.1],
+        skyTop: 0x2f7fc4, skyBot: 0xbfe3ea, fog: 0x7fb9c4, ground: 0x2f6b52,
+        sun: 0xfff4de, sunI: 2.15, hemi: 0xdff0f4, hemiI: 2.35,
+        roadA: 0xe8dfc8, roadB: 0xd0c4a6, kerb: 0xc0644a,
+        stone: 0xf0e8d8, accent: 0xc0472f, hazard: 0x1f88b8, pit: 0x06222e,
+        land: 'town', landA: 0xf0e6d2, landB: 0xc0472f,
+        ridge: 0x4f7f86, sky: 'cloud', skyC: 0xffffff,
+        road: [3, 2, 0.9, 0.02], prop: 'reed', propA: 0x3f8f6a, propB: 0xe0b25c,
+        ob: [0.95, 1.05, 0.95]
     },
     {
         id: 'semuc', name: 'Semuc Champey', dept: 'Alta Verapaz', mm: [60.9, 64.1],
@@ -153,51 +272,99 @@ const REGIONS = [
         roadA: 0xe4dcc0, roadB: 0xcdc2a2, kerb: 0x9aa87f,
         stone: 0x8fa08b, accent: 0x3fbfa6, hazard: 0x2fd0c4, pit: 0x07332f,
         land: 'karst', landA: 0x7d8f77, landB: 0x2f7a52,
+        ridge: 0x3f6a52, sky: 'cloud', skyC: 0xeef6ea,
+        road: [2, 1, 0.9, 0.05], prop: 'fern', propA: 0x2a7a52, propB: 0x9fb08a,
         ob: [1.1, 0.92, 1.15]
     },
     {
         id: 'riodulce', name: 'Río Dulce', dept: 'Izabal', mm: [86.0, 61.1],
         skyTop: 0x2f86c9, skyBot: 0xa8e0e6, fog: 0x6fb3c0, ground: 0x2e6b4e,
         sun: 0xfff6e0, sunI: 2.2, hemi: 0xe4f4f6, hemiI: 2.4,
-        roadA: 0xd9c9a4, roadB: 0xc2af87, kerb: 0x8a6b45,
+        roadA: 0xd9c9a4, roadB: 0xbfab82, kerb: 0x8a6b45,
         stone: 0x9b7448, accent: 0xe0b25c, hazard: 0x1f7fb0, pit: 0x06222f,
         land: 'palm', landA: 0x6f4f2f, landB: 0x2f9e5e,
+        ridge: 0x3f7f7a, sky: 'cloud', skyC: 0xffffff,
+        road: [1, 3, 0.84, 0.02], prop: 'palm', propA: 0x6f4f2f, propB: 0x2f9e5e,
         ob: [1.25, 0.85, 1.1]
+    },
+    {
+        id: 'esquipulas', name: 'Esquipulas', dept: 'Chiquimula', mm: [75.9, 88.2],
+        skyTop: 0x6f8fc0, skyBot: 0xe8c896, fog: 0xcfae82, ground: 0x4a5a3a,
+        sun: 0xffe0b0, sunI: 2.0, hemi: 0xe4d2ba, hemiI: 1.9,
+        roadA: 0xb8a684, roadB: 0x9e8b68, kerb: 0x8a7a5c,
+        stone: 0xf2ece0, accent: 0xd4a63a, hazard: 0x3a2f24, pit: 0x1a140e,
+        land: 'colonial', landA: 0xf2ece0, landB: 0xd4a63a,
+        ridge: 0x7a7250, sky: 'cloud', skyC: 0xf6e2c2,
+        road: [2, 2, 0.87, 0.06], prop: 'agave', propA: 0x5f7a44, propB: 0xb8a06a,
+        ob: [0.95, 1.1, 0.95]
     },
     {
         id: 'antigua', name: 'Antigua', dept: 'Sacatepéquez', mm: [41.3, 88.4],
         skyTop: 0x5a7fb8, skyBot: 0xf0c48a, fog: 0xd0a479, ground: 0x3a5340,
         sun: 0xffd9a4, sunI: 1.95, hemi: 0xdcc4ad, hemiI: 1.85,
-        roadA: 0x9c8f80, roadB: 0x877a6b, kerb: 0xb5a08a,
+        roadA: 0x9c8f80, roadB: 0x857868, kerb: 0xb5a08a,
         stone: 0xe8d9b8, accent: 0xd4762f, hazard: 0x3b3128, pit: 0x18120c,
         land: 'colonial', landA: 0xe0c9a6, landB: 0xc0472f,
+        ridge: 0x5a6a52, sky: 'cloud', skyC: 0xf7dcbe,
+        // El adoquin: seis cortes a lo ancho y tres a lo largo, junta marcada
+        // y piedras desigualadas. Es la calle de Antigua, y no se parece a
+        // ninguna otra del recorrido.
+        road: [6, 3, 0.85, 0.05], prop: 'jacaranda', propA: 0x4f6a44, propB: 0x8a6ac0,
         ob: [0.9, 1.15, 0.95]
+    },
+    {
+        id: 'fuego', name: 'Volcán de Fuego', dept: 'Chimaltenango', mm: [37.6, 90.7],
+        skyTop: 0x18131f, skyBot: 0xd4501f, fog: 0x8a3a22, ground: 0x241d1a,
+        sun: 0xff8a4a, sunI: 1.5, hemi: 0x8a5a4a, hemiI: 1.2,
+        roadA: 0x6a625c, roadB: 0x534d47, kerb: 0x4a423c,
+        stone: 0x3a332e, accent: 0xff5a1f, hazard: 0xff3d00, pit: 0x2a0a02,
+        land: 'volcano', landA: 0x2e2622, landB: 0xff5a1f,
+        ridge: 0x3a2822, sky: 'star', skyC: 0xff8a4a,
+        road: [3, 2, 0.9, 0.08], prop: 'lava', propA: 0x2e2622, propB: 0xff5a1f,
+        ob: [1.05, 1.0, 1.0]
     },
     {
         id: 'atitlan', name: 'Lago de Atitlán', dept: 'Sololá', mm: [29.6, 85.2],
         skyTop: 0x3a3a6d, skyBot: 0xe37a45, fog: 0xc2724a, ground: 0x2c4436,
         sun: 0xffad6a, sunI: 1.9, hemi: 0xd9aea0, hemiI: 1.8,
-        roadA: 0xc9b9a0, roadB: 0xb2a28a, kerb: 0x8f6f5a,
+        roadA: 0xc9b9a0, roadB: 0xb0a088, kerb: 0x8f6f5a,
         stone: 0x6d5a72, accent: 0xd94f6a, hazard: 0x1d4f7a, pit: 0x081c2c,
         land: 'volcano', landA: 0x3f4a55, landB: 0x8d6a4f,
+        ridge: 0x46405f, sky: 'cloud', skyC: 0xf0a483,
+        road: [3, 1, 0.9, 0.03], prop: 'maize', propA: 0x4f7a3f, propB: 0xd94f6a,
         ob: [0.95, 1.05, 1.0]
     },
     {
         id: 'chichi', name: 'Chichicastenango', dept: 'Quiché', mm: [31.8, 78.9],
         skyTop: 0x1f2a52, skyBot: 0x6b4a7a, fog: 0x4a3f63, ground: 0x22362c,
         sun: 0xc9a8e0, sunI: 1.15, hemi: 0x8f7fa8, hemiI: 1.35,
-        roadA: 0xb9ae95, roadB: 0xa2977e, kerb: 0x7d6f5a,
+        roadA: 0xb9ae95, roadB: 0xa0957c, kerb: 0x7d6f5a,
         stone: 0xd8d2c4, accent: 0xe0483f, hazard: 0x2a1f33, pit: 0x120c18,
         land: 'market', landA: 0xe6e0d2, landB: 0xe0483f,
+        ridge: 0x3a3550, sky: 'star', skyC: 0xdfe6ff,
+        road: [2, 2, 0.91, 0.04], prop: 'stall', propA: 0xe0483f, propB: 0xf0c34a,
         ob: [1.05, 0.95, 1.05]
+    },
+    {
+        id: 'todossantos', name: 'Todos Santos', dept: 'Huehuetenango', mm: [19.5, 64.6],
+        skyTop: 0x2f5fa8, skyBot: 0xcfe4f0, fog: 0x9fb8c4, ground: 0x3a5a44,
+        sun: 0xf2f8ff, sunI: 2.0, hemi: 0xd6e6f0, hemiI: 2.1,
+        roadA: 0xa8a89c, roadB: 0x8f8f7d, kerb: 0x7a7a68,
+        stone: 0x8a8f88, accent: 0xd93a3a, hazard: 0x2a3f4a, pit: 0x131c22,
+        land: 'peak', landA: 0x445a4a, landB: 0xdfe8ee,
+        ridge: 0x51707a, sky: 'cloud', skyC: 0xffffff,
+        road: [2, 1, 0.89, 0.07], prop: 'pine', propA: 0x2f5a3f, propB: 0xd93a3a,
+        ob: [1.0, 1.05, 1.0]
     },
     {
         id: 'tajumulco', name: 'Volcán Tajumulco', dept: 'San Marcos', mm: [12.0, 76.4],
         skyTop: 0x081120, skyBot: 0x1d3b46, fog: 0x17313b, ground: 0x152720,
         sun: 0xa8c6e6, sunI: 0.85, hemi: 0x6d90a4, hemiI: 1.05,
-        roadA: 0x8c9aa0, roadB: 0x74818a, kerb: 0x5a666b,
+        roadA: 0x8c9aa0, roadB: 0x717e87, kerb: 0x5a666b,
         stone: 0x4a5560, accent: 0xcfe4ef, hazard: 0xd4451f, pit: 0x2a0e06,
         land: 'peak', landA: 0x2b3540, landB: 0xe8f2f7,
+        ridge: 0x1e2b34, sky: 'star', skyC: 0xdfeaff,
+        road: [3, 2, 0.93, 0.06], prop: 'rock', propA: 0x3a4550, propB: 0xcfe4ef,
         ob: [1.0, 1.1, 0.9]
     },
     {
@@ -207,9 +374,14 @@ const REGIONS = [
         roadA: 0x5a544f, roadB: 0x484340, kerb: 0x7a6a55,
         stone: 0x6f5a3f, accent: 0xe8c98a, hazard: 0x2f6f8a, pit: 0x07202b,
         land: 'palm', landA: 0x4a3a26, landB: 0x2f7a4e,
+        ridge: 0x6a5a54, sky: 'cloud', skyC: 0xffd9b0,
+        // Arena negra: sin cortes y sin junta, para que se lea como superficie
+        // continua y no como losas.
+        road: [1, 1, 1.0, 0.02], prop: 'palm', propA: 0x4a3a26, propB: 0x2f7a4e,
         ob: [1.2, 0.88, 1.12]
     }
 ];
+
 
 const REGION_N = REGIONS.length;
 
@@ -219,18 +391,30 @@ const REGION_N = REGIONS.length;
 // Cada traje solo cambia colores: la silueta del corredor se mantiene para
 // que la lectura de la postura (salto, deslizamiento) no dependa del traje.
 const SKINS = [
-    { id: 'ajaw', name: 'Ajaw', desc: 'El corredor de la calzada, con tocado de jade.',
-      cost: 0, cloth: 0xc0453a, skin: 0xd9a066, crest: 0x2ec4a0, legs: 0x10201c, trim: 0xc8862f },
-    { id: 'tejedora', name: 'Tejedora', desc: 'Huipil de telar de cintura del altiplano.',
-      cost: 120, cloth: 0x7b2d8e, skin: 0xc98b58, crest: 0xe0483f, legs: 0x1b2b26, trim: 0xf0c34a },
-    { id: 'jaguar', name: 'Guerrero Jaguar', desc: 'Piel moteada de la orden militar maya.',
-      cost: 260, cloth: 0xd9a24b, skin: 0xd9a066, crest: 0x3b2a14, legs: 0x3b2a14, trim: 0x10201c },
-    { id: 'quetzal', name: 'Quetzal', desc: 'Verde tornasol y pecho carmesí.',
-      cost: 420, cloth: 0x1fae7e, skin: 0xd8484a, crest: 0x2ec4a0, legs: 0x14776a, trim: 0xd8484a },
-    { id: 'chapin', name: 'Chapín', desc: 'Azul y blanco, de un extremo al otro del país.',
-      cost: 620, cloth: 0x4a90d9, skin: 0xd9a066, crest: 0xf2f6fa, legs: 0xf2f6fa, trim: 0x4a90d9 },
-    { id: 'ceniza', name: 'Ceniza', desc: 'Lo que queda cuando el Fuego hace de las suyas.',
-      cost: 900, cloth: 0x33312f, skin: 0xb06a4a, crest: 0xff6b2c, legs: 0x1a1a1a, trim: 0xff6b2c }
+    { id: 'ajaw', name: 'Ajaw', icon: '◈',
+      desc: 'El corredor de la calzada, con tocado de jade.',
+      cost: 0, cloth: 0xc0453a, skin: 0xd9a066, crest: 0x2ec4a0, legs: 0x10201c,
+      trim: 0xc8862f, hair: 0x2a1a10, boot: 0x6b4a2a },
+    { id: 'tejedora', name: 'Tejedora', icon: '✦',
+      desc: 'Huipil de telar de cintura del altiplano.',
+      cost: 120, cloth: 0x7b2d8e, skin: 0xc98b58, crest: 0xe0483f, legs: 0x1b2b26,
+      trim: 0xf0c34a, hair: 0x1a1008, boot: 0x8a5a30 },
+    { id: 'jaguar', name: 'Guerrero Jaguar', icon: '◉',
+      desc: 'Piel moteada de la orden militar maya.',
+      cost: 260, cloth: 0xd9a24b, skin: 0xd9a066, crest: 0x3b2a14, legs: 0x3b2a14,
+      trim: 0x10201c, hair: 0x2a1a10, boot: 0x3b2a14 },
+    { id: 'quetzal', name: 'Quetzal', icon: '➤',
+      desc: 'Verde tornasol y pecho carmesí.',
+      cost: 420, cloth: 0x1fae7e, skin: 0xd8484a, crest: 0x2ec4a0, legs: 0x14776a,
+      trim: 0xd8484a, hair: 0x0f5a44, boot: 0xc8862f },
+    { id: 'chapin', name: 'Chapín', icon: '⚑',
+      desc: 'Azul y blanco, de un extremo al otro del país.',
+      cost: 620, cloth: 0x4a90d9, skin: 0xd9a066, crest: 0xf2f6fa, legs: 0xf2f6fa,
+      trim: 0x4a90d9, hair: 0x241810, boot: 0x2f5f96 },
+    { id: 'ceniza', name: 'Ceniza', icon: '▲',
+      desc: 'Lo que queda cuando el Fuego hace de las suyas.',
+      cost: 900, cloth: 0x33312f, skin: 0xb06a4a, crest: 0xff6b2c, legs: 0x1a1a1a,
+      trim: 0xff6b2c, hair: 0x141414, boot: 0x2a2a2a }
 ];
 
 // ===========================================================================
@@ -251,9 +435,65 @@ const UPGRADES = [
       desc: 'Cambias de carril más rápido y más seco.' },
     { id: 'djump',   name: 'Alas de quetzal',   max: 1, cost: () => 540,
       desc: 'Salto doble: un segundo impulso en el aire.' },
-    { id: 'luck',    name: 'Suerte del ajq’ij', max: 3, cost: l => 210 + l * 260,
+    { id: 'luck',    name: 'Suerte del ajq\u2019ij', max: 3, cost: l => 210 + l * 260,
       desc: 'Aparecen poderes con más frecuencia.' }
 ];
+
+// ===========================================================================
+// Iconos del taller
+// ===========================================================================
+// SVG en linea y no glifos Unicode: el HUD ya enseño el problema, porque la
+// tipografia solo trae el rango latino y todo simbolo raro cae en la fuente
+// de respaldo del sistema, que en Windows dibujo una "O" donde deberia haber
+// un escudo. Con SVG el icono es el mismo en cualquier maquina.
+const ICON_PATHS = {
+    lives:   '<path d="M12 21C6 16.5 3 13.4 3 9.8 3 7.1 5 5 7.6 5c1.6 0 3.1.8 4.4 2.3C13.3 5.8 14.8 5 16.4 5 19 5 21 7.1 21 9.8c0 3.6-3 6.7-9 11.2z"/>',
+    shield:  '<path d="M12 2l8 3v6.5c0 5-3.4 9.4-8 10.5-4.6-1.1-8-5.5-8-10.5V5z" fill="none" stroke="currentColor" stroke-width="2"/>',
+    magnet:  '<path d="M5 20V10a7 7 0 0 1 14 0v10" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M5 20h4M15 20h4" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/>',
+    power:   '<path d="M12 2c3 4 5 6.2 5 9a5 5 0 0 1-10 0c0-2.8 2-5 5-9z"/><path d="M12 22c-2.5 0-4-1.2-4-3h8c0 1.8-1.5 3-4 3z"/>',
+    value:   '<path d="M12 2l6 6-6 14-6-14z"/>',
+    agility: '<path d="M4 7l7 5-7 5z"/><path d="M13 7l7 5-7 5z"/>',
+    djump:   '<path d="M12 4l3 5 7 2-7 2-3 5-3-5-7-2 7-2z"/>',
+    luck:    '<path d="M12 2l2.6 6.6L21 11l-6.4 2.4L12 20l-2.6-6.6L3 11l6.4-2.4z"/>'
+};
+
+// Un glifo por sitio: piramide, isla, karst, palmera, basilica, arco,
+// volcan, lago, mercado, sierra, pico nevado y playa.
+const REGION_ICONS = {
+    tikal:       '<path d="M2 21h20L12 4z"/><path d="M8 21v-4h8v4z" fill="#0b1512" opacity=".55"/>',
+    flores:      '<path d="M3 21h18c-1-4-4-6-9-6s-8 2-9 6z"/><path d="M12 3l5 6H7z"/><rect x="10" y="9" width="4" height="5"/>',
+    semuc:       '<path d="M2 21h20v-4c-3 0-4-3-7-3s-4 3-6 3-4-1-7-1z"/><path d="M4 12c2-4 5-6 8-6s6 2 8 6z"/>',
+    riodulce:    '<path d="M11 21h2V9h-2z"/><path d="M12 8C9 4 5 4 3 7c3-1 6 0 9 1zM12 8c3-4 7-4 9-1-3-1-6 0-9 1z"/><path d="M2 21h20" stroke="currentColor" stroke-width="2"/>',
+    esquipulas:  '<path d="M12 1v4M10 3h4" stroke="currentColor" stroke-width="1.8"/><path d="M6 21V9l6-4 6 4v12z"/><rect x="10" y="14" width="4" height="7" fill="#0b1512" opacity=".5"/>',
+    antigua:     '<path d="M3 21V10h18v11z"/><path d="M8 21v-6a4 4 0 0 1 8 0v6z" fill="#0b1512" opacity=".55"/><path d="M2 10l10-6 10 6z"/>',
+    fuego:       '<path d="M2 21h20L14 7h-4z"/><path d="M12 2c1.5 2 3 2.6 3 4.4A3 3 0 0 1 9 6.4C9 4.6 10.5 4 12 2z"/>',
+    atitlan:     '<path d="M2 17h20v4H2z"/><path d="M1 17L8 5l6 12zM10 17l5-8 8 8z"/>',
+    chichi:      '<path d="M2 9l4-5h12l4 5z"/><path d="M4 9h16v12H4z"/><path d="M9 21v-6h6v6z" fill="#0b1512" opacity=".5"/>',
+    todossantos: '<path d="M1 21L9 6l5 9 3-5 6 11z"/><path d="M9 6l2.6 4.7-2.6 1-2.6-1z" fill="#0b1512" opacity=".4"/>',
+    tajumulco:   '<path d="M2 21L12 3l10 18z"/><path d="M12 3l3.4 6.2-3.4-1.4-3.4 1.4z" fill="#0b1512" opacity=".45"/>',
+    monterrico:  '<circle cx="18" cy="6" r="3.4"/><path d="M2 15c2-1.6 4-1.6 6 0s4 1.6 6 0 4-1.6 6 0" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2 20c2-1.6 4-1.6 6 0s4 1.6 6 0 4-1.6 6 0" fill="none" stroke="currentColor" stroke-width="2"/>'
+};
+
+const svg = body => '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">' + body + '</svg>';
+
+// Los trajes no llevan glifo sino un muñeco pintado con SUS colores: es a la
+// vez icono y vista previa, y ahorra tener que ponerselo para saber como es.
+function skinIcon(sk) {
+    const c = h => '#' + h.toString(16).padStart(6, '0');
+    return svg(
+        '<rect x="7" y="1.2" width="10" height="2.6" rx="1" fill="' + c(sk.crest) + '"/>' +
+        '<rect x="8.4" y="3.8" width="7.2" height="5" rx="1.2" fill="' + c(sk.skin) + '"/>' +
+        '<rect x="8.4" y="3.8" width="7.2" height="1.6" rx=".8" fill="' + c(sk.hair) + '"/>' +
+        '<rect x="6.4" y="9.4" width="11.2" height="7" rx="1.6" fill="' + c(sk.cloth) + '"/>' +
+        '<rect x="6.4" y="14" width="11.2" height="1.8" fill="' + c(sk.trim) + '"/>' +
+        '<rect x="3.6" y="9.8" width="2.4" height="5.6" rx="1.2" fill="' + c(sk.skin) + '"/>' +
+        '<rect x="18" y="9.8" width="2.4" height="5.6" rx="1.2" fill="' + c(sk.skin) + '"/>' +
+        '<rect x="8" y="16.6" width="3.2" height="4.6" rx="1" fill="' + c(sk.legs) + '"/>' +
+        '<rect x="12.8" y="16.6" width="3.2" height="4.6" rx="1" fill="' + c(sk.legs) + '"/>' +
+        '<rect x="7.6" y="21" width="4" height="1.8" rx=".8" fill="' + c(sk.boot) + '"/>' +
+        '<rect x="12.4" y="21" width="4" height="1.8" rx=".8" fill="' + c(sk.boot) + '"/>'
+    );
+}
 
 // ===========================================================================
 // Poderes
@@ -290,11 +530,15 @@ const game = {
     startRegion: 0,
     region: 0,           // indice del departamento actual
     powers: { magnet: 0, double: 0, amber: 0, flight: 0 },
-    powerMax: { magnet: 1, double: 1, amber: 1, flight: 1 }
+    powerMax: { magnet: 1, double: 1, amber: 1, flight: 1 },
+    curveBase: 0,        // desplazamiento de la curva justo donde esta el jugador
+    riseBase: 0,         // altura de la ondulacion en ese mismo punto
+    camLift: 0           // 0 a pie, 1 en el aire: reencuadra la camara al volar
 };
 
 const player = {
     lane: 1,
+    lanePrev: 1,      // de donde viene el cambio en curso, para leer su relieve
     laneFrom: 0,
     laneT: 1,         // progreso 0..1 del cambio de carril en curso
     x: 0,
@@ -308,7 +552,10 @@ const player = {
     run: 0,           // fase del ciclo de carrera
     coyote: 0,        // margen para saltar tras dejar el suelo
     buffer: 0,        // salto pulsado un instante antes de aterrizar
-    land: 0           // temporizador del aplastado de aterrizaje
+    land: 0,          // temporizador del aplastado de aterrizaje
+    groundY: 0,       // altura del suelo bajo los pies, ya no siempre cero
+    bump: 0,          // rebote contra el muro de un carril alto
+    bumpDir: 1        // hacia que lado intentaba ir cuando choco
 };
 
 // ===========================================================================
@@ -321,7 +568,7 @@ const dom = {
     hud: $('hud'), pauseTag: $('pauseTag'), motionNotice: $('motionNotice'),
     playBtn: $('playBtn'), againBtn: $('againBtn'), shopBtn: $('shopBtn'),
     overShopBtn: $('overShopBtn'), shopClose: $('shopClose'),
-    soundPref: $('soundPref'), soundBtn: $('soundBtn'),
+    soundPref: $('soundPref'), soundBtn: $('soundBtn'), musicPref: $('musicPref'),
     lives: $('lives'), dist: $('dist'), jade: $('jade'),
     overTitle: $('overTitle'), recordTag: $('recordTag'),
     finalDist: $('finalDist'), finalJade: $('finalJade'), finalScore: $('finalScore'),
@@ -360,7 +607,8 @@ const save = {
     skins: ['ajaw'],    // trajes comprados
     regions: ['tikal'], // tramos alcanzados
     start: 0,           // indice del tramo de salida elegido
-    sound: true
+    sound: true,
+    music: true
 };
 
 function loadSave() {
@@ -373,6 +621,8 @@ function loadSave() {
     save.start = parseInt(store.get('sacbe-start', '0'), 10) || 0;
     const s = store.get('sacbe-sound', null);
     save.sound = s === null ? true : s === '1';
+    const m = store.get('sacbe-music', null);
+    save.music = m === null ? true : m === '1';
 
     // Saneado: un localStorage manipulado a mano no debe romper el arranque
     if (!SKINS.some(s2 => s2.id === save.skin)) save.skin = 'ajaw';
@@ -474,6 +724,10 @@ const sfx = {
     slide: () => blip(220, 0.2, 'sawtooth', 0.32, 120),
     lane: () => blip(480, 0.07, 'square', 0.22),
     land: () => blip(150, 0.07, 'sine', 0.22),
+    // Topetazo contra el costado de un tramo alto. Seco y grave: no es un
+    // golpe, es un "por ahi no".
+    bump: () => blip(110, 0.1, 'square', 0.3, 70),
+    ramp: () => blip(300, 0.12, 'sine', 0.2, 430),
     jade: () => {
         blip(PENTA[Math.min(jadeStreak, PENTA.length - 1)], 0.19, 'triangle', 0.55);
         jadeStreak++;
@@ -497,6 +751,164 @@ const sfx = {
     deny: () => blip(160, 0.16, 'square', 0.35, 110)
 };
 
+// ===========================================================================
+// Musica de fondo: vals de marimba
+// ===========================================================================
+// NOTA SOBRE LA PIEZA. El encargo era "Luna de Xelaju", el vals de Paco Perez
+// de 1944. No se ha usado, por dos razones concretas:
+//
+//   1. No hay transcripcion fiable y libre de esa melodia: lo que circula son
+//      videos y partituras de pago, y escribirla de oido habria sido inventar
+//      una melodia y ponerle el nombre de otra.
+//   2. Paco Perez murio en 1951 y la obra sigue protegida en buena parte del
+//      mundo (en Estados Unidos, por plazo de publicacion, hasta los anos
+//      treinta del siglo que viene). Esto es una web publica.
+//
+// Lo que suena es un vals ORIGINAL escrito para el juego, en el molde del
+// vals guatemalteco: compas de 3/4, bajo en el primer tiempo y acordes en el
+// segundo y el tercero, melodia de marimba encima y giro de la menor a do
+// mayor en la segunda mitad. Si algun dia se quiere la pieza real, basta con
+// cambiar VALS.bars: el resto del sistema no se entera de que suena.
+//
+// La marimba se sintetiza como lo que es: una barra golpeada. Un seno para el
+// fundamental, otro cuatro veces mas agudo y muy corto para el golpe de la
+// baqueta, y caida exponencial en los dos.
+
+const NOTE_STEP = {
+    C: -9, 'C#': -8, D: -7, 'D#': -6, E: -5, F: -4,
+    'F#': -3, G: -2, 'G#': -1, A: 0, 'A#': 1, B: 2
+};
+
+function hz(n) {
+    const oct = parseInt(n.slice(-1), 10);
+    return 440 * Math.pow(2, (NOTE_STEP[n.slice(0, -1)] + (oct - 4) * 12) / 12);
+}
+
+const CHORDS = {
+    Am: { bass: 'A2', notes: ['A3', 'C4', 'E4'] },
+    Dm: { bass: 'D3', notes: ['D4', 'F4', 'A4'] },
+    E:  { bass: 'E3', notes: ['B3', 'E4', 'G#4'] },
+    C:  { bass: 'C3', notes: ['C4', 'E4', 'G4'] },
+    G:  { bass: 'G2', notes: ['G3', 'B3', 'D4'] },
+    F:  { bass: 'F2', notes: ['F3', 'A3', 'C4'] }
+};
+
+// Dieciseis compases. La melodia va como [nota, tiempos]; null es silencio.
+const VALS = {
+    bpm: 172,
+    bars: [
+        { ch: 'Am', mel: [['A4', 1], ['C5', 1], ['E5', 1]] },
+        { ch: 'Am', mel: [['D5', 2], ['C5', 1]] },
+        { ch: 'Dm', mel: [['B4', 1], ['D5', 1], ['F5', 1]] },
+        { ch: 'E',  mel: [['E5', 2], [null, 1]] },
+        { ch: 'Am', mel: [['A4', 1], ['C5', 1], ['E5', 1]] },
+        { ch: 'Am', mel: [['F5', 2], ['E5', 1]] },
+        { ch: 'Dm', mel: [['D5', 1], ['C5', 1], ['B4', 1]] },
+        { ch: 'Am', mel: [['A4', 3]] },
+        { ch: 'C',  mel: [['C5', 1], ['E5', 1], ['G5', 1]] },
+        { ch: 'G',  mel: [['F5', 2], ['D5', 1]] },
+        { ch: 'Am', mel: [['E5', 1], ['C5', 1], ['A4', 1]] },
+        { ch: 'E',  mel: [['B4', 2], [null, 1]] },
+        { ch: 'F',  mel: [['F4', 1], ['A4', 1], ['C5', 1]] },
+        { ch: 'E',  mel: [['B4', 1], ['G#4', 1], ['B4', 1]] },
+        { ch: 'Am', mel: [['A4', 2], ['E4', 1]] },
+        { ch: 'Am', mel: [['A4', 3]] }
+    ]
+};
+
+const music = { on: true, gain: null, next: 0, bar: 0, timer: null };
+
+function marimba(freq, t, dur, vol) {
+    const ctx = audio.ctx;
+    if (!ctx || !music.gain) return;
+
+    const o1 = ctx.createOscillator();
+    o1.type = 'sine';
+    o1.frequency.value = freq;
+    const g1 = ctx.createGain();
+    g1.gain.setValueAtTime(0, t);
+    g1.gain.linearRampToValueAtTime(vol, t + 0.008);
+    g1.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o1.connect(g1);
+    g1.connect(music.gain);
+    o1.start(t);
+    o1.stop(t + dur + 0.03);
+
+    // El golpe de la baqueta: cuarto armonico, muy corto. Sin el, la marimba
+    // suena a flauta.
+    const o2 = ctx.createOscillator();
+    o2.type = 'sine';
+    o2.frequency.value = freq * 4.01;
+    const g2 = ctx.createGain();
+    g2.gain.setValueAtTime(0, t);
+    g2.gain.linearRampToValueAtTime(vol * 0.3, t + 0.004);
+    g2.gain.exponentialRampToValueAtTime(0.0001, t + dur * 0.3);
+    o2.connect(g2);
+    g2.connect(music.gain);
+    o2.start(t);
+    o2.stop(t + dur * 0.35 + 0.03);
+}
+
+function scheduleBar(bar, t0, beat) {
+    const ch = CHORDS[bar.ch];
+
+    // Bajo en el primer tiempo, acordes en el segundo y el tercero: el patron
+    // de acompanamiento del vals, y lo que hace que suene a vals y no a
+    // sucesion de notas.
+    marimba(hz(ch.bass), t0, beat * 1.5, 0.5);
+    for (let b = 1; b < 3; b++) {
+        for (const n of ch.notes) {
+            marimba(hz(n), t0 + b * beat, beat * 0.75, 0.16);
+        }
+    }
+
+    let t = t0;
+    for (const [n, len] of bar.mel) {
+        if (n) marimba(hz(n), t, beat * len * 0.92, 0.34);
+        t += beat * len;
+    }
+}
+
+function musicTick() {
+    if (!music.on || !audio.ctx || !music.gain) return;
+    const beat = 60 / VALS.bpm;
+    const barDur = beat * 3;
+    const now = audio.ctx.currentTime;
+    if (music.next < now) music.next = now + 0.06;
+    // Se programa con medio segundo de adelanto: Web Audio suena solo, y asi
+    // un frame lento no abre un hueco en el compas.
+    while (music.next < now + 0.6) {
+        scheduleBar(VALS.bars[music.bar % VALS.bars.length], music.next, beat);
+        music.next += barDur;
+        music.bar++;
+    }
+}
+
+function startMusic() {
+    if (!audio.ctx) return;
+    if (!music.gain) {
+        music.gain = audio.ctx.createGain();
+        // Por debajo de los efectos a proposito: es fondo, y tapar el aviso
+        // de un golpe con un acorde seria cambiar musica por informacion.
+        music.gain.gain.value = 0.075;
+        music.gain.connect(audio.ctx.destination);
+    }
+    music.gain.gain.value = music.on ? 0.075 : 0;
+    if (!music.timer) music.timer = setInterval(musicTick, 90);
+    musicTick();
+}
+
+function setMusic(on) {
+    music.on = on;
+    if (music.gain) music.gain.gain.value = on ? 0.075 : 0;
+    if (on) startMusic();
+    if (dom.musicPref) {
+        dom.musicPref.textContent = 'Música: ' + (on ? 'activada' : 'apagada');
+        dom.musicPref.setAttribute('aria-pressed', String(on));
+    }
+    store.set('sacbe-music', on ? '1' : '0');
+}
+
 function setSound(on) {
     audio.on = on;
     save.sound = on;
@@ -515,7 +927,7 @@ function setSound(on) {
 // Three.js: escena
 // ===========================================================================
 let renderer, scene, camera;
-let roadMesh, kerbMesh, landMesh;
+let roadMesh, kerbMesh, baseMesh, landMesh, propMesh, ridgeMesh, skyMesh;
 let roadGroup, landGroup;
 let playerGroup, playerBody, playerParts, playerMats, shadowMesh;
 let jaguar, quetzal, groundMesh, sunLight, hemiLight;
@@ -527,6 +939,8 @@ const mat = {};
 
 const obstacles = [];
 const pickups = [];
+const platforms = [];
+const hazards = [];
 const particles = [];
 
 // Geometria unica compartida por todo el escenario
@@ -624,6 +1038,9 @@ function buildScene() {
     buildGround();
     buildRoad();
     buildLandmarks();
+    buildProps();
+    buildRidge();
+    buildSky();
     buildPools();
     buildParticles();
     buildPlayer();
@@ -642,6 +1059,18 @@ function buildMaterials() {
     mat.water  = lam(0x14776a);      // lo que llena el hueco del cenote
     mat.pit    = new THREE.MeshBasicMaterial({ color: 0x040d0b });   // el hueco
     mat.ground = lam(0x2f5a49);
+
+    // Terreno elevado: la superficie imita la losa de la calzada y el costado
+    // el bordillo, para que se lea como calzada que sube y no como un cajon.
+    mat.deck     = lam(0xefe6d2);
+    mat.deckSide = lam(0xb9a888);
+
+    // Las amenazas NO se tematizan. Todo lo demas cambia de color ocho veces
+    // por vuelta, y una fuente de dano que a veces es clara sobre fondo oscuro
+    // y a veces al reves se vuelve ilegible justo cuando importa. Silueta
+    // oscura y filo rojo, iguales en los ocho departamentos.
+    mat.danger     = lam(0x241a1a);
+    mat.dangerTrim = lam(0xef4444);
 
     // Emisivos de las recogidas: uno por tipo, para que el pulso de brillo se
     // anime una vez por frame en vez de una vez por pieza.
@@ -676,36 +1105,416 @@ function buildRoad() {
         // Blanco a proposito: el color real lo aporta setColorAt. Poner aqui
         // el mismo tono lo multiplicaria por si mismo y saldria oscurecido.
         new THREE.MeshLambertMaterial({ color: 0xffffff }),
-        TILE_COUNT
+        TILE_COUNT * ROAD_CELLS
     );
     roadMesh.instanceColor = new THREE.InstancedBufferAttribute(
-        new Float32Array(TILE_COUNT * 3), 3
+        new Float32Array(TILE_COUNT * ROAD_CELLS * 3), 3
     );
-
-    for (let i = 0; i < TILE_COUNT; i++) {
-        dummy.position.set(0, -0.5, ROAD_FROM + i * TILE_DEPTH);
-        dummy.scale.set(ROAD_WIDTH, 1, TILE_DEPTH * 0.94);
-        dummy.rotation.set(0, 0, 0);
-        dummy.updateMatrix();
-        roadMesh.setMatrixAt(i, dummy.matrix);
-    }
     roadMesh.instanceMatrix.needsUpdate = true;
+    // Sin descarte por frustum: three.js lo calcula sobre la caja de la
+    // geometria base, que en un InstancedMesh no dice nada de donde estan
+    // realmente las instancias. Con la calzada curvada, el descarte empezaba a
+    // equivocarse y hacia parpadear el tramo lejano.
+    roadMesh.frustumCulled = false;
     roadGroup.add(roadMesh);
 
     // Bordillos: los sacbeob tenian los cantos levantados
-    kerbMesh = new THREE.InstancedMesh(BOX, mat.kerb, TILE_COUNT * 2);
+    // Sub-base: una losa corrida bajo las celdas, doce centimetros mas abajo.
+    // Sin ella las juntas del adoquin son agujeros por los que se ve el suelo.
+    baseMesh = new THREE.InstancedMesh(
+        BOX, new THREE.MeshLambertMaterial({ color: 0xffffff }), TILE_COUNT
+    );
+    baseMesh.instanceColor = new THREE.InstancedBufferAttribute(
+        new Float32Array(TILE_COUNT * 3), 3
+    );
+    baseMesh.frustumCulled = false;
+    roadGroup.add(baseMesh);
+
+    // El bordillo tambien lleva color por instancia: cambia de material en la
+    // misma linea que la calzada, y con un solo material compartido se habria
+    // ido fundiendo de forma global mientras el firme daba el salto.
+    kerbMesh = new THREE.InstancedMesh(
+        BOX, new THREE.MeshLambertMaterial({ color: 0xffffff }), TILE_COUNT * 2
+    );
+    kerbMesh.instanceColor = new THREE.InstancedBufferAttribute(
+        new Float32Array(TILE_COUNT * 2 * 3), 3
+    );
+    kerbMesh.frustumCulled = false;
+    roadGroup.add(kerbMesh);
+}
+
+// ===========================================================================
+// Curvas
+// ===========================================================================
+// Dos senos de periodo largo y primo entre si: el trazado nunca se repite de
+// forma reconocible y no hace falta guardar ni generar nada.
+//
+// La clave de todo esto es que la curva se ancla a la DISTANCIA RECORRIDA, no
+// a la pantalla. Cada objeto tiene una coordenada de trazado invariante
+// s = distancia - z (los dos crecen a la vez, asi que la resta no cambia), de
+// modo que su desplazamiento lateral se calcula UNA vez al aparecer y luego
+// solo se le resta el del jugador. La curva sale practicamente gratis.
+function curveX(s) {
+    return CURVE_A1 * Math.sin(s / CURVE_L1) +
+           CURVE_A2 * Math.sin(s / CURVE_L2 + 1.7);
+}
+
+function curveY(s) {
+    return CURVE_AY * Math.sin(s / CURVE_LY + 0.6);
+}
+
+// Mascara de distancia: 0 en la zona de juego, 1 en el fondo. Es lo que hace
+// que el giro y la ondulacion sean decorado y no un problema de geometria.
+function curveMask(z) {
+    const d = -z;
+    if (d <= CURVE_NEAR) return 0;
+    const t = Math.min(1, (d - CURVE_NEAR) / (CURVE_FULL - CURVE_NEAR));
+    return t * t * (3 - 2 * t);              // smoothstep
+}
+
+// Desplazamiento visible de un objeto: cuanto se aparta de su carril respecto
+// a donde esta el jugador. En la zona de juego vale cero, y por eso ni las
+// colisiones ni los tramos elevados se enteran de que la calzada gira.
+const curveOf = o => (o.curve - game.curveBase) * curveMask(o.z);
+const riseOf = o => (o.rise - game.riseBase) * curveMask(o.z);
+
+// Lo mismo para una z arbitraria (camara, jaguar, quetzal, piezas sueltas de
+// un tramo elevado), que no tienen coordenada de trazado guardada.
+const curveAtZ = z => (curveX(game.distance - z) - game.curveBase) * curveMask(z);
+const riseAtZ = z => (curveY(game.distance - z) - game.riseBase) * curveMask(z);
+
+// La calzada si hay que recomponerla entera cada frame: sus losas van dentro
+// de un Group que se mueve con un modulo, asi que la z con la que se dibujan
+// cambia de forma continua y su desplazamiento lateral tambien. Son 180
+// matrices por FRAME; el codigo original hacia ese mismo trabajo por PASO DE
+// SIMULACION, que a 60 Hz eran seis veces mas.
+// Region a la que pertenece un punto del trazado. Cada losa consulta la suya,
+// asi que el cambio de firme es una LINEA en el mundo que se ve venir de
+// lejos, no un fundido global: llegar a Antigua es ver aparecer el adoquin.
+function roadRegionOf(s) {
+    const rp = game.startRegion + s / REGION_LENGTH + ROAD_SHIFT;
+    const i = Math.floor(rp) % REGION_N;
+    return i < 0 ? i + REGION_N : i;
+}
+
+// Bandera de celda ocupada. Los tramos con pocas celdas dejarian las
+// sobrantes con la matriz de la region anterior, asi que hay que apagarlas;
+// pero solo la primera vez, o cada frame reescribiria mil matrices en cero.
+const roadCellOn = new Uint8Array(TILE_COUNT * ROAD_CELLS);
+// Region que tenia cada losa la ultima vez. El color de la calzada solo
+// cambia cuando una losa cruza la linea entre departamentos, es decir un
+// punado de veces por minuto; subir el buffer de color entero en cada frame
+// era medio megabyte por segundo a la GPU para reescribir los mismos valores.
+const roadTileRegion = new Int8Array(TILE_COUNT).fill(-1);
+const _rc = new THREE.Color();
+
+// La calzada si hay que recomponerla entera cada frame: sus losas van dentro
+// de un Group que se mueve con un modulo, asi que la z con la que se dibujan
+// cambia de forma continua, y con ella su curva, su altura y su material. El
+// codigo original hacia este mismo trabajo por PASO DE SIMULACION, que a 60 Hz
+// eran seis veces mas.
+function updateRoadCurve() {
+    const off = roadGroup.position.z;
+    let colorDirty = false;
+
     for (let i = 0; i < TILE_COUNT; i++) {
-        const z = ROAD_FROM + i * TILE_DEPTH;
+        const zLocal = ROAD_FROM + i * TILE_DEPTH;
+        const zWorld = zLocal + off;
+        const mask = curveMask(zWorld);
+        const dx = (curveX(game.distance - zWorld) - game.curveBase) * mask;
+        const dy = (curveY(game.distance - zWorld) - game.riseBase) * mask;
+
+        const ri = roadRegionOf(game.distance - zWorld);
+        const R = REGIONS[ri];
+        const recolor = roadTileRegion[i] !== ri;
+        if (recolor) { roadTileRegion[i] = ri; colorDirty = true; }
+        const cuts = R.road[0], rows = R.road[1], gap = R.road[2], jit = R.road[3];
+        const cw = ROAD_WIDTH / cuts;
+        const cd = TILE_DEPTH / rows;
+
+        let c = 0;
+        for (let rr = 0; rr < rows; rr++) {
+            for (let cc = 0; cc < cuts; cc++, c++) {
+                const id = i * ROAD_CELLS + c;
+                // Desnivel de piedra a piedra, determinista por indice: si
+                // fuera aleatorio por frame la calzada herviria.
+                const bump = jit ? (((i * 7 + c * 13) % 7) - 3) / 3 * jit : 0;
+                dummy.position.set(
+                    dx - ROAD_WIDTH / 2 + cw * (cc + 0.5),
+                    -0.5 + dy + bump,
+                    zLocal - TILE_DEPTH / 2 + cd * (rr + 0.5)
+                );
+                dummy.scale.set(cw * gap, 1, cd * gap);
+                dummy.rotation.set(0, 0, 0);
+                dummy.updateMatrix();
+                roadMesh.setMatrixAt(id, dummy.matrix);
+                if (recolor) {
+                    roadMesh.setColorAt(id, _rc.setHex((i + cc + rr) % 2 ? R.roadA : R.roadB));
+                }
+                roadCellOn[id] = 1;
+            }
+        }
+        for (; c < ROAD_CELLS; c++) {
+            const id = i * ROAD_CELLS + c;
+            if (!roadCellOn[id]) continue;
+            roadCellOn[id] = 0;
+            dummy.position.set(0, -999, 0);
+            dummy.scale.set(0.0001, 0.0001, 0.0001);
+            dummy.rotation.set(0, 0, 0);
+            dummy.updateMatrix();
+            roadMesh.setMatrixAt(id, dummy.matrix);
+        }
+
+        // Sub-base, con el tono de la losa oscura bajado a la mitad: lo que
+        // se ve por las juntas es sombra de junta, no jungla.
+        dummy.position.set(dx, -0.62 + dy, zLocal);
+        dummy.scale.set(ROAD_WIDTH, 1, TILE_DEPTH);
+        dummy.rotation.set(0, 0, 0);
+        dummy.updateMatrix();
+        baseMesh.setMatrixAt(i, dummy.matrix);
+        if (recolor) baseMesh.setColorAt(i, _rc.setHex(R.roadB).multiplyScalar(0.55));
+
         for (let sd = 0; sd < 2; sd++) {
-            dummy.position.set(sd ? ROAD_WIDTH / 2 : -ROAD_WIDTH / 2, -0.1, z);
+            dummy.position.set(
+                dx + (sd ? ROAD_WIDTH / 2 : -ROAD_WIDTH / 2), -0.1 + dy, zLocal
+            );
             dummy.scale.set(0.55, 0.8, TILE_DEPTH * 0.94);
             dummy.rotation.set(0, 0, 0);
             dummy.updateMatrix();
             kerbMesh.setMatrixAt(i * 2 + sd, dummy.matrix);
+            if (recolor) kerbMesh.setColorAt(i * 2 + sd, _rc.setHex(R.kerb));
         }
     }
+    roadMesh.instanceMatrix.needsUpdate = true;
+    baseMesh.instanceMatrix.needsUpdate = true;
     kerbMesh.instanceMatrix.needsUpdate = true;
-    roadGroup.add(kerbMesh);
+    if (colorDirty) {
+        roadMesh.instanceColor.needsUpdate = true;
+        baseMesh.instanceColor.needsUpdate = true;
+        kerbMesh.instanceColor.needsUpdate = true;
+    }
+}
+
+// Al empezar una partida las losas tienen la region de la carrera anterior y
+// nadie las repintaria hasta que alguna cruzase una linea: se fuerza el
+// repintado invalidando la cache.
+function resetRoadColors() {
+    roadTileRegion.fill(-1);
+}
+
+// ===========================================================================
+// Capas de parallax: matorral, sierra y cielo
+// ===========================================================================
+// Tres mallas instanciadas mas, tres draw calls. Es lo que llena el hueco
+// entre la calzada y el horizonte: sin ellas el juego era una cinta blanca
+// sobre un plano verde y no habia nada por lo que pasar.
+
+// --- Lo que crece al borde de la calzada ---
+// Tres cubos por mata. La forma sale del tipo de la region y la variedad del
+// indice de la ranura, asi que dos matas seguidas nunca son iguales pero la
+// misma ranura siempre es igual a si misma.
+function propSpec(kind, k, out) {
+    const v = ((k * 37) % 11) / 11;          // 0..1 estable por ranura
+    const t = 0.8 + v * 0.6;
+    const put = (n, x, y, z, w, h, d, rz, ci) => {
+        const o = out[n];
+        o.x = x; o.y = y; o.z = z; o.w = w; o.h = h; o.d = d; o.rz = rz; o.ci = ci;
+    };
+    switch (kind) {
+        case 'jungle':
+            put(0, 0, 0.9 * t, 0, 0.5, 1.8 * t, 0.5, 0, 1);
+            put(1, 0, 2.2 * t, 0, 2.6 * t, 1.5 * t, 2.6 * t, 0, 0);
+            put(2, 0.7 * t, 3.1 * t, -0.4, 1.8 * t, 1.1 * t, 1.8 * t, 0, 0);
+            break;
+        case 'reed':
+            put(0, -0.5, 1.4 * t, 0, 0.22, 2.8 * t, 0.22, 0.12, 0);
+            put(1, 0.2, 1.8 * t, 0.3, 0.22, 3.6 * t, 0.22, -0.1, 0);
+            put(2, 0.7, 1.1 * t, -0.2, 0.3, 2.2 * t, 0.3, 0.18, 1);
+            break;
+        case 'fern':
+            put(0, 0, 0.5 * t, 0, 2.4 * t, 0.35, 2.4 * t, 0.1, 0);
+            put(1, 0.4, 1.0 * t, 0.2, 1.8 * t, 0.3, 1.8 * t, -0.14, 0);
+            put(2, -0.4, 1.4 * t, -0.3, 1.2 * t, 0.28, 1.2 * t, 0.2, 1);
+            break;
+        case 'palm':
+            put(0, 0, 2.4 * t, 0, 0.42, 4.8 * t, 0.42, 0.08, 0);
+            put(1, -1.2 * t, 4.7 * t, 0, 2.6 * t, 0.3, 1.0, -0.3, 1);
+            put(2, 1.2 * t, 4.7 * t, 0.2, 2.6 * t, 0.3, 1.0, 0.3, 1);
+            break;
+        case 'agave':
+            put(0, 0, 0.9 * t, 0, 0.4, 1.8 * t, 1.4, 0.25, 0);
+            put(1, 0.5, 0.8 * t, 0.3, 0.4, 1.6 * t, 1.2, -0.35, 0);
+            put(2, -0.4, 1.2 * t, -0.2, 0.35, 2.2 * t, 0.9, 0.12, 1);
+            break;
+        case 'jacaranda':
+            put(0, 0, 1.6 * t, 0, 0.55, 3.2 * t, 0.55, 0.05, 0);
+            put(1, 0, 3.9 * t, 0, 3.2 * t, 1.3 * t, 3.2 * t, 0, 1);
+            put(2, 0.8 * t, 4.7 * t, -0.5, 2.0 * t, 0.9 * t, 2.0 * t, 0, 1);
+            break;
+        case 'lava':
+            put(0, 0, 0.6 * t, 0, 2.0 * t, 1.2 * t, 1.8 * t, 0.1, 0);
+            put(1, 1.0, 0.4 * t, 0.6, 1.2 * t, 0.8 * t, 1.2 * t, -0.2, 0);
+            put(2, 0.2, 1.35 * t, 0.1, 0.9 * t, 0.28, 0.9 * t, 0, 1);
+            break;
+        case 'maize':
+            put(0, -0.4, 1.5 * t, 0, 0.26, 3.0 * t, 0.26, 0.1, 0);
+            put(1, 0.4, 1.7 * t, 0.3, 0.26, 3.4 * t, 0.26, -0.12, 0);
+            put(2, 0, 3.2 * t, 0.1, 0.5, 0.7 * t, 0.5, 0.2, 1);
+            break;
+        case 'stall':
+            put(0, 0, 0.9 * t, 0, 0.28, 1.8 * t, 0.28, 0, 1);
+            put(1, 0, 2.0 * t, 0, 2.8 * t, 0.3, 2.4 * t, 0.14, 0);
+            put(2, 0.3, 0.5 * t, 0.4, 1.2 * t, 1.0 * t, 1.0 * t, 0, 1);
+            break;
+        case 'pine':
+            put(0, 0, 0.9 * t, 0, 0.4, 1.8 * t, 0.4, 0, 1);
+            put(1, 0, 2.6 * t, 0, 2.4 * t, 2.0 * t, 2.4 * t, 0, 0);
+            put(2, 0, 4.2 * t, 0, 1.4 * t, 1.6 * t, 1.4 * t, 0, 0);
+            break;
+        default:   // rock
+            put(0, 0, 0.7 * t, 0, 2.2 * t, 1.4 * t, 2.0 * t, 0.12, 0);
+            put(1, 1.1, 0.45 * t, -0.5, 1.3 * t, 0.9 * t, 1.3 * t, -0.2, 0);
+            put(2, -0.6, 1.5 * t, 0.3, 0.9 * t, 0.8 * t, 0.9 * t, 0.3, 1);
+            break;
+    }
+}
+
+const propBuf = [];
+for (let i = 0; i < PROP_PARTS; i++) {
+    propBuf.push({ x: 0, y: 0, z: 0, w: 0, h: 0, d: 0, rz: 0, ci: 0 });
+}
+
+function buildProps() {
+    propMesh = new THREE.InstancedMesh(
+        BOX, new THREE.MeshLambertMaterial({ color: 0xffffff }),
+        PROP_SLOTS * PROP_PARTS
+    );
+    propMesh.instanceColor = new THREE.InstancedBufferAttribute(
+        new Float32Array(PROP_SLOTS * PROP_PARTS * 3), 3
+    );
+    propMesh.frustumCulled = false;
+    scene.add(propMesh);
+}
+
+function buildRidge() {
+    // Sin niebla a proposito: la niebla se cierra en 185 y la sierra vive mas
+    // alla, asi que fogueada seria invisible. Se pinta con un tono cercano al
+    // de la bruma para que siga leyendose como fondo y no como decorado.
+    ridgeMesh = new THREE.InstancedMesh(
+        BOX, new THREE.MeshBasicMaterial({ color: 0xffffff, fog: false }), RIDGE_COUNT
+    );
+    ridgeMesh.instanceColor = new THREE.InstancedBufferAttribute(
+        new Float32Array(RIDGE_COUNT * 3), 3
+    );
+    ridgeMesh.frustumCulled = false;
+    ridgeMesh.renderOrder = -2;
+    scene.add(ridgeMesh);
+}
+
+function buildSky() {
+    skyMesh = new THREE.InstancedMesh(
+        BOX, new THREE.MeshBasicMaterial({ color: 0xffffff, fog: false, transparent: true, opacity: 0.85 }),
+        SKY_COUNT
+    );
+    skyMesh.instanceColor = new THREE.InstancedBufferAttribute(
+        new Float32Array(SKY_COUNT * 3), 3
+    );
+    skyMesh.frustumCulled = false;
+    skyMesh.renderOrder = -3;
+    scene.add(skyMesh);
+}
+
+const _sc = new THREE.Color();
+// Temporales propios de la escenografia. mixHex usa _cA/_cB internamente, asi
+// que pasarle uno de esos dos como destino lo pisa a mitad de calculo.
+const _sA = new THREE.Color();
+const _sB = new THREE.Color();
+
+function updateScenery(A, B, e) {
+    // --- Matorral al borde (1x, la capa que corre) ---
+    const propOff = game.distance % PROP_PERIOD;
+    for (let k = 0; k < PROP_SLOTS; k++) {
+        const side = k % 2 ? 1 : -1;
+        const slot = k >> 1;
+        // El modulo va DENTRO: sin el, la mitad de las matas acababa detras
+        // de la camara y se dibujaban veintidos arbustos que nadie ve.
+        const zWorld = PROP_FROM + (slot * PROP_SPACING + propOff) % PROP_PERIOD;
+        // A que region pertenece este trozo de cuneta: el matorral cambia en
+        // la misma linea que el firme, o la selva de Peten seguiria creciendo
+        // en la arena de Monterrico.
+        const R = REGIONS[roadRegionOf(game.distance - zWorld)];
+        propSpec(R.prop, k, propBuf);
+
+        const mask = curveMask(zWorld);
+        const dx = (curveX(game.distance - zWorld) - game.curveBase) * mask;
+        const dy = (curveY(game.distance - zWorld) - game.riseBase) * mask;
+        const base = side * (ROAD_WIDTH / 2 + 2.2 + ((slot * 5) % 4) * 1.3);
+
+        for (let t = 0; t < PROP_PARTS; t++) {
+            const q = propBuf[t];
+            const id = k * PROP_PARTS + t;
+            dummy.position.set(base + q.x * side + dx, q.y - 1 + dy, zWorld + q.z);
+            dummy.scale.set(Math.max(0.02, q.w), Math.max(0.02, q.h), Math.max(0.02, q.d));
+            dummy.rotation.set(0, 0, q.rz * side);
+            dummy.updateMatrix();
+            propMesh.setMatrixAt(id, dummy.matrix);
+            propMesh.setColorAt(id, _sc.setHex(q.ci ? R.propB : R.propA));
+        }
+    }
+    propMesh.instanceMatrix.needsUpdate = true;
+    propMesh.instanceColor.needsUpdate = true;
+
+    // --- Sierra del fondo ---
+    // No se acerca: una cordillera a kilometros no crece porque camines, y
+    // reciclarla en Z daba un salto de tamano cada vuelta. Lo que hace es
+    // DERIVAR de lado, que es justo lo que se ve desde una carretera. El
+    // periodo lateral (RIDGE_PERIOD) es mas ancho que el cono de vision, asi
+    // que el reciclado ocurre fuera de pantalla y no se nota.
+    const ridgeOff = game.distance * 0.16;
+    mixHex(A.ridge, B.ridge, e, _sA);
+    mixHex(A.fog, B.fog, e, _sB);
+    _sc.copy(_sA).lerp(_sB, 0.45);          // medio velada por la bruma
+    for (let k = 0; k < RIDGE_COUNT; k++) {
+        const w = 26 + ((k * 23) % 44);
+        const h = 12 + ((k * 29) % 46);
+        const zk = -400 + ((k * 41) % 130);
+        const x = ((k * 97 + ridgeOff) % RIDGE_PERIOD) - RIDGE_PERIOD / 2;
+        // Tapa inclinada, alterna a un lado y a otro: con la caja recta el
+        // fondo era un muro liso, y basta este giro para que el perfil de
+        // arriba se quiebre y parezca una cordillera.
+        const tilt = (((k * 7) % 5) - 2) * 0.13;
+        dummy.position.set(x + curveAtZ(zk) * 0.55, h / 2 - 9, zk);
+        dummy.scale.set(w, h, 26);
+        dummy.rotation.set(0, ((k * 13) % 7) * 0.05, tilt);
+        dummy.updateMatrix();
+        ridgeMesh.setMatrixAt(k, dummy.matrix);
+        ridgeMesh.setColorAt(k, _sc);
+    }
+    ridgeMesh.instanceMatrix.needsUpdate = true;
+    ridgeMesh.instanceColor.needsUpdate = true;
+
+    // --- Cielo (0.05x): nubes de dia, estrellas de noche ---
+    const star = (e < 0.5 ? A.sky : B.sky) === 'star';
+    const skyOff = game.distance * 0.045;
+    mixHex(A.skyC, B.skyC, e, _sc);
+    for (let k = 0; k < SKY_COUNT; k++) {
+        const zk = -150 - ((k * 53) % 210);
+        const x = ((k * 71 + skyOff) % SKY_PERIOD) - SKY_PERIOD / 2;
+        const y = 20 + ((k * 37) % 30);
+        if (star) {
+            dummy.position.set(x, y + 10, zk);
+            dummy.scale.set(1.1, 1.1, 1.1);
+        } else {
+            dummy.position.set(x, y, zk);
+            dummy.scale.set(18 + ((k * 19) % 26), 3.4 + ((k * 7) % 3), 10);
+        }
+        dummy.rotation.set(0, 0, 0);
+        dummy.updateMatrix();
+        skyMesh.setMatrixAt(k, dummy.matrix);
+        skyMesh.setColorAt(k, _sc);
+    }
+    skyMesh.instanceMatrix.needsUpdate = true;
+    skyMesh.instanceColor.needsUpdate = true;
 }
 
 // ===========================================================================
@@ -778,6 +1587,19 @@ function silhouette(kind, s, R) {
                 const w = 16 * s * (1 - t * 0.185);
                 put(0, 3.0 * s * t + 1.5 * s - 1, 0, w, 3.0 * s, w, t >= 3 ? R.landB : R.landA);
             }
+            break;
+        }
+        case 'town': {                                    // Flores, la isla
+            // Un monticulo con casas de tejado rojo trepando por el. Flores es
+            // eso visto desde el lago, y no se parece a ningun otro hito.
+            put(0, 0.9 * s - 1, 0, 11 * s, 2.4 * s, 9 * s, R.landA);
+            put(-2.2 * s, 2.9 * s, 1.2 * s, 2.4 * s, 2.2 * s, 2.4 * s, R.landA);
+            put(-2.2 * s, 4.3 * s, 1.2 * s, 2.9 * s, 0.6 * s, 2.9 * s, R.landB);
+            put(1.4 * s, 3.4 * s, -0.6 * s, 2.6 * s, 3.0 * s, 2.6 * s, R.landA);
+            put(1.4 * s, 5.2 * s, -0.6 * s, 3.1 * s, 0.7 * s, 3.1 * s, R.landB);
+            put(0, 5.6 * s, 1.8 * s, 2.0 * s, 4.4 * s, 2.0 * s, R.landA);
+            put(0, 8.1 * s, 1.8 * s, 2.4 * s, 0.7 * s, 2.4 * s, R.landB);
+            put(0, 8.9 * s, 1.8 * s, 0.3 * s, 1.1 * s, 0.3 * s, R.landB);
             break;
         }
         case 'market': {                                  // Chichicastenango
@@ -921,7 +1743,7 @@ function makeObstacle() {
     return {
         group, parts: [estela, dintel, cenote],
         shaft, cap, beam, posts,
-        type: -1, lane: 1, z: 0, active: false
+        type: -1, lane: 1, z: 0, baseY: 0, curve: 0, rise: 0, active: false
     };
 }
 
@@ -929,12 +1751,153 @@ function makePickup() {
     const mesh = new THREE.Mesh(GEO.jade, mat.jade);
     mesh.visible = false;
     scene.add(mesh);
-    return { mesh, lane: 1, z: 0, y: 1.1, active: false, kind: 'jade', pulled: false };
+    return {
+        mesh, lane: 1, z: 0, y: 1.1, curve: 0, rise: 0,
+        active: false, kind: 'jade', pulled: false
+    };
+}
+
+// ---------------------------------------------------------------------------
+// Tramo elevado
+// ---------------------------------------------------------------------------
+// Geometria en coordenadas locales, con el origen en la BOCA de la rampa de
+// entrada. El jugador esta fijo en z = 0 y el tramo avanza hacia el, asi que
+// recorre sus z locales de 0 hacia negativo: primero la rampa que sube, luego
+// el llano, y al final la rampa que baja. El largo del llano es lo unico que
+// cambia entre unos y otros, y se ajusta escalando, sin reconstruir nada.
+function makePlatform() {
+    const group = new THREE.Group();
+    const ang = Math.atan2(LEVEL_HIGH, RAMP_LEN);
+    const rampLen = Math.hypot(RAMP_LEN, LEVEL_HIGH);
+
+    // Rampa de subida: se recorre de z = 0 a z = -RAMP_LEN. Girando en +X el
+    // extremo de z negativa es el que sube, que es justo lo que hace falta.
+    //
+    // El desplazamiento en Y no es la mitad del desnivel sino esa mitad menos
+    // el medio grosor proyectado de la losa: asi la CARA de la rampa arranca
+    // rasante con la calzada y termina justo en LEVEL_HIGH, que es la altura
+    // que devuelve terrainAt. Con la mitad a secas quedaba un escalon de doce
+    // centimetros en la boca, y el jugador andaba doce por encima del suelo
+    // que pisaba.
+    const rampY = LEVEL_HIGH / 2 - 0.25 * Math.cos(ang);
+    const up = new THREE.Mesh(BOX, mat.deck);
+    up.scale.set(2.15, 0.5, rampLen);
+    up.position.set(0, rampY, -RAMP_LEN / 2);
+    up.rotation.x = ang;
+    group.add(up);
+
+    // Cuerpo: el costado da el volumen y la tapa el color de la calzada.
+    const side = new THREE.Mesh(BOX, mat.deckSide);
+    side.scale.set(2.15, LEVEL_HIGH, 1);
+    group.add(side);
+
+    const deck = new THREE.Mesh(BOX, mat.deck);
+    deck.scale.set(2.2, 0.26, 1);
+    group.add(deck);
+
+    // Rampa de bajada, al otro extremo. Giro contrario.
+    const down = new THREE.Mesh(BOX, mat.deck);
+    down.scale.set(2.15, 0.5, rampLen);
+    down.rotation.x = -ang;
+    group.add(down);
+
+    group.visible = false;
+    scene.add(group);
+
+    return {
+        group, up, side, deck, down, rampY,
+        lane: 1, z: 0, len: PLAT_MIN, curve: 0, rise: 0, active: false
+    };
+}
+
+// ---------------------------------------------------------------------------
+// Amenazas
+// ---------------------------------------------------------------------------
+function makeHazard() {
+    const group = new THREE.Group();
+
+    // Camazotz, el murcielago de Xibalba. Vuela a la altura del pecho: o te
+    // agachas por debajo, o lo saltas por encima, o te apartas de carril.
+    const bat = new THREE.Group();
+    const piece = (parent, m, sx, sy, sz, x, y, z) => {
+        const q = new THREE.Mesh(BOX, m);
+        q.scale.set(sx, sy, sz);
+        q.position.set(x, y, z);
+        parent.add(q);
+        return q;
+    };
+    piece(bat, mat.danger, 0.5, 0.5, 0.8, 0, 0, 0);            // cuerpo
+    piece(bat, mat.danger, 0.34, 0.34, 0.34, 0, 0.2, 0.42);    // cabeza
+    piece(bat, mat.dangerTrim, 0.1, 0.1, 0.08, -0.11, 0.24, 0.6);  // ojos
+    piece(bat, mat.dangerTrim, 0.1, 0.1, 0.08, 0.11, 0.24, 0.6);
+    piece(bat, mat.danger, 0.14, 0.3, 0.1, -0.14, 0.44, 0.38);     // orejas
+    piece(bat, mat.danger, 0.14, 0.3, 0.1, 0.14, 0.44, 0.38);
+    // Envergadura ajustada a la caja de colision (1,15 a cada lado). Con alas
+    // mas largas el bicho invadia visualmente los carriles vecinos y parecia
+    // que iba a golpear donde no golpea: asusta de mas, que en un juego de
+    // reflejos es tan injusto como asustar de menos.
+    const wingL = piece(bat, mat.danger, 0.95, 0.1, 0.62, -0.66, 0.06, 0);
+    const wingR = piece(bat, mat.danger, 0.95, 0.1, 0.62, 0.66, 0.06, 0);
+    piece(bat, mat.dangerTrim, 0.95, 0.06, 0.14, -0.66, 0.02, -0.3);
+    piece(bat, mat.dangerTrim, 0.95, 0.06, 0.14, 0.66, 0.02, -0.3);
+    group.add(bat);
+
+    // Piedra rodante: baja por el carril girando. Solo se salta.
+    const rock = new THREE.Group();
+    piece(rock, mat.danger, 1.45, 1.45, 1.45, 0, 0, 0);
+    piece(rock, mat.danger, 1.1, 1.1, 1.75, 0, 0, 0);
+    piece(rock, mat.dangerTrim, 1.5, 0.2, 0.2, 0, 0.5, 0);
+    piece(rock, mat.dangerTrim, 0.2, 0.2, 1.5, 0.45, 0.3, 0);
+    group.add(rock);
+
+    group.visible = false;
+    scene.add(group);
+
+    return {
+        group, parts: [bat, rock], bat, rock, wingL, wingR,
+        type: CAMAZOTZ, lane: 1, z: 0, y: 0, phase: 0, active: false
+    };
 }
 
 function buildPools() {
     for (let i = 0; i < OBSTACLE_POOL; i++) obstacles.push(makeObstacle());
     for (let i = 0; i < PICKUP_POOL; i++) pickups.push(makePickup());
+    for (let i = 0; i < PLATFORM_POOL; i++) platforms.push(makePlatform());
+    for (let i = 0; i < HAZARD_POOL; i++) hazards.push(makeHazard());
+}
+
+// ---------------------------------------------------------------------------
+// Altura del terreno
+// ---------------------------------------------------------------------------
+// Unica fuente de verdad sobre a que altura esta el suelo: la usan el jugador,
+// los obstaculos al aparecer, las recogidas y las piedras que ruedan. Con
+// nueve tramos como maximo en vuelo, el barrido no se nota.
+function terrainAt(lane, z) {
+    let h = 0;
+    for (const p of platforms) {
+        if (!p.active || p.lane !== lane) continue;
+        const u = p.z - z;                       // 0 en la boca, crece hacia dentro
+        if (u < 0 || u > 2 * RAMP_LEN + p.len) continue;
+
+        let y;
+        if (u < RAMP_LEN) y = LEVEL_HIGH * (u / RAMP_LEN);                       // subiendo
+        else if (u < RAMP_LEN + p.len) y = LEVEL_HIGH;                           // llano
+        else y = LEVEL_HIGH * (1 - (u - RAMP_LEN - p.len) / RAMP_LEN);           // bajando
+
+        if (y > h) h = y;
+    }
+    return h;
+}
+
+// Hay tramo (de cualquier carril) ocupando esa z? Evita encadenar perfiles
+// nuevos encima de uno que todavia esta pasando.
+function platformNear(z) {
+    for (const p of platforms) {
+        if (!p.active) continue;
+        const u = p.z - z;
+        if (u > -18 && u < 2 * RAMP_LEN + p.len + 18) return true;
+    }
+    return false;
 }
 
 // Proporciones de obstaculo por departamento: en Río Dulce los postes son de
@@ -1069,7 +2032,8 @@ function buildPlayer() {
     });
 
     playerMats = {
-        cloth: slot(), skin: slot(), crest: slot(), legs: slot(), trim: slot()
+        cloth: slot(), skin: slot(), crest: slot(), legs: slot(),
+        trim: slot(), hair: slot(), boot: slot()
     };
 
     const cube = (parent, m, sx, sy, sz, x, y, z) => {
@@ -1080,24 +2044,60 @@ function buildPlayer() {
         return mesh;
     };
 
-    const limb = (m, hx, hy, sx, sy, sz) => {
+    // Un miembro es un pivote en la articulacion, el miembro colgando de el y
+    // un remate (mano o pie) en la punta. Sin el remate los brazos eran palos
+    // que terminaban en nada, que es lo que hacia raro al personaje.
+    const limb = (m, mEnd, hx, hy, sx, sy, sz, endS) => {
         const pivot = new THREE.Group();
         pivot.position.set(hx, hy, 0);
         playerBody.add(pivot);
         cube(pivot, m, sx, sy, sz, 0, -sy / 2, 0);
+        cube(pivot, mEnd, endS[0], endS[1], endS[2], 0, -sy - endS[1] / 2 + 0.04, endS[3] || 0);
         return pivot;
     };
 
+    // --- Tronco ---
     const torso = cube(playerBody, playerMats.cloth, 0.86, 0.95, 0.55, 0, 1.28, 0);
-    cube(playerBody, playerMats.trim, 0.9, 0.16, 0.6, 0, 0.88, 0);       // faja
-    const head = cube(playerBody, playerMats.skin, 0.62, 0.6, 0.6, 0, 2.05, 0);
-    cube(playerBody, playerMats.crest, 0.7, 0.26, 0.7, 0, 2.45, 0);      // tocado
-    cube(playerBody, playerMats.crest, 0.16, 0.5, 0.5, 0, 2.7, 0.06);    // pluma
+    cube(playerBody, playerMats.trim, 0.9, 0.16, 0.6, 0, 0.88, 0);        // faja
+    cube(playerBody, playerMats.legs, 0.78, 0.34, 0.52, 0, 0.72, 0);      // taparrabo
+    // Manta a la espalda. El jugador corre de espaldas a la camara: TODO el
+    // detalle que se ve esta en este lado, y una espalda lisa era la mitad
+    // del problema de que el personaje pareciera un bloque.
+    cube(playerBody, playerMats.trim, 0.8, 1.05, 0.09, 0, 1.3, 0.31);
+    cube(playerBody, playerMats.crest, 0.8, 0.12, 0.11, 0, 1.72, 0.32);
+    cube(playerBody, playerMats.crest, 0.8, 0.12, 0.11, 0, 0.95, 0.32);
+    // Morral cruzado, colgando de la cadera
+    cube(playerBody, playerMats.boot, 0.14, 0.9, 0.12, -0.33, 1.4, 0.2);
+    cube(playerBody, playerMats.boot, 0.34, 0.34, 0.24, -0.42, 0.95, 0.2);
+    // Hombreras
+    cube(playerBody, playerMats.trim, 0.3, 0.16, 0.4, -0.52, 1.72, 0);
+    cube(playerBody, playerMats.trim, 0.3, 0.16, 0.4, 0.52, 1.72, 0);
 
-    const armL = limb(playerMats.skin, -0.55, 1.66, 0.24, 0.72, 0.24);
-    const armR = limb(playerMats.skin, 0.55, 1.66, 0.24, 0.72, 0.24);
-    const legL = limb(playerMats.legs, -0.24, 0.85, 0.3, 0.8, 0.3);
-    const legR = limb(playerMats.legs, 0.24, 0.85, 0.3, 0.8, 0.3);
+    // --- Cabeza ---
+    cube(playerBody, playerMats.skin, 0.3, 0.2, 0.3, 0, 1.85, 0);         // cuello
+    const head = cube(playerBody, playerMats.skin, 0.62, 0.6, 0.6, 0, 2.05, 0);
+    // Pelo: nuca y laterales. Es lo primero que se ve de el.
+    cube(playerBody, playerMats.hair, 0.66, 0.5, 0.22, 0, 2.08, 0.22);
+    cube(playerBody, playerMats.hair, 0.66, 0.22, 0.62, 0, 2.31, 0);
+    cube(playerBody, playerMats.hair, 0.16, 0.42, 0.5, -0.35, 2.02, 0.06);
+    cube(playerBody, playerMats.hair, 0.16, 0.42, 0.5, 0.35, 2.02, 0.06);
+    // Tocado y tres plumas abiertas hacia atras
+    cube(playerBody, playerMats.crest, 0.72, 0.24, 0.72, 0, 2.5, 0);
+    cube(playerBody, playerMats.trim, 0.76, 0.1, 0.76, 0, 2.63, 0);
+    const plume = (x, rz, h) => {
+        const f = cube(playerBody, playerMats.crest, 0.13, h, 0.34, x, 2.62 + h / 2, 0.2);
+        f.rotation.z = rz;
+        f.rotation.x = 0.35;
+        return f;
+    };
+    plume(0, 0, 0.66);
+    plume(-0.2, 0.42, 0.52);
+    plume(0.2, -0.42, 0.52);
+
+    const armL = limb(playerMats.skin, playerMats.skin, -0.55, 1.66, 0.24, 0.72, 0.24, [0.28, 0.24, 0.28, 0]);
+    const armR = limb(playerMats.skin, playerMats.skin, 0.55, 1.66, 0.24, 0.72, 0.24, [0.28, 0.24, 0.28, 0]);
+    const legL = limb(playerMats.legs, playerMats.boot, -0.24, 0.85, 0.3, 0.8, 0.3, [0.34, 0.2, 0.5, -0.08]);
+    const legR = limb(playerMats.legs, playerMats.boot, 0.24, 0.85, 0.3, 0.8, 0.3, [0.34, 0.2, 0.5, -0.08]);
 
     playerParts = { torso, head, armL, armR, legL, legR };
     scene.add(playerGroup);
@@ -1117,12 +2117,14 @@ function buildPlayer() {
 }
 
 function applySkin(id) {
-    const s = skinById(id);
-    playerMats.cloth.color.setHex(s.cloth);
-    playerMats.skin.color.setHex(s.skin);
-    playerMats.crest.color.setHex(s.crest);
-    playerMats.legs.color.setHex(s.legs);
-    playerMats.trim.color.setHex(s.trim);
+    const sk = skinById(id);
+    playerMats.cloth.color.setHex(sk.cloth);
+    playerMats.skin.color.setHex(sk.skin);
+    playerMats.crest.color.setHex(sk.crest);
+    playerMats.legs.color.setHex(sk.legs);
+    playerMats.trim.color.setHex(sk.trim);
+    playerMats.hair.color.setHex(sk.hair);
+    playerMats.boot.color.setHex(sk.boot);
 }
 
 // --- Jaguar: la presion visual de las vidas ---
@@ -1188,7 +2190,14 @@ function buildQuetzal() {
     const wingL = piece(C.quetzal, 0.5, 0.08, 0.34, -0.36, 0.06, 0);
     const wingR = piece(C.quetzal, 0.5, 0.08, 0.34, 0.36, 0.06, 0);
 
-    quetzal.userData = { wingL, wingR };
+    // Garras: solo se ven mientras carga al jugador. Son lo que convierte
+    // "el pajaro esta encima" en "el pajaro me lleva".
+    const talonL = piece(C.ochre, 0.09, 0.34, 0.09, -0.13, -0.3, -0.1);
+    const talonR = piece(C.ochre, 0.09, 0.34, 0.09, 0.13, -0.3, -0.1);
+    talonL.visible = false;
+    talonR.visible = false;
+
+    quetzal.userData = { wingL, wingR, talonL, talonR };
     quetzal.visible = false;
     scene.add(quetzal);
 }
@@ -1199,6 +2208,8 @@ function buildQuetzal() {
 function resetWorld() {
     obstacles.forEach(o => { o.active = false; o.group.visible = false; });
     pickups.forEach(p => { p.active = false; p.mesh.visible = false; });
+    platforms.forEach(p => { p.active = false; p.group.visible = false; });
+    hazards.forEach(h => { h.active = false; h.group.visible = false; });
     game.nextSpawnZ = SPAWN_Z + 40;   // margen inicial para orientarse
 }
 
@@ -1222,15 +2233,41 @@ function freePickup() {
     return best;
 }
 
-function spawnObstacle(type, lane, z) {
+function freePlatform() {
+    let best = null;
+    for (const p of platforms) {
+        if (!p.active) return p;
+        if (!best || p.z > best.z) best = p;
+    }
+    return best;
+}
+
+function freeHazard() {
+    let best = null;
+    for (const h of hazards) {
+        if (!h.active) return h;
+        if (!best || h.z > best.z) best = h;
+    }
+    return best;
+}
+
+// Coordenada de trazado de un objeto que aparece en z. Es invariante durante
+// toda su vida, asi que la curva se resuelve con una resta por frame.
+const trackCurve = z => curveX(game.distance - z);
+const trackRise  = z => curveY(game.distance - z);
+
+function spawnObstacle(type, lane, z, baseY) {
     const o = freeObstacle();
     if (!o) return;
     o.type = type;
     o.lane = lane;
     o.z = z;
+    o.baseY = baseY || 0;
+    o.curve = trackCurve(z);
+    o.rise = trackRise(z);
     o.active = true;
     o.group.visible = true;
-    o.group.position.set(LANE_X[lane], 0, z);
+    o.group.position.set(LANE_X[lane] + curveOf(o), o.baseY + riseOf(o), z);
     o.parts.forEach((p, i) => { p.visible = (i === type); });
 }
 
@@ -1240,13 +2277,59 @@ function spawnPickup(lane, z, height, kind = 'jade') {
     p.lane = lane;
     p.z = z;
     p.y = height;
+    p.curve = trackCurve(z);
+    p.rise = trackRise(z);
     p.active = true;
     p.kind = kind;
     p.pulled = false;
     p.mesh.geometry = GEO[kind] || GEO.jade;
     p.mesh.material = mat[kind] || mat.jade;
     p.mesh.visible = true;
-    p.mesh.position.set(LANE_X[lane], height, z);
+    p.mesh.position.set(LANE_X[lane] + curveOf(p), height + riseOf(p), z);
+}
+
+function spawnPlatform(lane, z, len) {
+    const p = freePlatform();
+    if (!p) return;
+    p.lane = lane;
+    p.z = z;
+    p.len = len;
+    p.curve = trackCurve(z);
+    p.rise = trackRise(z);
+    p.active = true;
+    p.group.visible = true;
+    p.group.position.set(LANE_X[lane], 0, z);
+
+    // El llano y su costado se estiran al largo pedido; las rampas son fijas.
+    const mid = -RAMP_LEN - len / 2;
+    p.side.scale.z = len;
+    p.side.position.set(0, LEVEL_HIGH / 2, mid);
+    p.deck.scale.z = len + 0.3;
+    // La tapa tambien termina exactamente en LEVEL_HIGH: es la superficie que
+    // el jugador pisa, y tiene que coincidir con lo que dice terrainAt.
+    p.deck.position.set(0, LEVEL_HIGH - 0.13, mid);
+    p.down.position.set(0, p.rampY, -RAMP_LEN - len - RAMP_LEN / 2);
+}
+
+function spawnHazard(type, lane, z) {
+    const h = freeHazard();
+    if (!h) return;
+    h.type = type;
+    h.lane = lane;
+    h.z = z;
+    h.phase = Math.random() * 6.283;
+    // Sin curva guardada, a proposito: una amenaza cierra distancia por su
+    // cuenta, asi que su coordenada de trazado NO es invariante y hay que
+    // recalcularla en cada paso. Es el unico objeto del juego que lo necesita.
+    h.active = true;
+    h.group.visible = true;
+    h.parts.forEach((p, i) => { p.visible = (i === type); });
+
+    // Se coloca ya, sin esperar al siguiente paso: el bucle de amenazas corre
+    // ANTES que la generacion de compases, asi que una recien nacida pasaria
+    // un frame entero dibujada donde estuvo la anterior.
+    h.y = terrainAt(lane, z) + (type === CAMAZOTZ ? 1.8 : 0.72);
+    h.group.position.set(LANE_X[lane] + curveAtZ(z), h.y + riseAtZ(z), z);
 }
 
 // Elige un poder segun su peso. El escudo solo entra en el sorteo si no
@@ -1266,41 +2349,133 @@ function rollPower() {
     return 'magnet';
 }
 
+// Levanta un perfil de alturas: uno de los cinco repartos alto/bajo, con su
+// rampa de subida y de bajada en cada carril alto. Se hace de una vez para los
+// tres carriles y con el mismo largo, para que el perfil se lea de un vistazo.
+function generateTerrain(z) {
+    const pat = LANE_PATTERNS[(Math.random() * LANE_PATTERNS.length) | 0];
+    const len = PLAT_MIN + Math.random() * (PLAT_MAX - PLAT_MIN);
+    for (let l = 0; l < 3; l++) {
+        if (pat[l]) spawnPlatform(l, z, len);
+    }
+}
+
 // Genera un "compas" de recorrido: un patron de obstaculos mas su jade.
 // La dificultad sube reduciendo el hueco entre compases.
 function generateChunk(z) {
-    if (Math.random() < powerChance()) {
-        spawnPickup((Math.random() * 3) | 0, z - 12, 1.3, rollPower());
+    const hard = Math.min(game.elapsed / 95, 1);        // 0 -> 1 en poco mas de un minuto
+
+    // --- Relieve ---
+    // Nunca antes de los primeros metros ni encima de un tramo que aun pasa:
+    // encadenarlos deja al jugador sin suelo bajo que reorientarse.
+    // La boca de la rampa se adelanta unas unidades respecto al compas: si
+    // arrancase justo en z, los obstaculos de este mismo compas caerian dentro
+    // de la rampa, que es donde peor se leen.
+    // Medio compas de cada dos, y desde los 120 m. Con valores mas timidos un
+    // tramo elevado salia cada 190 unidades y la partida corriente veia dos:
+    // demasiado poco para que el desnivel llegue a ser una mecanica y no una
+    // curiosidad.
+    if (game.distance > 120 && !platformNear(z) && Math.random() < 0.5) {
+        generateTerrain(z - 10);
     }
 
-    const hard = Math.min(game.elapsed / 95, 1);        // 0 -> 1 en poco mas de un minuto
-    const pattern = Math.random();
+    // --- Amenazas que vienen a por ti ---
+    // Entran mas tarde que el relieve: primero se aprende la calzada, y solo
+    // despues empieza a venir algo de frente. A los 220 m el jugador lleva ya
+    // unos quince segundos y ha visto los tres obstaculos y una rampa.
+    if (game.distance > 220 && Math.random() < 0.16 + hard * 0.2) {
+        const type = Math.random() < 0.55 ? CAMAZOTZ : RODANTE;
+        spawnHazard(type, (Math.random() * 3) | 0, z - 20);
+    }
+
+    const at = l => terrainAt(l, z);
+    // En rampa no se pone nada: un obstaculo sobre una cuesta no se lee bien y
+    // un cenote en mitad de una subida no significa nada.
+    const flat = l => { const y = at(l); return (y < 0.01 || y > LEVEL_HIGH - 0.01) ? y : -1; };
+
+    // Nivel de cada carril, y si el compas cae sobre terreno desigual.
+    const lv = [at(0), at(1), at(2)].map(y => y > LEVEL_HIGH * 0.5 ? 1 : 0);
+    const mixed = !(lv[0] === lv[1] && lv[1] === lv[2]);
+    // En terreno desigual, el nivel que ocupa DOS carriles. Es donde se puede
+    // poner un obstaculo sin dejar a nadie sin salida.
+    const major = lv[0] + lv[1] + lv[2] >= 2 ? 1 : 0;
+    // Carriles donde es seguro estorbar: si el terreno es plano, cualquiera.
+    const safeLanes = [0, 1, 2].filter(l => !mixed || lv[l] === major);
+    const pick = arr => arr[(Math.random() * arr.length) | 0];
+
+    if (Math.random() < powerChance()) {
+        const l = (Math.random() * 3) | 0;
+        const y = flat(l);
+        if (y >= 0) spawnPickup(l, z - 12, y + 1.3, rollPower());
+    }
+
+    let pattern = Math.random();
+    // Sobre terreno desigual se descarta el patron de dos obstaculos. Deja un
+    // unico carril libre, y si ese carril esta arriba y el jugador abajo, el
+    // muro lateral le cierra la unica salida: golpe seguro sin haber fallado
+    // nada. El relieve ya es el reto de ese tramo; no hace falta apretar mas.
+    if (mixed && pattern >= 0.3 + hard * 0.15 && pattern < 0.62 + hard * 0.1) {
+        pattern = Math.random() * (0.3 + hard * 0.15);
+    }
 
     if (pattern < 0.3 + hard * 0.15) {
-        // Un solo obstaculo, jade en los carriles libres
-        const lane = (Math.random() * 3) | 0;
-        const type = (Math.random() * 3) | 0;
-        spawnObstacle(type, lane, z);
+        // Un solo obstaculo, jade en los carriles libres. En terreno desigual
+        // va siempre en el nivel que tiene dos carriles, para que quien corra
+        // por ahi pueda apartarse sin cambiar de altura.
+        const lane = pick(safeLanes);
+        const y = flat(lane);
+        // Sobre un tramo elevado no hay cenotes: un agujero en una plataforma
+        // que ya esta en alto no se entiende, y ademas se sale por los lados.
+        const type = y > 0 ? (Math.random() * 2) | 0 : (Math.random() * 3) | 0;
+        if (y >= 0) spawnObstacle(type, lane, z, y);
         for (let l = 0; l < 3; l++) {
-            if (l !== lane && Math.random() < 0.72) spawnPickup(l, z, 1.1);
+            const ly = flat(l);
+            if (l !== lane && ly >= 0 && Math.random() < 0.72) spawnPickup(l, z, ly + 1.1);
         }
     } else if (pattern < 0.62 + hard * 0.1) {
         // Dos obstaculos: queda un unico carril libre
         const free = (Math.random() * 3) | 0;
         for (let l = 0; l < 3; l++) {
-            if (l !== free) spawnObstacle((Math.random() * 3) | 0, l, z);
+            if (l === free) continue;
+            const y = flat(l);
+            if (y < 0) continue;
+            spawnObstacle(y > 0 ? (Math.random() * 2) | 0 : (Math.random() * 3) | 0, l, z, y);
         }
-        spawnPickup(free, z, 1.1);
+        const fy = flat(free);
+        if (fy >= 0) spawnPickup(free, z, fy + 1.1);
     } else if (pattern < 0.82) {
         // Pasillo de jade: recompensa sin riesgo, para respirar. Es el patron
-        // que hace alcanzable la racha, asi que da de sobra.
+        // que hace alcanzable la racha, asi que da de sobra. Sigue el relieve
+        // del carril, asi que un pasillo sobre un tramo alto sube con el.
         const lane = (Math.random() * 3) | 0;
-        for (let k = 0; k < 5; k++) spawnPickup(lane, z - k * 3.2, 1.1);
+        for (let k = 0; k < 5; k++) {
+            const pz = z - k * 3.2;
+            spawnPickup(lane, pz, terrainAt(lane, pz) + 1.1);
+        }
     } else {
         // Dintel en los tres carriles: hay que deslizarse, con jade alto
         // colocado justo detras para premiar el momento exacto
-        for (let l = 0; l < 3; l++) spawnObstacle(DINTEL, l, z);
-        spawnPickup(1, z - 6, 1.1);
+        for (let l = 0; l < 3; l++) {
+            const y = flat(l);
+            if (y >= 0) spawnObstacle(DINTEL, l, z, y);
+        }
+        spawnPickup(1, z - 6, terrainAt(1, z - 6) + 1.1);
+    }
+}
+
+// Rastro de jade en el aire: se siembra al recoger el vuelo del quetzal, a la
+// altura de crucero y serpenteando entre carriles. Sin el, volar era solo
+// invulnerabilidad temporal; con el, el vuelo es otro juego durante seis
+// segundos y de verdad compensa subir.
+function spawnSkyTrail() {
+    const n = 22;
+    const step = 7;
+    const base = Math.random() * 6.283;
+    for (let k = 0; k < n; k++) {
+        const lane = 1 + Math.round(Math.sin(base + k * 0.42));
+        const z = -34 - k * step;
+        if (k === 11) spawnPickup(lane, z, FLY_Y + 1.1, rollPower());
+        else spawnPickup(lane, z, FLY_Y + 1.1);
     }
 }
 
@@ -1310,9 +2485,23 @@ function generateChunk(z) {
 function moveLane(dir) {
     const next = Math.max(0, Math.min(2, player.lane + dir));
     if (next === player.lane) return;
+
+    // El costado de un tramo elevado es un muro. Se rechaza el cambio en vez
+    // de cobrar una vida: el desnivel es un problema de ruta, no una trampa, y
+    // castigarlo con dano lo volveria injusto justo cuando aun no lo entiendes.
+    // Para subir: la rampa de tu carril, o un salto.
+    if (game.powers.flight <= 0 && terrainAt(next, PLAYER_Z) > player.y + STEP_UP) {
+        player.bump = 0.18;
+        player.bumpDir = dir;
+        shake = Math.max(shake, 0.16);
+        sfx.bump();
+        return;
+    }
+
     // El tween arranca desde donde esta el cuerpo AHORA, no desde el carril
     // anterior: encadenar dos cambios seguidos ya no da un tiron hacia atras.
     player.laneFrom = player.x;
+    player.lanePrev = player.lane;
     player.lane = next;
     player.laneT = 0;
     sfx.lane();
@@ -1393,6 +2582,7 @@ function initInput() {
         if (game.state === State.PAUSED) {
             if (e.code === 'KeyP' || e.code === 'Escape') { e.preventDefault(); togglePause(); }
             else if (e.code === 'KeyM') setSound(!audio.on);
+            else if (e.code === 'KeyN') setMusic(!music.on);
             return;
         }
 
@@ -1409,6 +2599,7 @@ function initInput() {
             case 'ArrowDown': case 'KeyS': e.preventDefault(); slide(); break;
             case 'KeyP': case 'Escape': togglePause(); break;
             case 'KeyM': setSound(!audio.on); break;
+            case 'KeyN': setMusic(!music.on); break;
         }
     });
 
@@ -1474,11 +2665,23 @@ function updatePlayer(dt) {
 
     const flying = game.powers.flight > 0;
 
+    // --- Suelo bajo los pies ---
+    // Ya no es siempre cero. Durante un cambio de carril se toma la altura MAS
+    // ALTA de los dos carriles implicados: como entrar en un carril alto desde
+    // abajo ya esta prohibido en moveLane, aqui las dos alturas siempre son
+    // compatibles, y usar el maximo hace que salir de un tramo elevado sea
+    // correr hasta el borde y caer, en vez de desaparecer a mitad de camino.
+    const gTo = terrainAt(player.lane, PLAYER_Z);
+    const gy = player.laneT < 1
+        ? Math.max(gTo, terrainAt(player.lanePrev, PLAYER_Z))
+        : gTo;
+    player.groundY = gy;
+
     if (flying) {
         // Vuelo: se sube a altura de crucero y se queda ahi. La gravedad se
         // desconecta del todo para que aterrizar sea decision del temporizador
         // y no del jugador.
-        player.y += (FLY_Y - player.y) * Math.min(1, 5 * dt);
+        player.y += (FLY_Y - player.y) * Math.min(1, 4 * dt);
         player.vy = 0;
         player.grounded = false;
         player.sliding = 0;
@@ -1493,8 +2696,8 @@ function updatePlayer(dt) {
         player.vy += GRAVITY * (player.vy < 0 ? FALL_GRAVITY : 1) * dt;
         player.y += player.vy * dt;
 
-        if (player.y <= 0) {
-            player.y = 0;
+        if (player.y <= gy) {
+            player.y = gy;
             player.vy = 0;
             player.grounded = true;
             player.jumps = 0;
@@ -1513,14 +2716,26 @@ function updatePlayer(dt) {
             }
         }
     } else {
-        player.coyote = COYOTE_TIME;
-        player.jumps = 0;
-        player.wantSlide = false;
+        // En el suelo se sigue el relieve. La rampa se sube y se baja pegado a
+        // ella; solo una caida de verdad (el borde del tramo) suelta al
+        // jugador al aire, o cada rampa se bajaria a saltitos.
+        if (gy < player.y - STEP_DOWN) {
+            player.grounded = false;
+            player.vy = 0;
+            player.coyote = COYOTE_TIME;
+        } else {
+            if (gy > player.y + 0.001 && player.y < 0.05) sfx.ramp();
+            player.y = gy;
+            player.coyote = COYOTE_TIME;
+            player.jumps = 0;
+            player.wantSlide = false;
+        }
     }
 
     if (player.buffer > 0) player.buffer = Math.max(0, player.buffer - dt);
     if (player.sliding > 0) player.sliding = Math.max(0, player.sliding - dt);
     if (player.land > 0) player.land = Math.max(0, player.land - dt);
+    if (player.bump > 0) player.bump = Math.max(0, player.bump - dt);
 
     // Ciclo de carrera
     player.run += dt * game.speed * 0.55;
@@ -1550,14 +2765,16 @@ function updatePlayer(dt) {
     const c = Math.cos(player.run);
 
     if (flying) {
-        playerBody.rotation.x = -0.42;
-        playerParts.armL.rotation.x = 0.2;
-        playerParts.armR.rotation.x = 0.2;
-        playerParts.armL.rotation.z = 1.15 + Math.sin(player.run * 2.4) * 0.2;
-        playerParts.armR.rotation.z = -1.15 - Math.sin(player.run * 2.4) * 0.2;
-        playerParts.legL.rotation.x = -0.35;
-        playerParts.legR.rotation.x = -0.2;
-        playerParts.head.rotation.x = 0.15;
+        // Colgado de las garras del quetzal: cuerpo casi vertical, brazos
+        // estirados hacia arriba agarrandose y piernas balanceandose sueltas.
+        // La postura de planeo anterior no explicaba por que no caia.
+        playerBody.rotation.x = 0.05 + Math.sin(game.elapsed * 2.2) * 0.05;
+        playerParts.armL.rotation.set(-2.85, 0, -0.12);
+        playerParts.armR.rotation.set(-2.85, 0, 0.12);
+        playerParts.legL.rotation.set(Math.sin(game.elapsed * 2.6) * 0.28 + 0.12, 0, 0);
+        playerParts.legR.rotation.set(Math.sin(game.elapsed * 2.6 + 0.9) * 0.28 + 0.05, 0, 0);
+        playerParts.torso.position.y = 1.28;
+        playerParts.head.rotation.set(-0.12, 0, 0);
     } else if (sliding) {
         playerParts.armL.rotation.set(-0.4, 0, 0.3);
         playerParts.armR.rotation.set(-0.4, 0, -0.3);
@@ -1586,11 +2803,20 @@ function updatePlayer(dt) {
         playerParts.head.rotation.set(rising ? -0.15 : 0.2, 0, 0);
     }
 
-    // Sombra de contacto: se encoge y se aclara con la altura, que es lo que
-    // permite calcular el aterrizaje.
-    const h = Math.min(player.y, 6);
+    // Topetazo contra el muro de un carril alto: el cuerpo se asoma y vuelve.
+    // Sin este acuse, un cambio de carril rechazado parece que no se registro.
+    if (player.bump > 0) {
+        const b = player.bump / 0.18;
+        playerGroup.position.x += Math.sin(b * Math.PI) * 0.5 * player.bumpDir;
+        playerGroup.rotation.z += Math.sin(b * Math.PI) * 0.18 * player.bumpDir;
+    }
+
+    // Sombra de contacto: se encoge y se aclara con la ALTURA SOBRE EL SUELO,
+    // no sobre el cero absoluto. Sobre un tramo elevado la sombra va con el
+    // jugador; si se quedase abajo, aterrizar dejaria de poder calcularse.
+    const h = Math.min(player.y - gy, 6);
     const k = 1 - h * 0.085;
-    shadowMesh.position.x = player.x;
+    shadowMesh.position.set(player.x, gy + 0.03, PLAYER_Z);
     shadowMesh.scale.set(k, k, 1);
     shadowMesh.material.opacity = Math.max(0.08, 0.4 - h * 0.045);
 
@@ -1609,20 +2835,86 @@ function scrollWorld(dt) {
     const dz = game.speed * dt;
     game.distance += dz;
 
+    // Desplazamiento lateral de la curva en el punto donde esta el jugador.
+    // Todo lo demas se dibuja restando este valor, de modo que el jugador
+    // siempre queda sobre su carril y la calzada se dobla a su alrededor.
+    game.curveBase = curveX(game.distance);
+    game.riseBase = curveY(game.distance);
+
     // --- Calzada y horizonte: solo se mueve el Group ---
-    // Antes se recolocaban las 180 instancias de la calzada y se reconstruian
-    // los cubos del fondo en CADA paso de simulacion, reenviando ademas el
-    // buffer de color entero. Al ser ambos escenarios periodicos basta con
-    // desplazar su contenedor y envolver con un modulo.
+    // La Z sigue resolviendose con el modulo del contenedor, que es lo que
+    // evita recolocar 180 instancias por paso de simulacion. La X, en cambio,
+    // ya no puede: la curva se recompone una vez por FRAME en updateRoadCurve.
     roadGroup.position.z = game.distance % ROAD_PERIOD;
     landGroup.position.z = (game.distance * 0.82) % LAND_PERIOD;
+    // Los hitos del fondo no se doblan uno a uno (serian 336 matrices por
+    // frame por un detalle que esta en la bruma): se desplaza el grupo entero
+    // por la curva a media distancia, que da el mismo paralaje al ojo.
+    landGroup.position.x = curveAtZ(-90) * 1.15;
+    landGroup.position.y = riseAtZ(-90) * 0.9;
+
+    // --- Tramos elevados ---
+    for (const p of platforms) {
+        if (!p.active) continue;
+        p.z += dz;
+        // El grupo va sobre su carril a pelo y CADA PIEZA se desplaza por su
+        // cuenta segun la z que ocupa. Un tramo puede medir setenta unidades:
+        // moverlo entero con un solo desplazamiento lo dejaba cruzado sobre la
+        // calzada en cuanto esta empezaba a doblarse.
+        p.group.position.x = LANE_X[p.lane];
+        p.group.position.z = p.z;
+        p.up.position.x = curveAtZ(p.z - RAMP_LEN / 2);
+        p.up.position.y = p.rampY + riseAtZ(p.z - RAMP_LEN / 2);
+        p.side.position.x = curveAtZ(p.z + p.side.position.z);
+        p.side.position.y = LEVEL_HIGH / 2 + riseAtZ(p.z + p.side.position.z);
+        p.deck.position.x = curveAtZ(p.z + p.deck.position.z);
+        p.deck.position.y = LEVEL_HIGH - 0.13 + riseAtZ(p.z + p.deck.position.z);
+        p.down.position.x = curveAtZ(p.z + p.down.position.z);
+        p.down.position.y = p.rampY + riseAtZ(p.z + p.down.position.z);
+        // Se recicla cuando su COLA pasa de largo, no su boca: si no, el tramo
+        // desapareceria con el jugador todavia encima.
+        if (p.z - 2 * RAMP_LEN - p.len > DESPAWN_Z) {
+            p.active = false;
+            p.group.visible = false;
+        }
+    }
 
     // --- Obstaculos ---
     for (const o of obstacles) {
         if (!o.active) continue;
         o.z += dz;
+        o.group.position.x = LANE_X[o.lane] + curveOf(o);
+        o.group.position.y = o.baseY + riseOf(o);
         o.group.position.z = o.z;
         if (o.z > DESPAWN_Z) { o.active = false; o.group.visible = false; }
+    }
+
+    // --- Amenazas ---
+    // Avanzan con el mundo MAS lo suyo propio, que es lo que hace que se lean
+    // como algo que viene a por ti y no como parte del decorado.
+    for (const h of hazards) {
+        if (!h.active) continue;
+        h.z += dz + HAZ_SPEED[h.type] * dt;
+        h.phase += dt;
+
+        const base = terrainAt(h.lane, h.z);
+        let x = LANE_X[h.lane] + curveAtZ(h.z);
+
+        if (h.type === CAMAZOTZ) {
+            // Zigzag corto: no cambia de carril, pero obliga a leerlo.
+            x += Math.sin(h.phase * 3.1) * 0.55;
+            h.y = base + 1.8 + Math.sin(h.phase * 4.6) * 0.16;
+            const flap = Math.sin(h.phase * 19) * 0.9;
+            h.wingL.rotation.z = flap;
+            h.wingR.rotation.z = -flap;
+            h.bat.rotation.z = Math.sin(h.phase * 3.1) * 0.2;
+        } else {
+            h.y = base + 0.72;
+            h.rock.rotation.x -= dt * 7.5;
+        }
+
+        h.group.position.set(x, h.y + riseAtZ(h.z), h.z);
+        if (h.z > DESPAWN_Z) { h.active = false; h.group.visible = false; }
     }
 
     // --- Recogidas ---
@@ -1643,8 +2935,8 @@ function scrollWorld(dt) {
             p.mesh.position.y += ((player.y + 1.1) - p.mesh.position.y) * pull;
             p.pulled = true;
         } else if (!p.pulled) {
-            p.mesh.position.x = LANE_X[p.lane];
-            p.mesh.position.y = p.y;
+            p.mesh.position.x = LANE_X[p.lane] + curveOf(p);
+            p.mesh.position.y = p.y + riseOf(p);
         }
 
         p.mesh.position.z = p.z;
@@ -1685,6 +2977,8 @@ function checkCollisions() {
 
     if (game.invuln > 0 || flying) return;
 
+    const sliding = player.sliding > 0 && player.grounded;
+
     // --- Obstaculos ---
     for (const o of obstacles) {
         if (!o.active) continue;
@@ -1693,7 +2987,10 @@ function checkCollisions() {
         // carril apunta la ultima tecla pulsada.
         if (Math.abs(player.x - LANE_X[o.lane]) > LANE_HALF) continue;
 
-        const sliding = player.sliding > 0 && player.grounded;
+        // Altura RELATIVA a la base del obstaculo: sobre un tramo elevado el
+        // dintel esta a 1,6 mas arriba, y compararlo contra el cero absoluto
+        // haria que se pasara por debajo sin agacharse.
+        const rel = player.y - o.baseY;
         let hit = false;
 
         if (o.type === ESTELA) {
@@ -1701,10 +2998,31 @@ function checkCollisions() {
         } else if (o.type === DINTEL) {
             hit = !sliding;                   // hay que ir agachado
         } else if (o.type === CENOTE) {
-            hit = player.y < 0.9;             // hay que estar en el aire
+            hit = rel < 0.9;                  // hay que estar en el aire
         }
 
         if (hit) { takeHit(); return; }
+    }
+
+    // --- Amenazas ---
+    // Cada una ocupa una franja vertical sobre su suelo: por debajo del
+    // murcielago se pasa deslizandose, por encima de la piedra saltando. Que
+    // el criterio sea una franja y no un "te toca o no" es lo que hace que
+    // agacharse y saltar sean respuestas distintas y no intercambiables.
+    for (const h of hazards) {
+        if (!h.active) continue;
+        if (Math.abs(h.z - PLAYER_Z) > 1.25) continue;
+        if (Math.abs(player.x - h.group.position.x) > 1.15) continue;
+
+        const base = h.y - (h.type === CAMAZOTZ ? 1.8 : 0.72);
+        const lo = base + HAZ_LOW[h.type];
+        const hi = base + HAZ_HIGH[h.type];
+
+        // Franja que ocupa el jugador: de pie llega a 2,4; agachado, a 1,1.
+        const feet = player.y;
+        const head = player.y + (sliding ? 1.1 : 2.4);
+
+        if (head > lo && feet < hi) { takeHit(); return; }
     }
 }
 
@@ -1727,9 +3045,15 @@ function collect(p) {
         sfx.shield();
     } else {
         const t = POWERS[p.kind].time * powerScale();
+        // Encadenar un segundo vuelo no debe sembrar un rastro nuevo encima
+        // del que aun esta en el aire: se alarga el tiempo y ya esta.
+        const wasFlying = p.kind === 'flight' && game.powers.flight > 0;
         game.powers[p.kind] = t;
         game.powerMax[p.kind] = t;
-        if (p.kind === 'flight') player.wantSlide = false;
+        if (p.kind === 'flight') {
+            player.wantSlide = false;
+            if (!wasFlying) spawnSkyTrail();
+        }
         sfx.power();
     }
     burstParticles(x, y, p.z, 16, 1.15, POWERS[p.kind].color);
@@ -1932,13 +3256,14 @@ function applyBlend(pos) {
     if (key !== lastBlendKey) {
         lastBlendKey = key;
 
-        // Calzada y bordillo
-        for (let k = 0; k < TILE_COUNT; k++) {
-            mixHex(k % 2 ? A.roadA : A.roadB, k % 2 ? B.roadA : B.roadB, e, _cMix);
-            roadMesh.setColorAt(k, _cMix);
-        }
-        roadMesh.instanceColor.needsUpdate = true;
-        mat.kerb.color.copy(mixHex(A.kerb, B.kerb, e, _cMix));
+        // La calzada y el bordillo ya NO se pintan aqui: cada losa consulta su
+        // propia region en updateRoadCurve, para que el firme cambie en una
+        // linea que se ve venir en vez de fundirse de forma global.
+        //
+        // Los tramos elevados si van con la mezcla: son piezas de paso y
+        // siempre estan en la zona cercana, donde la region es la actual.
+        mat.deck.color.copy(mixHex(A.roadA, B.roadA, e, _cMix));
+        mat.deckSide.color.copy(mixHex(A.kerb, B.kerb, e, _cMix));
 
         // Obstaculos
         mat.stone.color.copy(mixHex(A.stone, B.stone, e, _cMix));
@@ -1970,7 +3295,7 @@ function applyBlend(pos) {
         skyTexture.needsUpdate = true;
     }
 
-    return { i, j, raw, e };
+    return { i, j, raw, e, A, B };
 }
 
 // ===========================================================================
@@ -2029,7 +3354,11 @@ function updateCompanions(dt) {
 
     jaguar.visible = game.lives < total;
     jaguar.position.z += (targetZ - jaguar.position.z) * Math.min(1, 2.2 * dt);
-    jaguar.position.x += (player.x * 0.6 - jaguar.position.x) * Math.min(1, 3 * dt);
+    // Tambien va sobre la calzada, asi que tambien la sigue al girar: a veinte
+    // unidades por detras la curva ya vale mas de una unidad y sin esto el
+    // jaguar corria por el aire.
+    const jx = player.x * 0.6 + curveAtZ(jaguar.position.z);
+    jaguar.position.x += (jx - jaguar.position.x) * Math.min(1, 3 * dt);
 
     // Zancada y cola
     const gait = game.elapsed * game.speed * 0.55;
@@ -2040,21 +3369,40 @@ function updateCompanions(dt) {
     jaguar.position.y = Math.abs(Math.sin(gait * 0.5)) * 0.14;
     jaguar.userData.tail.rotation.x = Math.sin(gait * 0.4) * 0.25;
 
-    // Quetzal: vuela al lado, sin colision ni funcion. Solo compania. Cuando
-    // el jugador vuela, se le acerca y lo escolta.
+    // Quetzal. En reposo vuela por delante y a un lado, sin colision ni
+    // funcion: solo compania. Con el poder activo baja, se coloca ENCIMA del
+    // jugador y lo levanta agarrado de las garras. El mismo pajaro haciendo de
+    // premio explica el poder mejor que cualquier rotulo del HUD.
     quetzal.visible = true;
     const bob = Math.sin(game.elapsed * 3.4);
     const flying = game.powers.flight > 0;
-    quetzal.position.set(
-        player.x + (flying ? 2.4 : -4.6) + Math.sin(game.elapsed * 0.7) * 0.4,
-        (flying ? player.y + 0.6 : 3.5) + bob * 0.3,
-        PLAYER_Z - (flying ? 1.6 : 7) + Math.cos(game.elapsed * 0.9) * 0.7
-    );
-    quetzal.scale.setScalar(0.85);
-    quetzal.rotation.z = bob * 0.12;
-    const flap = Math.sin(game.elapsed * (flying ? 22 : 15)) * 0.7;
+
+    // La transicion se hace con el mismo valor que reencuadra la camara, asi
+    // que el pajaro llega justo cuando el jugador termina de subir.
+    const g = game.camLift;
+
+    const idleX = player.x - 4.6 + Math.sin(game.elapsed * 0.7) * 0.4 + curveAtZ(PLAYER_Z - 7);
+    const idleY = 3.5 + bob * 0.3;
+    const idleZ = PLAYER_Z - 7 + Math.cos(game.elapsed * 0.9) * 0.7;
+
+    const holdX = player.x;
+    const holdY = player.y + 3.15 + bob * 0.12;
+    const holdZ = PLAYER_Z + 0.45;
+
+    quetzal.position.set(lerp(idleX, holdX, g), lerp(idleY, holdY, g), lerp(idleZ, holdZ, g));
+    quetzal.scale.setScalar(lerp(0.85, 1.65, g));
+    quetzal.rotation.z = bob * 0.12 * (1 - g) - (LANE_X[player.lane] - player.x) * 0.1;
+    quetzal.rotation.x = lerp(0, -0.12, g);
+
+    // Cargando bate mas fuerte y mas despacio: aletazos de esfuerzo, no de
+    // planeo. Las garras solo salen cuando hay a quien agarrar.
+    const flap = flying
+        ? 0.35 + Math.sin(game.elapsed * 9) * 0.95
+        : Math.sin(game.elapsed * 15) * 0.7;
     quetzal.userData.wingL.rotation.z = flap;
     quetzal.userData.wingR.rotation.z = -flap;
+    quetzal.userData.talonL.visible = g > 0.05;
+    quetzal.userData.talonR.visible = g > 0.05;
 }
 
 // ===========================================================================
@@ -2062,6 +3410,7 @@ function updateCompanions(dt) {
 // ===========================================================================
 function startGame() {
     initAudio();
+    if (music.on) startMusic();
     stopPendingTones();          // corta la fanfarria de la partida anterior
     sfx.start();
 
@@ -2080,9 +3429,13 @@ function startGame() {
     game.startRegion = save.start;
     game.region = save.start;
     for (const k of POWER_KEYS) if (k !== 'shield') game.powers[k] = 0;
+    game.curveBase = curveX(0);
+    game.riseBase = curveY(0);
+    game.camLift = 0;
     jadeStreak = 0;
 
     player.lane = 1;
+    player.lanePrev = 1;
     player.laneFrom = 0;
     player.laneT = 1;
     player.x = 0;
@@ -2096,6 +3449,8 @@ function startGame() {
     player.coyote = COYOTE_TIME;
     player.buffer = 0;
     player.land = 0;
+    player.groundY = 0;
+    player.bump = 0;
 
     playerGroup.visible = true;
     for (const m of Object.values(playerMats)) m.opacity = 1;
@@ -2112,6 +3467,7 @@ function startGame() {
     shake = 0;
 
     resetHudCache();
+    resetRoadColors();
     mmLastName = '';
     lastBlendKey = -1;
     hudDirty = true;
@@ -2157,6 +3513,10 @@ function endGame() {
     // pantalla de fin, sobre un mundo que ya no se mueve.
     jaguar.visible = false;
     quetzal.visible = false;
+
+    // Los poderes se apagan al morir. Si el vuelo sobreviviese a la partida,
+    // la camara se quedaria encuadrada en el aire durante todo el menu.
+    for (const k of ['magnet', 'double', 'amber', 'flight']) game.powers[k] = 0;
 
     dom.hud.hidden = true;
     dom.over.hidden = false;
@@ -2214,7 +3574,7 @@ function renderShop() {
         const label = on ? 'Puesto' : owned ? 'Ponérselo' : s.cost + ' jade';
         const dis = (!owned && save.bank < s.cost) || on;
         return '<div class="card' + (on ? ' on' : '') + (owned ? '' : ' locked') + '">' +
-            swatch([s.cloth, s.crest, s.trim, s.legs]) +
+            '<span class="card-ic skin-ic">' + skinIcon(s) + '</span>' +
             '<b>' + s.name + '</b><p>' + s.desc + '</p>' +
             '<button type="button" data-skin="' + s.id + '"' +
             (dis ? ' disabled' : '') + (on ? ' class="equipped"' : '') + '>' + label + '</button>' +
@@ -2230,6 +3590,7 @@ function renderShop() {
         const bars = Array.from({ length: u.max }, (_, k) =>
             '<i class="' + (k < l ? 'full' : '') + '"></i>').join('');
         return '<div class="card' + (l > 0 ? ' on' : '') + '">' +
+            '<span class="card-ic">' + svg(ICON_PATHS[u.id]) + '</span>' +
             '<b>' + u.name + '</b><p>' + u.desc + '</p>' +
             '<span class="card-lvl">' + bars + '</span>' +
             '<button type="button" data-upg="' + u.id + '"' +
@@ -2243,6 +3604,7 @@ function renderShop() {
         const on = save.start === i;
         const label = on ? 'Salida' : open ? 'Salir de aquí' : 'Por descubrir';
         return '<div class="card' + (on ? ' on' : '') + (open ? '' : ' locked') + '">' +
+            '<span class="card-ic">' + svg(REGION_ICONS[R.id] || '') + '</span>' +
             swatch([R.skyBot, R.landA, R.landB, R.roadA]) +
             '<b>' + R.name + '</b><p>' + R.dept + '. Tramo ' + (i + 1) + ' de ' + REGION_N + '.</p>' +
             '<button type="button" data-route="' + i + '"' +
@@ -2379,7 +3741,11 @@ function frame(now) {
         if (hudDirty) { renderHud(); hudDirty = false; }
         renderDistance();
 
+        // Calzada y escenografia se recomponen una vez por FRAME, no una por
+        // paso de simulacion: son trabajo de dibujo, no de simulacion.
         const blend = applyBlend(routePos());
+        updateRoadCurve();
+        updateScenery(blend.A, blend.B, blend.e);
         renderMinimap(blend.i, blend.j, blend.raw, blend.e);
 
         // Al entrar en un departamento nuevo: bandera, sonido y desbloqueo
@@ -2412,21 +3778,53 @@ function frame(now) {
     } else if (game.state === State.MENU || game.state === State.SHOP) {
         // Los menus se ven sobre la escena, asi que conviene que respire, y
         // ademas asi el fondo adelanta que aspecto tiene el tramo de salida.
-        applyBlend(save.start);
         updateParticles(delta);
+        // La calzada tambien se dobla de fondo: si no, el menu ensena una recta
+        // y el juego arranca con una curva, que se lee como un salto.
+        game.curveBase = curveX(game.distance);
+        game.riseBase = curveY(game.distance);
+        const mb = applyBlend(save.start);
+        updateRoadCurve();
+        updateScenery(mb.A, mb.B, mb.e);
     }
 
+    // Reencuadre al volar. Si la camara siguiera al jugador con el factor de a
+    // pie, a casi siete unidades de altura se saldria del encuadre por arriba;
+    // subiendo camara y punto de mira EN LA MISMA proporcion, el jugador se
+    // queda exactamente donde estaba y lo que cambia es el horizonte.
+    //
+    // Depende solo del poder, no del estado: condicionarlo a PLAYING hacia que
+    // al pausar en pleno vuelo la camara se recolocase como si el jugador
+    // estuviera en el suelo, y el personaje se iba del encuadre por arriba.
+    const wantLift = game.powers.flight > 0 ? 1 : 0;
+    game.camLift += (wantLift - game.camLift) * Math.min(1, 2.6 * delta);
+    const f = game.camLift;
+
+    // Curva: la camara mira hacia donde va la calzada, no al frente. Sin esto
+    // el trazado se iria de plano en cuanto la curva apretase.
+    const aimCurve = curveAtZ(cam.aimZ) * CURVE_FOLLOW;
+
     // Camara: sigue al jugador con retardo y acusa el golpe
-    const targetX = player.x * 0.32;
+    const targetX = player.x * 0.32 + aimCurve * 0.5;
     camera.position.x += (targetX - camera.position.x) * Math.min(1, 6 * delta);
-    camera.position.y = cam.y + player.y * 0.12;
+    camera.position.y = cam.y + player.y * (0.12 + 0.85 * f);
 
     if (shake > 0) {
         shake = Math.max(0, shake - delta * 2.2);
         camera.position.x += (Math.random() - 0.5) * shake * 0.9;
         camera.position.y += (Math.random() - 0.5) * shake * 0.9;
     }
-    camera.lookAt(player.x * 0.5, cam.aimY + player.y * 0.2, cam.aimZ);
+
+    camera.lookAt(
+        player.x * 0.5 + aimCurve,
+        cam.aimY + player.y * (0.2 + 0.77 * f),
+        cam.aimZ
+    );
+
+    // Alabeo: la camara se tumba un poco hacia dentro de la curva. Va DESPUES
+    // de lookAt, que reescribe la rotacion entera. Un grado escaso: lo justo
+    // para que el giro se sienta en el cuerpo sin marear.
+    camera.rotation.z += curveAtZ(cam.aimZ) * 0.022;
 
     renderer.render(scene, camera);
 }
@@ -2448,6 +3846,7 @@ function boot() {
     initInput();
     initShop();
     setSound(save.sound);
+    setMusic(save.music);
     refreshMenu();
 
     // Aviso de movimiento: el juego es movimiento continuo y no se puede
@@ -2460,10 +3859,11 @@ function boot() {
 
     dom.playBtn.addEventListener('click', startGame);
     dom.againBtn.addEventListener('click', startGame);
-    dom.shopBtn.addEventListener('click', () => { initAudio(); openShop(State.MENU); });
+    dom.shopBtn.addEventListener('click', () => { initAudio(); if (music.on) startMusic(); openShop(State.MENU); });
     dom.overShopBtn.addEventListener('click', () => openShop(State.OVER));
     dom.shopClose.addEventListener('click', closeShop);
     dom.soundPref.addEventListener('click', () => { initAudio(); setSound(!audio.on); });
+    dom.musicPref.addEventListener('click', () => { initAudio(); setMusic(!music.on); });
     dom.soundBtn.addEventListener('click', () => setSound(!audio.on));
     dom.pauseBtn.addEventListener('click', togglePause);
 

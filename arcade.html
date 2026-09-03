@@ -625,6 +625,24 @@
         .card.locked > p,
         .card.locked > .card-swatch { opacity: 0.6; }
 
+        /* Icono de la tarjeta. Va en SVG en linea y no en glifo Unicode: la
+           tipografia solo trae el rango latino, asi que cualquier simbolo cae
+           en la fuente de respaldo del sistema y cambia de forma —o de
+           existencia— segun la maquina. */
+        .card-ic {
+            display: block;
+            width: 2.1rem;
+            height: 2.1rem;
+            color: var(--jade);
+            margin-bottom: 0.1rem;
+        }
+
+        .card-ic .ic { width: 100%; height: 100%; display: block; fill: currentColor; }
+
+        /* El traje no lleva glifo sino un muneco con sus propios colores: es
+           icono y vista previa a la vez. */
+        .skin-ic { width: 2.6rem; height: 2.6rem; }
+
         .card-swatch {
             display: flex;
             gap: 0.22rem;
@@ -728,10 +746,14 @@
 
             <p class="blurb">
                 Los mayas unían sus ciudades con <b>sacbeob</b>: calzadas de piedra
-                caliza blanca. La tuya cruza Guatemala entera —de Tikal a Monterrico,
-                pasando por Semuc Champey, Río Dulce, Antigua, Atitlán, Chichicastenango
-                y el Tajumulco—. Esquiva lo que se cruce, recoge jade y llega lo más
-                lejos que puedas.
+                caliza blanca. La tuya cruza Guatemala entera en <b>doce tramos</b>,
+                de Tikal a Monterrico pasando por Flores, Semuc Champey, Río Dulce,
+                Esquipulas, Antigua, el Fuego, Atitlán, Chichicastenango, Todos Santos
+                y el Tajumulco. En cada uno cambian el cielo, la vegetación y hasta el
+                firme que pisas —el adoquín de Antigua no se parece a la caliza de
+                Tikal—. La calzada gira, sube por rampas a tramos elevados y de vez en
+                cuando algo viene de frente. Esquiva, recoge jade y llega lo más lejos
+                que puedas.
             </p>
 
             <div class="keys">
@@ -741,11 +763,22 @@
                 <div class="key-row"><b>Táctil</b> desliza o toca</div>
             </div>
 
+            <p class="notice" style="border-color:rgba(46,196,160,.35);background:rgba(46,196,160,.07)">
+                <b style="color:var(--jade)">Los desniveles.</b> Algunos carriles suben a
+                un segundo nivel. Se entra por la <b>rampa de ese carril</b>, o
+                <b>saltando</b>: por el costado no se pasa. Bajar es solo dejarse caer.
+                Y si el quetzal te levanta, arriba hay filas de jade que no se ven
+                desde el suelo.
+            </p>
+
             <div class="actions">
                 <button class="btn" id="playBtn" type="button">Jugar</button>
                 <button class="btn btn-ghost" id="shopBtn" type="button">Taller</button>
                 <button class="btn btn-ghost" id="soundPref" type="button" aria-pressed="true">
                     Sonido: activado
+                </button>
+                <button class="btn btn-ghost" id="musicPref" type="button" aria-pressed="true">
+                    Música: activada
                 </button>
             </div>
 
