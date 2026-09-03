@@ -183,13 +183,26 @@ la piedra rodante sueltos salen SIN señal**, a propósito: son el ruido de
 fondo del camino, y ponerles cartel llenaría el margen de rombos hasta que
 dejaran de mirarse los que sí anuncian algo gordo.
 
-**Los distribuidores viales.** Cada 620 m la calzada llega a un cruce. Un
-pórtico con dos rótulos verdes anuncia las salidas —una lleva a otro
-departamento, la otra es el **retorno** al actual— y sesenta unidades después
-**la calzada se parte de verdad**: desde la X salen dos vías de tres carriles
-que se separan hacia los lados, y el mundo se recoloca sobre la que llevas
-puesta mientras la otra se abre hacia fuera hasta perderse. **Qué lado es cuál
-se sortea cada vez.** El retorno paga en jade; el cambio, en paisaje nuevo.
+**Las bifurcaciones.** Cada 780 m la calzada se parte de verdad: desde la X
+salen dos vías de tres carriles que se separan hacia los lados, el mundo se
+recoloca sobre la que llevas puesta y la otra pivota sobre el cruce y se pierde
+de vista en poco más de un segundo. **Y son dos cosas distintas, alternándose:**
+
+- **Distribuidor de destino.** Un pórtico con dos rótulos verdes: una salida
+  lleva a otro departamento, la otra es el **retorno** al actual. Se decide
+  leyendo, y qué lado es cuál se sortea cada vez. El retorno paga en jade; el
+  cambio, en paisaje nuevo.
+- **Bifurcación cortada.** Sin pórtico. Un disco rojo de **prohibido virar**
+  marca el ramal que está tapado por un derrumbe. Se decide mirando: acertar
+  paga jade, meterse por ahí se acabó —y si revives, sales ya en el bueno—.
+
+Iban mezcladas en el mismo cruce y eso las estropeaba a las dos: el disco rojo
+se leía como una parte más de la señalización de destinos, y el rótulo verde
+competía por la atención justo cuando lo único que importaba era no meterse por
+un lado. **Alrededor de las dos hay 315 unidades sin absolutamente nada** —ni
+obstáculos, ni rampas, ni enemigos, ni poderes—, porque lo que se pide ahí es
+elegir, y un murciélago apareciendo a mitad de un cambio de carril no es
+dificultad: es no dejar jugar.
 
 **La calzada no es recta ni plana.** Gira, ondula y a partir de los 120 m
 aparecen tramos elevados: uno de los cinco repartos alto/bajo entre los tres
@@ -204,6 +217,13 @@ cruza al paso de un margen al otro; y la *camioneta*, que baja por su carril
 de frente. Las dos últimas son **más altas que un salto a propósito**: la
 respuesta a las dos es apartarse, y dejar que además se pudieran saltar
 convertiría tres respuestas distintas en una sola.
+
+**Las placas de impulso.** Turquesa, pegadas al suelo, hay que **pisarlas**
+—saltándolas no cuentan—. Dan un empujón fuerte de dos segundos y medio, dejan
+un **3 % de velocidad para siempre** hasta un tope del 30 %, y **cada tres
+devuelven una vida**. Es la única forma de recuperar vidas corriendo, y está
+atada a lo único del juego que hay que salir a buscar: la placa no te la
+encuentras, te desvías a pisarla.
 
 **Poderes** que aparecen en la calzada: escudo, imán de jade, jade doble,
 ámbar de Verapaz (ralentiza el mundo sin ralentizarte a ti) y vuelo del
@@ -286,6 +306,42 @@ Lo que importa mantener si se toca:
   sin tener que desactivar nada. La versión anterior resolvía el cruce con una
   isleta y ya: no había forma de saber qué camino habías tomado, porque los dos
   eran el mismo camino.
+- **Con una probabilidad no se reparte nada.** Los tramos especiales —bajada,
+  curva cerrada, estrechamiento— se armaban con un sorteo al 9 % por compás y
+  con un bloqueo grosero: bastaba que hubiera una bifurcación activa para
+  descartar el armado, cuando el tramo armado no empieza hasta 215 unidades
+  después. Medido, salía **uno cada dos mil metros** y una partida normal no
+  veía ninguno. Ahora la comprobación es de VENTANAS —¿se solapa el tramo que
+  saldría con la zona limpia de alguna bifurcación?— y el reparto es firme: uno
+  por ciclo, sin repetir el anterior. Medido: **1,3 tramos por km**, y las
+  bifurcaciones alternando destino/cortada sin fallar una.
+- **Y para eso hubo que separar las bifurcaciones 780 m en vez de 620.** Entre
+  una y la siguiente tienen que caber las dos zonas limpias más un tramo
+  especial entero con sus márgenes. Con 620 no cabía; el hueco libre era de
+  poco más de cien unidades y casi nunca coincidía con un compás.
+- **La zona limpia se calcula por delante, no cuando el cruce ya existe.** Un
+  compás suelta cosas que no llegan al jugador hasta 170 unidades después, así
+  que para cuando el cruce nace ya sería tarde para no ponerlas: la posición de
+  la próxima bifurcación se deduce de `nextCross`, que se conoce con 780
+  unidades de antelación. Y la comprobación va **la primera** de la función:
+  estaba al final, veinte líneas por debajo de donde se generan los enemigos,
+  así que se colaban dentro.
+- **Los tramos elevados necesitan su propio margen.** Miden hasta 72 unidades de
+  la boca a la cola, así que uno que nazca justo antes de la bifurcación sigue
+  pasando por debajo del jugador cuando este ya está eligiendo. Era el 5 % de
+  muestras sucias que quedaba.
+
+- **La flecha de la placa de impulso apuntaba hacia atrás.** Las dos barras se
+  abrían hacia delante y el vértice quedaba detrás: la placa que empuja hacia
+  delante dibujaba una flecha señalando el sentido contrario. Un signo.
+- **Recoger el vuelo del quetzal se pisaba a sí mismo.** `spawnSkyTrail` siembra
+  veintidós jades llamando a `spawnPickup`, y `spawnPickup` con el pool lleno
+  recicla el primer hueco libre… que es justo la pieza que se está recogiendo,
+  marcada inactiva una línea antes. A partir de ahí `p.kind` valía `'jade'` y la
+  última línea de `collect` reventaba buscando el color de un poder inexistente.
+  Se copian los datos de la pieza al entrar y no hay forma de que vuelva a
+  pasar. Estaba ahí desde que existe el rastro del quetzal.
+
 - **El ramal que no se toma se marcha, no se queda.** Elegido uno, al otro se
   le multiplica la separación durante poco más de un segundo y luego se deja de
   dibujar. Como la separación vale cero en la X y crece hacia el fondo,

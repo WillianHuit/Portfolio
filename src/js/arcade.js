@@ -165,9 +165,25 @@ const BOOST_POOL = 8;
 // Cual esta a la izquierda y cual a la derecha se sortea cada vez. Si fuera
 // siempre el mismo lado dejaria de ser una decision a los dos minutos: lo que
 // se lee es el rotulo, no la costumbre.
-const CROSS_EVERY = 620;            // metros entre distribuidores
+// Metros entre bifurcaciones. Subio de 620 a 780 por sitio: entre una y la
+// siguiente tienen que caber la zona limpia de las dos y ademas un tramo
+// especial entero con sus margenes. Con 620 no cabia, y el resultado medido
+// era que no salia ni una bajada ni una curva en dos mil metros.
+const CROSS_EVERY = 780;
 const CROSS_SIGN_AHEAD = 62;        // el rotulo, adelantado a la isleta
 const CROSS_ISLAND_LEN = 22;
+// A que coordenada de trazado cae la isleta cuando el cruce nace en SPAWN_Z.
+// Se necesita ANTES de que el cruce exista para poder ir dejando limpio lo que
+// viene, asi que se calcula en vez de leerse.
+const CROSS_ISLAND_AT = -SPAWN_Z + CROSS_SIGN_AHEAD;      // 232
+
+// Zona sin nada alrededor de la bifurcacion. Antes solo se despejaba el compas
+// que cayera justo encima, y como los enemigos se generaban ANTES de esa
+// comprobacion, se colaban dentro: aparecia un murcielago mientras el jugador
+// cruzaba de carril para tomar una salida, sin sitio donde meterse. Ahora la
+// zona se calcula por delante y no se genera nada cuyo destino caiga dentro.
+const QUIET_PRE = 105;              // limpio antes de la isleta
+const QUIET_POST = 105;             // ...y despues de que los ramales se abran
 
 // --- La bifurcacion ------------------------------------------------------
 // La version anterior resolvia el cruce con una isleta y ya: pasabas por un
@@ -219,7 +235,7 @@ const SLOPE_SPEED = 1.2;            // lo que se gana en el punto mas empinado
 // propia, mucho mas cerrada, hacia el lado en el que se planto el cartel. El
 // tramo va limpio de obstaculos —solo entran los enemigos— y se corre mas: lo
 // que hay que resolver ahi es la curva, no un obstaculo dentro de la curva.
-const TURN_LEN = 190;               // largo de la curva
+const TURN_LEN = 165;               // largo de la curva
 // Cuanto se desplaza el trazado. Parece mucho al lado de las 6,4 unidades del
 // serpenteo de siempre, pero es que la mascara de distancia se come todo lo de
 // dentro de 158 unidades: lo que llega a verse es la ultima franja de calzada,
@@ -275,6 +291,13 @@ const WARN_MIN_GAP = 95;
 // peligroso: el premio y el riesgo son la misma cosa.
 const BOOST_TIME = 2.6;
 const BOOST_MULT = 1.45;
+// Lo que cada placa deja para siempre. El empujon fuerte se pasa en un par de
+// segundos, pero un pellizco se queda: la partida larga acaba corriendo mas
+// que la corta porque se la ha ganado, no porque haya durado.
+const BOOST_KEEP = 0.03;
+const BOOST_KEEP_MAX = 0.3;         // diez placas y ya no sube mas
+// Placas necesarias para recuperar una vida.
+const BOOST_PER_LIFE = 3;
 const HAZARD_POOL = 10;
 
 // Tipos de obstaculo. Los tres verbos del juego: esquivar, agacharse, saltar.
@@ -800,6 +823,11 @@ const game = {
     turn: { active: false, s0: 0, dir: 1 },
     turnHold: 0,         // segundos aguantando por el lado que cierra
     narrowS0: -1,        // distancia en la que empieza el estrechamiento
+    nextTramo: 0,        // distancia a la que toca armar el proximo tramo
+    lastTramo: -1,       // cual salio la vez anterior, para no repetirlo
+    crossKind: 1,        // 0 = cruce de destino, 1 = bifurcacion cortada
+    boostTaken: 0,       // aceleradores pisados, para la vida extra
+    boostPerm: 0,        // velocidad que se queda para siempre
     wrongC: null,        // cruce en el que se metio por el ramal cortado
     wrongLane: 1,        // ...y el carril por el que tendria que haber ido
     nextCross: CROSS_EVERY,
@@ -2807,7 +2835,10 @@ function makeBoost() {
             const m = new THREE.Mesh(BOX, mat.boostMark);
             m.scale.set(1.15, 0.1, 0.3);
             m.position.set(sx * 0.4, 0.13, -1.15 + k * 1.15);
-            m.rotation.y = sx * 0.58;
+            // El giro va con el signo CAMBIADO. Con el otro, las dos barras se
+            // abrian hacia delante y el vertice quedaba detras: la placa que
+            // empuja hacia delante dibujaba una flecha apuntando hacia atras.
+            m.rotation.y = -sx * 0.58;
             group.add(m);
             marks.push(m);
         }
@@ -3256,7 +3287,7 @@ function buildPools() {
     // Dos cruces a la vez como mucho: el que se acerca y el que acaba de pasar
     for (let i = 0; i < 2; i++) {
         crossings.push({ sign: makeCrossing(), island: makeIsland(),
-                         swapLane: 0, target: 0, blocked: 0,
+                         swapLane: 0, target: 0, blocked: 0, kind: 0,
                          z: 0, active: false, done: false });
     }
 }
@@ -3836,21 +3867,66 @@ function runPending() {
         if (game.distance < pending[i].d) continue;
         const f = pending[i].fn;
         pending.splice(i, 1);
+        // Si para cuando le toca ha quedado dentro de la zona limpia, se cae.
+        // Es la unica promesa rota que el juego se permite, y se permite
+        // porque la alternativa es peor: una vaca cruzando justo cuando el
+        // jugador esta eligiendo salida.
+        if (limpioEntre(game.distance + 85, game.distance + 190)) continue;
         f();
     }
 }
 
-// --- Armado de los tramos especiales ---
-// Los tres cambian la calzada y ninguno puede solaparse con otro ni con un
-// cruce: dos geometrias a la vez no se leen, se estorban.
-function trackBusy() {
-    if (game.slopeS0 >= 0 || game.turn.active || game.narrowS0 >= 0) return true;
-    if (game.fork.active) return true;
-    // Tampoco justo antes de un distribuidor: el jugador tiene que llegar al
-    // cruce leyendo el rotulo, no saliendo de una curva.
-    if (game.nextCross - game.distance < ARM_AHEAD + 160) return true;
-    for (const c of crossings) if (c.active) return true;
+// --- La zona limpia de la bifurcacion ---
+// Devuelve las franjas de trazado que tienen que quedar vacias: la de la
+// bifurcacion en curso, si la hay, y la de la siguiente. La siguiente se
+// calcula a partir de game.nextCross, que se conoce con setecientas unidades
+// de antelacion; hace falta saberlo con tanto adelanto porque un compas suelta
+// cosas que no llegan al jugador hasta ciento setenta unidades despues, y para
+// cuando el cruce existe ya seria tarde para no ponerlas.
+function forkWindows() {
+    const w = [];
+    if (game.fork.active) {
+        w.push([game.fork.s0 - QUIET_PRE, game.fork.s0 + FORK_LEN + QUIET_POST]);
+    }
+    const s0 = game.nextCross + CROSS_ISLAND_AT;
+    w.push([s0 - QUIET_PRE, s0 + FORK_LEN + QUIET_POST]);
+    return w;
+}
+
+// Se solapa el tramo de trazado [a, b] con alguna zona limpia?
+function limpioEntre(a, b) {
+    for (const q of forkWindows()) if (b > q[0] && a < q[1]) return true;
     return false;
+}
+
+// --- Armado de los tramos especiales ---
+// Los tres cambian la calzada y ninguno puede solaparse con otro ni con una
+// bifurcacion: dos geometrias a la vez no se leen, se estorban.
+//
+// La comprobacion es de VENTANAS, no de banderas. Antes bastaba con que
+// hubiera una bifurcacion activa para bloquear el armado, y como el tramo
+// armado no empieza hasta doscientas quince unidades despues, se estaba
+// descartando sitio de sobra: medido, salia un tramo especial cada dos mil
+// metros y una partida normal no veia ninguno.
+function trackBusy(len) {
+    if (game.slopeS0 >= 0 || game.turn.active || game.narrowS0 >= 0) return true;
+    // Donde caeria el tramo si se armase ahora mismo, con margen a los lados
+    return limpioEntre(game.distance + ARM_AHEAD - 45,
+                       game.distance + ARM_AHEAD + len + 45);
+}
+
+// Uno de los tres, evitando repetir el de la vez anterior: con tres cosas y
+// sorteo libre, ver la misma dos veces seguidas pasa una de cada tres.
+function armTramo() {
+    let t = (Math.random() * 3) | 0;
+    if (t === game.lastTramo) t = (t + 1 + ((Math.random() * 2) | 0)) % 3;
+    const len = t === 0 ? TURN_LEN : (t === 1 ? SLOPE_LEN : NARROW_LEN);
+    if (trackBusy(len)) return false;
+    if (t === 0) armTurn();
+    else if (t === 1) armSlope();
+    else armNarrow();
+    game.lastTramo = t;
+    return true;
 }
 
 // Donde se planta el cartel de un tramo que se arma a ARM_AHEAD.
@@ -3940,14 +4016,25 @@ function generateChunk(z) {
     const sz = game.distance - z;                       // trazado de este compas
 
     // --- Armado de los tramos especiales ---
-    // Se arman muy por delante y con el cartel puesto. Van aqui y no en un
-    // temporizador porque tienen que caer donde no haya nada mas montado.
-    if (game.distance > 300 && !trackBusy() && Math.random() < 0.09) {
-        const r = Math.random();
-        if (r < 0.4) armTurn();
-        else if (r < 0.75) armSlope();
-        else armNarrow();
+    // Uno por ciclo de bifurcacion, en cuanto haya sitio. Antes era un sorteo
+    // al 9 % por compas y salia uno cada dos mil metros: con una probabilidad
+    // no se reparte nada, solo se deja al azar decidir si el jugador llega a
+    // ver una mecanica entera del juego o no.
+    if (game.distance > 260 && game.distance > game.nextTramo) {
+        if (armTramo()) game.nextTramo = game.distance + 200;
     }
+
+    // --- La zona limpia de la bifurcacion ---
+    // Un compas suelta cosas que llegan al jugador entre noventa y cinco y
+    // ciento ochenta unidades mas adelante: los estaticos a ciento setenta y
+    // las amenazas antes, porque cierran distancia por su cuenta. Si ese rango
+    // toca la zona limpia, el compas no genera NADA —ni obstaculos, ni rampas,
+    // ni enemigos, ni poderes—.
+    //
+    // Iba al final de la funcion y por eso no servia: los enemigos se
+    // generaban veinte lineas antes y se colaban dentro de la bifurcacion,
+    // justo mientras el jugador cruzaba de carril para tomar una salida.
+    if (limpioEntre(game.distance + 78, game.distance + 192)) return;
 
     // --- Dentro de un tramo especial ---
     // En el estrechamiento no cabe nada: es un carril, y meterle algo dentro
@@ -3977,7 +4064,14 @@ function generateChunk(z) {
     // tramo elevado salia cada 190 unidades y la partida corriente veia dos:
     // demasiado poco para que el desnivel llegue a ser una mecanica y no una
     // curiosidad.
-    if (game.distance > 120 && !platformNear(z) && Math.random() < 0.4) {
+    // El filtro de la zona limpia se mira aparte y con mas margen: un tramo
+    // elevado mide hasta setenta y dos unidades de la boca a la cola, asi que
+    // uno que nazca justo antes de la bifurcacion sigue pasando por debajo del
+    // jugador cuando este ya esta eligiendo salida. Medido, era el 5 % de las
+    // muestras sucias dentro de la zona.
+    if (game.distance > 120 && !platformNear(z) && Math.random() < 0.4 &&
+        !limpioEntre(game.distance + 95,
+                     game.distance + 190 + 2 * RAMP_LEN + PLAT_MAX)) {
         generateTerrain(z - 10);
     }
 
@@ -3996,7 +4090,8 @@ function generateChunk(z) {
     // Y lo que anuncia no nace con ella, sino unos metros mas tarde: la
     // camioneta viene de frente y cierra distancia mucho mas deprisa que el
     // cartel, asi que naciendo a la vez adelantaria a su propio aviso.
-    if (game.distance > 240 && Math.random() < 0.22) {
+    if (game.distance > 240 && Math.random() < 0.22 &&
+        !limpioEntre(game.distance + 180, game.distance + 330)) {
         const r = Math.random();
         if (r < 0.4) {
             // Derrumbe: caen piedras del cerro sobre el carril de ese lado.
@@ -4053,23 +4148,6 @@ function generateChunk(z) {
         }
     }
 
-    // Un compas que caiga sobre la isleta no genera nada: los obstaculos se
-    // amontonarian justo donde el jugador tiene que estar leyendo el rotulo y
-    // colocandose, que es el peor sitio posible para pedirle otra cosa.
-    // Toda la bifurcacion va limpia. Un obstaculo ahi dentro caeria sobre un
-    // ramal que se esta abriendo y acabaria flotando, o en el ramal que no se
-    // ha tomado, o justo donde el jugador tiene que estar leyendo y
-    // colocandose. Los tres casos son igual de malos.
-    if (game.fork.active) {
-        const sz = game.distance - z;
-        if (sz > game.fork.s0 - FORK_CLEAR && sz < game.fork.s0 + FORK_LEN + FORK_CLEAR) {
-            return;
-        }
-    }
-    for (const c of crossings) {
-        if (!c.active || !c.island.active) continue;
-        if (Math.abs(c.island.z - z) < CROSS_ISLAND_LEN / 2 + 26) return;
-    }
 
     // --- Obstaculos que cruzan de lado a lado ---
     // Van solos en su compas y solo sobre terreno llano y parejo: un tronco
@@ -4193,6 +4271,11 @@ function spawnSkyTrail() {
     for (let k = 0; k < n; k++) {
         const lane = 1 + Math.round(Math.sin(base + k * 0.42));
         const z = -34 - k * step;
+        // El rastro se siembra de golpe a lo largo de ciento cincuenta
+        // unidades, asi que puede alcanzar la zona limpia de una bifurcacion
+        // aunque el jugador este lejos de ella. Las piezas que caigan dentro
+        // no se ponen: la zona limpia lo es tambien para los premios.
+        if (limpioEntre(game.distance - z, game.distance - z)) continue;
         if (k === 11) spawnPickup(lane, z, FLY_Y + 1.1, rollPower());
         else spawnPickup(lane, z, FLY_Y + 1.1);
     }
@@ -4210,9 +4293,23 @@ function freeCrossing() {
     return null;
 }
 
+// Las bifurcaciones se alternan y son DOS COSAS DISTINTAS:
+//
+//   destino  - portico con rotulos verdes. Una salida lleva a otro
+//              departamento y la otra es el retorno. Se decide leyendo.
+//   cortada  - sin portico. Un disco rojo de prohibido virar marca el ramal
+//              que esta tapado por un derrumbe. Se decide mirando.
+//
+// Antes iban mezcladas —el disco rojo colgaba del mismo cruce que los rotulos
+// de destino— y eso las estropeaba a las dos: el disco se leia como una parte
+// mas de la senalizacion de destinos, y el rotulo verde competia por la
+// atencion justo cuando lo unico que importaba era no meterse por un lado.
 function spawnCrossing(z) {
     const c = freeCrossing();
     if (!c) return;
+
+    game.crossKind = 1 - game.crossKind;
+    c.kind = game.crossKind;                       // 0 = destino, 1 = cortada
 
     const here = Math.floor(routePos()) % REGION_N;
     // Destino: cualquier departamento menos en el que ya se esta.
@@ -4226,35 +4323,37 @@ function spawnCrossing(z) {
     c.z = z - CROSS_SIGN_AHEAD;
     c.active = true;
     c.done = false;
+    c.blocked = 0;
 
-    // Uno de cada tres cruces lleva un ramal cortado por un derrumbe. Va
-    // anunciado con la senal de prohibido virar puesta EN ESE LADO, que es
-    // redonda y roja: no avisa de un peligro, dice que por ahi no se pasa. El
-    // que la ignore se estampa contra las piedras; el que revive, sale ya
-    // metido en el ramal bueno.
-    c.blocked = Math.random() < 0.34 ? (Math.random() < 0.5 ? -1 : 1) : 0;
+    if (c.kind === 0) {
+        const izq = c.swapLane === 0;
+        const nombre = REGIONS[target].name.toUpperCase();
+        const aqui = REGIONS[here].name.toUpperCase();
 
-    const izq = c.swapLane === 0;
-    const nombre = REGIONS[target].name.toUpperCase();
-    const aqui = REGIONS[here].name.toUpperCase();
+        // Se rehacen las dos texturas: el destino y el lado cambian cada vez.
+        const put = (i, titulo, sub, flecha) => {
+            if (c.sign.tex[i]) c.sign.tex[i].dispose();
+            c.sign.tex[i] = signTexture(titulo, sub, flecha);
+            c.sign.panels[i].material.map = c.sign.tex[i];
+            c.sign.panels[i].material.needsUpdate = true;
+        };
+        put(0, izq ? nombre : 'RETORNO', izq ? 'DESVÍO' : aqui, -1);
+        put(1, izq ? 'RETORNO' : nombre, izq ? aqui : 'DESVÍO', 1);
 
-    // Se rehacen las dos texturas: el destino y el lado cambian cada vez.
-    const put = (i, titulo, sub, flecha) => {
-        if (c.sign.tex[i]) c.sign.tex[i].dispose();
-        c.sign.tex[i] = signTexture(titulo, sub, flecha);
-        c.sign.panels[i].material.map = c.sign.tex[i];
-        c.sign.panels[i].material.needsUpdate = true;
-    };
-    put(0, izq ? nombre : 'RETORNO', izq ? 'DESVÍO' : aqui, -1);
-    put(1, izq ? 'RETORNO' : nombre, izq ? aqui : 'DESVÍO', 1);
-
-    c.sign.z = z;
-    c.sign.curve = trackCurve(c.sign.z);
-    c.sign.rise = trackRise(c.sign.z);
-    c.sign.active = true;
-    c.sign.group.visible = true;
-
-    if (c.blocked) spawnWarn('noVirar', z - 18, c.blocked, true);
+        c.sign.z = z;
+        c.sign.curve = trackCurve(c.sign.z);
+        c.sign.rise = trackRise(c.sign.z);
+        c.sign.active = true;
+        c.sign.group.visible = true;
+    } else {
+        // Sin portico: aqui no hay nada que leer, hay que mirar de que lado
+        // esta el disco rojo. Un portico verde vacio seria ruido.
+        c.sign.active = false;
+        c.sign.group.visible = false;
+        c.blocked = Math.random() < 0.5 ? -1 : 1;
+        spawnWarn('noVirar', z - 26, c.blocked, true);
+        spawnWarn('noVirar', z - 74, c.blocked, true);
+    }
 
     // La bifurcacion empieza donde esta la isleta. s0 se guarda como distancia
     // recorrida y no como z, porque la z se mueve y la coordenada de trazado no.
@@ -4282,14 +4381,27 @@ function takeExit(c, lane) {
     game.fork.chosen = lane === 2 ? 1 : -1;
     game.fork.mainBand = game.fork.chosen;
 
-    // El ramal cortado. Se pone el derrumbe unas decenas de unidades mas
-    // alla —tiempo de verlo llegar y de entender que era eso del cartel— y se
-    // apunta por donde tendria que haber ido, para poder devolverlo ahi si
-    // decide revivir.
-    if (c.blocked && game.fork.chosen === c.blocked) {
-        spawnObstacle(MURO, 1, -52, 0);
-        game.wrongC = c;
-        game.wrongLane = c.blocked < 0 ? 2 : 0;
+    // --- Bifurcacion cortada ---
+    // No lleva a ninguna parte: lo unico que hay que hacer es no meterse por
+    // donde el disco rojo dice que no. Si se hace, el derrumbe aparece unas
+    // decenas de unidades mas alla —tiempo de verlo llegar y de entender que
+    // era eso del cartel— y se apunta por donde tendria que haber ido, para
+    // devolverlo ahi si decide revivir.
+    if (c.kind === 1) {
+        if (lane === 1) return;                    // saltar el divisor no elige
+        if (game.fork.chosen === c.blocked) {
+            spawnObstacle(MURO, 1, -52, 0);
+            game.wrongC = c;
+            game.wrongLane = c.blocked < 0 ? 2 : 0;
+        } else {
+            // Acertar tambien paga algo: si no, la unica consecuencia posible
+            // de la senal seria mala y no habria razon para alegrarse de verla.
+            game.jade += 2;
+            game.jadeScore += Math.round(50 * jadeScale());
+            burstParticles(player.x, player.y + 1.2, PLAYER_Z, 14, 1, C.jade);
+            hudDirty = true;
+        }
+        return;
     }
 
     // Pero por encima del divisor no se TOMA ninguna salida: el muro se puede
@@ -5060,8 +5172,30 @@ function checkCollisions() {
         b.active = false;
         b.group.visible = false;
         game.boost = BOOST_TIME;
+        game.boostPerm = Math.min(BOOST_KEEP_MAX, game.boostPerm + BOOST_KEEP);
         sfx.boost();
         burstParticles(player.x, player.y + 0.4, PLAYER_Z, 16, 0.9, 0x4affd0);
+
+        // Cada tres placas, una vida. Es la unica forma de recuperar vidas
+        // corriendo, y va atada a lo unico del juego que hay que salir a
+        // buscar: la placa no te la encuentras, te desvias a pisarla.
+        //
+        // Si ya vas al completo, las tres placas NO se pierden: pagan en jade.
+        // Perderlas por ir bien seria castigar precisamente al que no ha
+        // fallado, y ademas hace ilegible la regla —pisas tres, no pasa nada,
+        // y no sabes por que—.
+        if (++game.boostTaken >= BOOST_PER_LIFE) {
+            game.boostTaken = 0;
+            burstParticles(player.x, player.y + 1.3, PLAYER_Z, 22, 1.3, 0x4affd0);
+            if (game.lives < maxLives()) {
+                game.lives++;
+                showBanner('VIDA EXTRA', BOOST_PER_LIFE + ' aceleradores');
+            } else {
+                game.jade += 5;
+                game.jadeScore += Math.round(120 * jadeScale());
+                showBanner('+5 JADE', 'vidas al completo');
+            }
+        }
         hudDirty = true;
     }
 
@@ -5164,36 +5298,45 @@ function checkCollisions() {
 }
 
 function collect(p) {
-    const x = p.mesh.position.x, y = p.mesh.position.y;
+    // Todo lo que hace falta de la pieza se copia AQUI, antes de tocar nada
+    // mas. Recoger el vuelo del quetzal llama a spawnSkyTrail, que siembra
+    // veintidos jades llamando a spawnPickup; y spawnPickup, cuando el pool
+    // esta lleno, recicla el primer hueco libre... que es justo esta pieza,
+    // marcada inactiva una linea antes de entrar aqui. A partir de ese momento
+    // p.kind ya no vale 'flight' sino 'jade', y la ultima linea de la funcion
+    // reventaba buscando el color de un poder que no existe. Con una copia
+    // local no hay forma de que pase.
+    const kind = p.kind;
+    const x = p.mesh.position.x, y = p.mesh.position.y, z = p.z;
 
-    if (p.kind === 'jade') {
+    if (kind === 'jade') {
         game.jade++;
         game.combo++;
         const mult = comboMultiplier() * (game.powers.double > 0 ? 2 : 1);
         game.jadeScore += Math.round(25 * mult * jadeScale());
         sfx.jade();
-        burstParticles(x, y, p.z, 8, 0.85, C.jade);
+        burstParticles(x, y, z, 8, 0.85, C.jade);
         hudDirty = true;
         return;
     }
 
-    if (p.kind === 'shield') {
+    if (kind === 'shield') {
         game.shield = true;
         sfx.shield();
     } else {
-        const t = POWERS[p.kind].time * powerScale();
+        const t = POWERS[kind].time * powerScale();
         // Encadenar un segundo vuelo no debe sembrar un rastro nuevo encima
         // del que aun esta en el aire: se alarga el tiempo y ya esta.
-        const wasFlying = p.kind === 'flight' && game.powers.flight > 0;
-        game.powers[p.kind] = t;
-        game.powerMax[p.kind] = t;
-        if (p.kind === 'flight') {
+        const wasFlying = kind === 'flight' && game.powers.flight > 0;
+        game.powers[kind] = t;
+        game.powerMax[kind] = t;
+        if (kind === 'flight') {
             player.wantSlide = false;
             if (!wasFlying) spawnSkyTrail();
         }
         sfx.power();
     }
-    burstParticles(x, y, p.z, 16, 1.15, POWERS[p.kind].color);
+    burstParticles(x, y, z, 16, 1.15, POWERS[kind].color);
     hudDirty = true;
 }
 
@@ -5258,15 +5401,19 @@ function checkMilestone() {
     dom.milestone.classList.add('show');
 }
 
+function showBanner(titulo, sub) {
+    dom.banner.firstElementChild.textContent = titulo;
+    dom.banner.lastElementChild.textContent = sub;
+    dom.banner.hidden = false;
+    dom.banner.classList.remove('show');
+    void dom.banner.offsetWidth;         // reinicia la animacion
+    dom.banner.classList.add('show');
+}
+
 function showRegionBanner(ri) {
     const R = REGIONS[ri];
     sfx.region();
-    dom.banner.firstElementChild.textContent = R.name;
-    dom.banner.lastElementChild.textContent = R.dept;
-    dom.banner.hidden = false;
-    dom.banner.classList.remove('show');
-    void dom.banner.offsetWidth;
-    dom.banner.classList.add('show');
+    showBanner(R.name, R.dept);
 }
 
 // ===========================================================================
@@ -5594,6 +5741,11 @@ function startGame() {
     game.region = save.start;
     for (const k of POWER_KEYS) if (k !== 'shield') game.powers[k] = 0;
     game.boost = 0;
+    game.boostTaken = 0;
+    game.boostPerm = 0;
+    game.nextTramo = 0;
+    game.lastTramo = -1;
+    game.crossKind = 1;
     game.regionShift = 0;
     game.nextCross = CROSS_EVERY;
     game.fork.active = false;
@@ -6089,6 +6241,10 @@ function frame(now) {
                 SPEED_MAX,
                 SPEED_START + SPEED_GAIN * Math.sqrt(game.distance / 100)
             ) * scale;
+            // Lo que han dejado las placas pisadas va DESPUES del tope: el
+            // tope es una red de seguridad del reparto de obstaculos, no un
+            // techo de diseno, y lo que el jugador se gana tiene que notarse.
+            if (game.boostPerm > 0) game.speed *= 1 + game.boostPerm;
             if (game.boost > 0) game.speed *= BOOST_MULT;
             // Cuesta abajo y en curva cerrada se corre mas. Son los dos unicos
             // sitios donde la velocidad sube sin que el jugador haya hecho
