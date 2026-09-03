@@ -481,6 +481,10 @@ const svg = body => '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">' + 
 function skinIcon(sk) {
     const c = h => '#' + h.toString(16).padStart(6, '0');
     return svg(
+        // Placa de fondo clara. Sin ella los trajes de piernas oscuras (el
+        // Ajaw lleva obsidiana) se comian las piernas contra la tarjeta, que
+        // tambien es oscura, y el muneco salia sin mitad inferior.
+        '<rect x="1" y="0" width="22" height="24" rx="4" fill="#efe6d2" opacity=".16"/>' +
         '<rect x="7" y="1.2" width="10" height="2.6" rx="1" fill="' + c(sk.crest) + '"/>' +
         '<rect x="8.4" y="3.8" width="7.2" height="5" rx="1.2" fill="' + c(sk.skin) + '"/>' +
         '<rect x="8.4" y="3.8" width="7.2" height="1.6" rx=".8" fill="' + c(sk.hair) + '"/>' +
