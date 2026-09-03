@@ -145,7 +145,11 @@ el secreto sin explicarlo y dicen cuántos faltan. En táctil, donde no hay
 hover, el primer toque los deja visibles. La ventana entre clics es de 3 s y
 se reinicia sola.
 
-**La ruta.** Doce tramos de 500 m, en circuito: Tikal y Flores (Petén) → Semuc
+**La ruta.** Doce sitios de Guatemala, y **solo se cambia de uno a otro en una
+bifurcación**: la ruta no avanza con los metros, la mueve la salida que tomes.
+Antes el departamento cambiaba solo cada 500 m y el cruce era un atajo; así el
+cruce es la única forma de ir a otro sitio, que es lo que convierte elegir
+salida en la decisión del juego y no en un adorno. El orden del circuito es: Tikal y Flores (Petén) → Semuc
 Champey (Alta Verapaz) → Río Dulce (Izabal) → Esquipulas (Chiquimula) →
 Antigua (Sacatepéquez) → Volcán de Fuego (Chimaltenango) → Atitlán (Sololá) →
 Chichicastenango (Quiché) → Todos Santos (Huehuetenango) → Tajumulco (San
@@ -173,7 +177,7 @@ está plantada.**
 | Curva | La calzada **cierra de verdad hacia ese lado**, se corre un 16 % más y el tramo va limpio de obstáculos: solo entran enemigos. Quedarse ~2 s por el carril de fuera te saca de la carretera. |
 | Pendiente | Bajada real de 150 unidades: la calzada se hunde por delante, la cámara cabecea y se corre un 20 % más. Sin obstáculos ni tramos elevados. |
 | `] [` Carril estrecho | Los tres carriles **se vuelven uno**. Por los lados ya no hay calzada: quien siga ahí se cae. |
-| Bifurcación en Y + ceda | Viene un distribuidor vial. |
+| Bifurcación en Y | Viene una bifurcación. |
 | Prohibido virar (disco rojo) | Ese ramal del cruce está **cortado por un derrumbe**. Meterse por ahí se acabó. |
 | Hueco | Un vacío de lado a lado en la calzada. |
 
@@ -306,6 +310,35 @@ Lo que importa mantener si se toca:
   sin tener que desactivar nada. La versión anterior resolvía el cruce con una
   isleta y ya: no había forma de saber qué camino habías tomado, porque los dos
   eran el mismo camino.
+- **La explanada tapaba la bajada, y ese era todo el misterio.** El suelo es un
+  único plano liso clavado a y = −1,02, y la calzada se hunde quince unidades:
+  a sesenta por delante el firme ya iba ocho por DEBAJO del plano, así que lo
+  que se veía en la cuesta no era una cuesta, era el plano tapando la calzada,
+  los obstáculos y todo lo demás. Ahora se inclina con la pendiente. Se despeja
+  el ángulo en cinco puntos repartidos hasta donde llega la bruma y se toma el
+  más exigente: con una sola tangente quedaban dos puntos con la calzada por
+  debajo del plano, porque el perfil de la cuesta no es una recta.
+- **El firme cambia de departamento en la propia bifurcación.** Con la ruta
+  quieta entre cruces ya no hay una línea que se mueva sola, así que al tomar la
+  salida se apunta una coordenada de trazado sesenta unidades por delante —justo
+  donde los dos ramales acaban de abrirse— y de ahí en adelante la calzada ya es
+  la del sitio nuevo. Se ve venir el adoquín.
+- **La barra del minimapa mide otra cosa.** Medía el avance dentro del
+  departamento; con la ruta quieta eso no existe, así que ahora mide lo que
+  falta para el próximo cruce, que es lo único que puede cambiarlo.
+
+- **El cartel de curva se dibuja una vez y se voltea.** Está dibujado torciendo
+  a la derecha, y para el margen izquierdo se invierte el plano. La primera
+  versión miraba el parámetro `side` en vez del lado ya sorteado —que para la
+  curva se decide DENTRO de `spawnWarn`, y llega como `null`—, así que el espejo
+  no se aplicaba nunca: un cartel plantado a la izquierda dibujaba una flecha
+  torciendo a la derecha. Una señal que dice lo contrario de lo que va a pasar
+  es peor que ninguna señal.
+- **Fuera el ceda el paso.** No anunciaba nada que el jugador pudiera hacer —no
+  hay a quién ceder el paso— y su triángulo rojo y blanco se confundía de lejos
+  con el disco rojo de prohibido virar, que sí dice algo y muy concreto. Una
+  señal que no significa nada no es neutra: le quita crédito a las que sí.
+
 - **Con una probabilidad no se reparte nada.** Los tramos especiales —bajada,
   curva cerrada, estrechamiento— se armaban con un sorteo al 9 % por compás y
   con un bloqueo grosero: bastaba que hubiera una bifurcación activa para

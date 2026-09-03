@@ -119,7 +119,7 @@ const PARTICLE_POOL = 64;
 // Metros por departamento. A 500 una partida decente cruza dos o tres, que
 // es lo minimo para que el viaje se note; con los 900 del ciclo anterior la
 // mayoria de partidas moria sin salir del primero.
-const REGION_LENGTH = 500;
+
 // La transicion ocupa el ultimo 38 % del tramo: el resto se sostiene, para
 // que cada departamento tenga identidad y no sea un degradado continuo.
 const REGION_BLEND = 0.62;
@@ -130,7 +130,7 @@ const ROAD_CELLS = 18;
 // Punto del tramo en el que la calzada cambia de material. Coincide con la
 // mitad de la transicion de cielo y luces, de modo que el cambio de firme cae
 // donde el resto del paisaje ya esta a medio camino.
-const ROAD_SHIFT = 1 - (REGION_BLEND + (1 - REGION_BLEND) / 2);
+
 
 // --- Capas de parallax ---------------------------------------------------
 // Cuatro profundidades moviendose a velocidades distintas: matorral al borde
@@ -810,7 +810,9 @@ const game = {
     powers: { magnet: 0, double: 0, amber: 0, flight: 0 },
     powerMax: { magnet: 1, double: 1, amber: 1, flight: 1 },
     boost: 0,            // segundos que quedan de impulso
-    regionShift: 0,      // saltos de departamento tomados en los cruces
+    routePos: 0,         // en que punto de la ruta se esta; solo lo mueven los cruces
+    roadS0: -1,          // trazado donde el firme cambia de departamento, -1 si no
+    roadFrom: 0,         // firme que queda por detras de esa linea
     // Bifurcacion en curso. s0 es la distancia recorrida a la que empieza a
     // abrirse; mainBand dice cual de los dos ramales dibuja la calzada
     // principal, y se voltea al elegir para que el jugador siempre corra sobre
@@ -1563,11 +1565,52 @@ function buildMaterials() {
 // Es un unico plano estatico. No necesita desplazarse porque es de color
 // uniforme: la sensacion de avance la dan la calzada y el horizonte. Sin el,
 // los hitos del fondo parecian flotar sobre la bruma.
+const GROUND_Y = -1.02;
+const GROUND_Z = -320;
+
 function buildGround() {
     groundMesh = new THREE.Mesh(new THREE.PlaneGeometry(700, 900), mat.ground);
     groundMesh.rotation.x = -Math.PI / 2;
-    groundMesh.position.set(0, -1.02, -320);
+    groundMesh.position.set(0, GROUND_Y, GROUND_Z);
     scene.add(groundMesh);
+}
+
+// La explanada tiene que bajar con la calzada.
+//
+// Era ESTE el motivo de que en la bajada no se viera lo que venia. La calzada
+// se hunde quince unidades y el suelo se quedaba clavado a -1,02: a sesenta
+// unidades por delante el firme ya iba ocho por DEBAJO del plano, asi que el
+// plano tapaba literalmente la calzada, los obstaculos y todo lo demas. Lo que
+// se veia era una pared de color de suelo.
+//
+// Se inclina, que para un plano de color liso es suficiente. Y se ajusta a la
+// parte de CERCA, no a la del fondo: el perfil de la cuesta se va aplanando
+// con la distancia, asi que la tangente de cerca queda por debajo del resto
+// del trazado y el plano no vuelve a asomar por encima en ningun punto.
+// Con la inclinacion puesta, la altura del plano en una z vale
+//     y(z) = -z * e + GROUND_Y
+// asi que exigir que quede por debajo de la calzada en un punto es despejar e.
+// Se hace en cinco puntos repartidos hasta donde llega la bruma y se toma el
+// mas exigente: una sola tangente no basta porque el perfil de la cuesta no es
+// una recta, y medido dejaba dos puntos con la calzada por debajo del plano.
+const GROUND_PROBES = [-20, -35, -55, -85, -125, -180];
+
+function updateGroundTilt() {
+    // Exigir  y(z) <= riseAtZ(z) - HOLGURA  y despejar e. La constante sale de
+    // HOLGURA - GROUND_Y = 0.9 - 1.02, y es lo que hace que en llano no se
+    // pida nada: con la calzada a su altura de siempre el plano ya cumple de
+    // sobra y el angulo se queda en cero.
+    //
+    // Se mira SIEMPRE, no solo en las cuestas. La ondulacion de siempre ya
+    // hundia el trazado un par de unidades por debajo del plano a ciento
+    // ochenta, justo en el limite de la bruma: poco, pero era lo mismo que
+    // pasaba en la bajada a lo grande, y corregirlo no cuesta nada.
+    let e = 0;
+    for (const z of GROUND_PROBES) {
+        e = Math.min(e, (riseAtZ(z) + 0.12) / -z);
+    }
+    groundMesh.rotation.x = -Math.PI / 2 + e;
+    groundMesh.position.y = GROUND_Y - GROUND_Z * e;
 }
 
 // --- Calzada: losas alternadas para que se perciba el avance ---
@@ -1844,9 +1887,14 @@ function slopeDropAtZ(z) { return 0; }
 // Region a la que pertenece un punto del trazado. Cada losa consulta la suya,
 // asi que el cambio de firme es una LINEA en el mundo que se ve venir de
 // lejos, no un fundido global: llegar a Antigua es ver aparecer el adoquin.
+// Region del firme en un punto del trazado. Con la ruta quieta entre cruces,
+// el firme es uniforme; lo que hace falta es que el CAMBIO tenga una linea en
+// el mundo, y esa linea es la propia bifurcacion: al tomar la salida se apunta
+// una coordenada de trazado unas decenas de unidades por delante, y de ahi en
+// adelante la calzada ya es la del departamento nuevo. Se ve venir el adoquin.
 function roadRegionOf(s) {
-    const rp = game.startRegion + game.regionShift + s / REGION_LENGTH + ROAD_SHIFT;
-    const i = Math.floor(rp) % REGION_N;
+    if (game.roadS0 >= 0 && s < game.roadS0) return game.roadFrom;
+    const i = Math.floor(game.routePos) % REGION_N;
     return i < 0 ? i + REGION_N : i;
 }
 
@@ -1901,6 +1949,7 @@ function hideAt(mesh, id) {
 }
 
 function updateRoadCurve() {
+    updateGroundTilt();
     const off = roadGroup.position.z;
     let colorDirty = false;
     collectGaps();
@@ -2853,7 +2902,7 @@ function makeBoost() {
 // Senales de aviso
 // ===========================================================================
 // Cada senal es un canvas de 160 px con fondo transparente: el rombo o el
-// triangulo se pintan dentro y las esquinas quedan vacias, de modo que basta
+// disco se pintan dentro y las esquinas quedan vacias, de modo que basta
 // un plano cuadrado con alpha y no hace falta geometria recortada.
 //
 // Las texturas se generan UNA vez al arrancar y se comparten. Rehacerlas en
@@ -2873,21 +2922,6 @@ function signCanvas(marco, dibujo) {
         x.fill();
         x.lineWidth = 15;
         x.strokeStyle = '#d62828';
-        x.stroke();
-        x.setTransform(1, 0, 0, 1, 0, 0);
-    } else if (marco === 'triangulo') {
-        // Ceda el paso: triangulo invertido, blanco con filo rojo.
-        x.setTransform(1, 0, 0, 1, 80, 80);
-        x.beginPath();
-        x.moveTo(-66, -46);
-        x.lineTo(66, -46);
-        x.lineTo(0, 64);
-        x.closePath();
-        x.fillStyle = '#ffffff';
-        x.fill();
-        x.strokeStyle = '#d62828';
-        x.lineWidth = 14;
-        x.lineJoin = 'round';
         x.stroke();
         x.setTransform(1, 0, 0, 1, 0, 0);
     } else {
@@ -3090,16 +3124,15 @@ const SIGN_ART = {
         x.moveTo(38, -14); x.lineTo(0, -40); x.lineTo(0, 12);
         x.closePath(); x.fill();
     },
-    ceda: null      // el triangulo ya lo dice todo
 };
 
 const SIGN_TEX = {};
 const SIGN_GEO_W = new THREE.PlaneGeometry(2.5, 2.5);
 
-// Que marco lleva cada una. El amarillo avisa, el triangulo cede y el circulo
-// prohibe: tres formas distintas para tres cosas distintas, legibles antes de
-// haber podido leer el dibujo de dentro.
-const SIGN_FRAME = { ceda: 'triangulo', noVirar: 'circulo' };
+// Que marco lleva cada una. El rombo amarillo avisa y el disco rojo prohibe:
+// dos formas para dos cosas distintas, legibles antes de haber podido leer el
+// dibujo de dentro.
+const SIGN_FRAME = { noVirar: 'circulo' };
 
 function buildSignTextures() {
     for (const k in SIGN_ART) {
@@ -3138,7 +3171,8 @@ function freeWarn() {
 // Planta un aviso por delante de lo que anuncia. side null = lado al azar.
 // Devuelve el lado en el que quedo, que es lo que permite que el peligro salga
 // justo por ahi. force salta el racionamiento: lo usan la bifurcacion y el
-// ceda el paso, que anuncian algo que no se puede dejar sin avisar.
+// las de los tramos especiales, que anuncian algo que no se puede dejar sin
+// avisar.
 function spawnWarn(kind, z, side, force) {
     const tex = SIGN_TEX[kind];
     if (!tex) return 0;
@@ -3151,10 +3185,20 @@ function spawnWarn(kind, z, side, force) {
     w.face.material.needsUpdate = true;
     // La flecha de prohibido virar esta dibujada girando a la derecha; para el
     // margen izquierdo se voltea el plano en vez de guardar otra textura.
-    w.face.scale.x = kind === 'noVirar' && side < 0 ? -1 : 1;
     w.side = side === undefined || side === null
         ? (Math.random() < 0.5 ? -1 : 1)
         : side;
+    // Las dos senales con SENTIDO se dibujan una sola vez, girando a la
+    // derecha, y el plano se voltea para el margen izquierdo. Sin esto un
+    // cartel de curva plantado a la izquierda dibujaba una flecha torciendo a
+    // la derecha: decia lo contrario de lo que iba a pasar, que en una senal
+    // es peor que no decir nada.
+    //
+    // Mira w.side y no el parametro: la curva no dice de que lado quiere ir,
+    // se sortea AQUI, y comparando el parametro —que vale null— el espejo no
+    // se aplicaba nunca.
+    const espejo = (kind === 'noVirar' || kind === 'curva') && w.side < 0;
+    w.face.scale.x = espejo ? -1 : 1;
     w.z = z;
     w.curve = trackCurve(z);
     w.rise = trackRise(z);
@@ -3962,6 +4006,10 @@ function armNarrow() {
 function updateTrackSystems() {
     const d = game.distance;
 
+    // La linea del firme se apaga cuando ya no queda calzada por detras de
+    // ella: a partir de ahi los dos lados de la comparacion dan lo mismo.
+    if (game.roadS0 >= 0 && d > game.roadS0 + 60) game.roadS0 = -1;
+
     if (game.slopeS0 >= 0 && d > game.slopeS0 + SLOPE_LEN + 40) {
         game.slopeS0 = -1;
         // La cuesta no vuelve a subir: deja el mundo quince unidades mas
@@ -4372,7 +4420,7 @@ function spawnCrossing(z) {
 
 // Tomar una salida. El CAMBIO adelanta la ruta al principio del departamento
 // elegido; el RETORNO la devuelve al principio del actual. En los dos casos se
-// recoloca routePos, que es una funcion de la distancia, con regionShift.
+// mueve routePos, que es lo unico que decide en que departamento se esta.
 function takeExit(c, lane) {
     // El ramal se fija SIEMPRE, incluso si se ha saltado el divisor por
     // arriba. Dejandolo sin fijar, forkDX pierde el termino que recentra el
@@ -4413,8 +4461,15 @@ function takeExit(c, lane) {
     const desde = Math.floor(routePos()) % REGION_N;
     const destino = cambio ? c.target : desde;
 
-    // Se busca el desplazamiento que deja routePos justo al empezar el tramo.
-    game.regionShift = destino + 0.02 - game.startRegion - game.distance / REGION_LENGTH;
+    // La ruta salta aqui y en ningun otro sitio.
+    const antes = Math.floor(game.routePos) % REGION_N;
+    game.routePos = destino + 0.02;
+    // Y el firme cambia en una linea que se ve venir: sesenta unidades por
+    // delante, justo donde los dos ramales acaban de abrirse.
+    if (destino !== antes) {
+        game.roadFrom = antes;
+        game.roadS0 = game.distance + 60;
+    }
 
     game.crossTaken++;
     lastBlendKey = -1;          // la escena se repinta entera, sin cache
@@ -5120,12 +5175,13 @@ function scrollWorld(dt) {
     if (game.distance > game.nextCross) {
         game.nextCross += CROSS_EVERY;
         spawnCrossing(SPAWN_Z);
-        // La bifurcacion primero y el ceda el paso despues, en ese orden:
-        // primero se avisa de que hay que elegir, luego de que hay que
-        // colocarse. Uno a cada lado, porque la decision es de lado.
+        // Solo la Y de bifurcacion, una a cada lado porque la decision es de
+        // lado. El ceda el paso se ha quitado: no anunciaba nada que el
+        // jugador pudiera hacer —no hay a quien ceder el paso— y ademas su
+        // triangulo rojo y blanco se confundia de lejos con el disco rojo de
+        // prohibido virar, que si dice algo y muy concreto.
         spawnWarn('bifurcacion', SPAWN_Z + WARN_AHEAD + 26, -1, true);
         spawnWarn('bifurcacion', SPAWN_Z + WARN_AHEAD + 26, 1, true);
-        spawnWarn('ceda', SPAWN_Z + WARN_AHEAD - 14, null, true);
     }
 
     game.nextSpawnZ += dz;
@@ -5522,11 +5578,18 @@ function mixHex(a, b, t, out) {
 // Posicion en la ruta como numero real: la parte entera es el departamento,
 // la decimal lo recorrido dentro de el.
 function routePos() {
-    // regionShift lo mueven los distribuidores viales: tomar la salida de
-    // CAMBIO adelanta la ruta a otro departamento, y la de RETORNO la devuelve
-    // al principio del actual. Sin ese sumando la ruta seria una funcion de la
-    // distancia y nada podria alterarla.
-    return game.startRegion + game.regionShift + game.distance / REGION_LENGTH;
+    // La ruta ya NO es una funcion de la distancia: es un numero que solo se
+    // mueve al tomar la salida de un distribuidor. Antes el departamento
+    // cambiaba solo cada quinientos metros y el cruce era un atajo; ahora el
+    // cruce es la UNICA forma de cambiar de sitio, que es lo que convierte
+    // elegir salida en la decision del juego y no en un adorno.
+    return game.routePos;
+}
+
+// Cuanto se lleva recorrido hacia el proximo distribuidor, de 0 a 1.
+function crossProgress() {
+    const t = 1 - (game.nextCross - game.distance) / CROSS_EVERY;
+    return Math.max(0, Math.min(1, t));
 }
 
 function applyBlend(pos) {
@@ -5649,6 +5712,9 @@ function renderMinimap(i, j, raw, e) {
         dom.mmName.textContent = REGIONS[i].name;
         dom.mmDept.textContent = REGIONS[i].dept;
     }
+    // La barra ya no mide el avance dentro del departamento —no hay tal cosa,
+    // la ruta esta quieta— sino lo que falta para el proximo cruce, que es lo
+    // unico que puede cambiarlo.
     dom.mmFill.style.width = (raw * 100).toFixed(0) + '%';
 }
 
@@ -5746,7 +5812,9 @@ function startGame() {
     game.nextTramo = 0;
     game.lastTramo = -1;
     game.crossKind = 1;
-    game.regionShift = 0;
+    game.routePos = save.start + 0.02;
+    game.roadS0 = -1;
+    game.roadFrom = 0;
     game.nextCross = CROSS_EVERY;
     game.fork.active = false;
     game.fork.chosen = 0;
@@ -6278,7 +6346,7 @@ function frame(now) {
         const blend = applyBlend(routePos());
         updateRoadCurve();
         updateScenery(blend.A, blend.B, blend.e);
-        renderMinimap(blend.i, blend.j, blend.raw, blend.e);
+        renderMinimap(blend.i, blend.j, crossProgress(), blend.e);
 
         // Al entrar en un departamento nuevo: bandera, sonido y desbloqueo
         if (blend.i !== game.region) {
