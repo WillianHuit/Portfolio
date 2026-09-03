@@ -160,14 +160,28 @@ moviendo el marcador.
 golpe, multiplicador por racha de jade, hitos cada 250 m, jaguar que se acerca
 conforme pierdes vidas y quetzal de acompañante.
 
-**Las señales.** Rombos amarillos y un ceda el paso al borde de la calzada,
-dibujados en canvas. **No son decorado**: cada uno se planta porque viene lo
-que anuncia, treinta y cuatro unidades por delante. Derrumbe antes de un
-tronco o de una piedra rodante, puente angosto antes de un vacío, paso de
-ganado antes del camazotz, pendiente antes de una rampa, curva antes de un
-giro real del trazado y bifurcación en Y antes de un cruce. Zona escolar,
-paso de peatones y calzada resbaladiza son las únicas de ambiente, atadas al
-tipo de departamento y con cuentagotas.
+**Las señales.** Rombos amarillos, un ceda el paso y un disco rojo de
+prohibición al borde de la calzada, dibujados en canvas. **No son decorado ni
+un aviso genérico: cada una dispara un suceso concreto, y del lado en el que
+está plantada.**
+
+| Señal | Lo que provoca |
+|---|---|
+| Derrumbe | Caen piedras del cerro **sobre ese carril**. En los dos márgenes, un tronco de lado a lado. |
+| Ganado | Una **vaca** entra por ese margen y cruza la calzada al paso hasta el otro. |
+| Parada de camioneta | Por ese carril viene un **bus** de frente, que no se aparta ni se salta. |
+| Curva | La calzada **cierra de verdad hacia ese lado**, se corre un 16 % más y el tramo va limpio de obstáculos: solo entran enemigos. Quedarse ~2 s por el carril de fuera te saca de la carretera. |
+| Pendiente | Bajada real de 150 unidades: la calzada se hunde por delante, la cámara cabecea y se corre un 20 % más. Sin obstáculos ni tramos elevados. |
+| `] [` Carril estrecho | Los tres carriles **se vuelven uno**. Por los lados ya no hay calzada: quien siga ahí se cae. |
+| Bifurcación en Y + ceda | Viene un distribuidor vial. |
+| Prohibido virar (disco rojo) | Ese ramal del cruce está **cortado por un derrumbe**. Meterse por ahí se acabó. |
+| Hueco | Un vacío de lado a lado en la calzada. |
+
+Zona escolar, paso de peatones y calzada resbaladiza son las únicas de
+ambiente, atadas al tipo de departamento y con cuentagotas. **El murciélago y
+la piedra rodante sueltos salen SIN señal**, a propósito: son el ruido de
+fondo del camino, y ponerles cartel llenaría el margen de rombos hasta que
+dejaran de mirarse los que sí anuncian algo gordo.
 
 **Los distribuidores viales.** Cada 620 m la calzada llega a un cruce. Un
 pórtico con dos rótulos verdes anuncia las salidas —una lleva a otro
@@ -185,7 +199,11 @@ rampa del propio carril o saltando; por el costado no se pasa.
 **Y algo viene de frente.** A partir de los 220 m entran amenazas que cierran
 distancia por su cuenta en vez de dejarse arrastrar por el mundo: el
 *camazotz*, el murciélago de Xibalbá, que vuela a la altura del pecho y se
-esquiva agachándose, y la *piedra rodante*, que solo se salta.
+esquiva agachándose; la *piedra rodante*, que solo se salta; la *vaca*, que
+cruza al paso de un margen al otro; y la *camioneta*, que baja por su carril
+de frente. Las dos últimas son **más altas que un salto a propósito**: la
+respuesta a las dos es apartarse, y dejar que además se pudieran saltar
+convertiría tres respuestas distintas en una sola.
 
 **Poderes** que aparecen en la calzada: escudo, imán de jade, jade doble,
 ámbar de Verapaz (ralentiza el mundo sin ralentizarte a ti) y vuelo del
@@ -268,6 +286,12 @@ Lo que importa mantener si se toca:
   sin tener que desactivar nada. La versión anterior resolvía el cruce con una
   isleta y ya: no había forma de saber qué camino habías tomado, porque los dos
   eran el mismo camino.
+- **El ramal que no se toma se marcha, no se queda.** Elegido uno, al otro se
+  le multiplica la separación durante poco más de un segundo y luego se deja de
+  dibujar. Como la separación vale cero en la X y crece hacia el fondo,
+  multiplicarla entera hace que el ramal PIVOTE sobre el cruce: se ve curvarse y
+  perderse. Dejando los dos ahí, abiertos y paralelos, no había forma de saber
+  cuál era el tuyo —que era exactamente la queja—.
 - **El ramal se fija incluso si se salta el divisor por arriba.** Sin fijarlo,
   `forkDX` pierde el término que recoloca el mundo y la calzada se le desliza
   al jugador de debajo de los pies hasta ocho unidades.
@@ -282,19 +306,21 @@ Lo que importa mantener si se toca:
   unidades mínimas entre dos, salvo las del cruce y las de lo que cruza la
   calzada entera, que no se pueden dejar sin avisar.
 - **La señal manda sobre el peligro, no al revés.** Se planta primero, se mira
-  por qué lado quedó, y la piedra o el murciélago entran justo por ahí —desde
-  fuera de la calzada, meténdose hacia su carril—. Una señal de derrumbe a la
-  derecha con la piedra cayendo por la izquierda es peor que no ponerla, porque
-  enseña a no fiarse.
-- **La pendiente anuncia una bajada de verdad**: la calzada se hunde por
-  delante, la cámara cabecea y se corre un 22 % más durante 150 unidades. Es el
-  único sitio donde la velocidad sube sin que el jugador haya hecho nada, y por
-  eso se avisa siempre.
-- **Una señal que no anuncia nada envenena a las demás.** Si la de curva
-  saliera en las rectas, el jugador dejaría de mirar todas: por eso se mide el
-  desplazamiento REAL del trazado treinta unidades más allá y solo se planta
-  si la calzada se va a mover de verdad. Las de ambiente salen al 7 % por
-  compás justamente para no devaluar a las que sí avisan.
+  por qué lado quedó, y el suceso ocurre justo por ahí. Una señal de derrumbe a
+  la derecha con las piedras cayendo por la izquierda es peor que no ponerla,
+  porque enseña a no fiarse.
+- **Y lo que anuncia no nace con ella: se programa unos metros más tarde.** La
+  señal se planta 34 unidades por delante del compás, así que llega antes… pero
+  la camioneta viene DE FRENTE y cierra distancia al doble de velocidad que el
+  mundo: naciendo a la vez, adelantaba a su propio aviso. Hay una cola de
+  eventos por distancia (`pending`) y cada suceso se apunta con el adelanto que
+  le corresponde según lo deprisa que se acerque.
+- **Una señal que no anuncia nada envenena a las demás.** Antes la de curva se
+  plantaba cuando el serpenteo de siempre movía la calzada un poco; ahora abre
+  una curva propia. Y el murciélago y la piedra sueltos van SIN cartel: si cada
+  uno llevase el suyo, el margen sería un pasillo de rombos y los que anuncian
+  algo gordo dejarían de mirarse. Las de ambiente salen al 7 % por compás por
+  la misma razón.
 - **Treinta y cuatro unidades de adelanto, ni una más.** La señal nace a 136
   del jugador y la bruma, que cierra a 185, se come su entrada. Con más
   adelanto aparecería de golpe en mitad del campo visible. Lo que gana no es
@@ -336,10 +362,64 @@ Lo que importa mantener si se toca:
 - **`roadRegionOf` también suma `regionShift`.** Sin eso, al tomar la salida de
   cambio el cielo y la vegetación saltaban al departamento nuevo y la calzada se
   quedaba con el adoquín del anterior.
-- **Deslizarse no es encogerse, es tirarse.** El cuerpo se tumba a 64° y baja al
-  ras, con un brazo estirado y la cabeza compensando la inclinación para seguir
-  mirando al frente. Achatar la figura en el sitio, como hacía antes, se leía
-  como un personaje agachado y no como uno derrapando.
+- **Deslizarse no es agacharse, es tirarse de barriga.** El cuerpo se tumba a
+  85° —cinco grados de horizontal—, baja hasta rozar la calzada y estira **los
+  dos brazos** hacia delante, con la cabeza compensando la inclinación entera
+  para seguir mirando al frente. Las dos versiones anteriores fallaban por lo
+  mismo: achatar la figura en el sitio se leía como alguien en cuclillas, y
+  tumbarla a 64° con un brazo estirado y otro recogido, como una caída. Una
+  postura de la que uno se puede levantar no dice «me estoy deslizando».
+
+- **Una cuesta con perfil de seno es un hoyo, no una bajada.** El seno sube y
+  vuelve, así que por delante se abría un socavón de trece unidades y por
+  detrás se cerraba solo: el camino desaparecía del encuadre justo al entrar.
+  Ahora el perfil es una S que **sube a uno y se queda ahí** —se baja y uno se
+  queda abajo, como en una carretera— y lo que mueve la velocidad y el cabeceo
+  de la cámara es la *derivada*, que sí es una campana y sí vuelve a cero.
+- **Y una curva con perfil de seno es una ese.** Medido: la calzada a 150
+  unidades se iba treinta a la derecha y luego cuarenta a la izquierda, o sea
+  que el cartel de «curva a la derecha» acababa anunciando una a la izquierda.
+  Misma corrección: el desplazamiento cierra hacia el lado del cartel y **se
+  queda ahí**. Sale gratis porque todo se mide restando el desplazamiento del
+  propio jugador, así que quedarse desviado no desvía nada.
+
+- **Los tres tramos que cambian la calzada se arman 215 unidades por delante.**
+  La calzada llega a 204 y los compases nacen a 170. Armar dentro de eso hacía
+  dos destrozos a la vez: el tramo ya visible daba un tirón delante de los ojos,
+  y los objetos que ya estaban puestos —que guardan su altura al nacer— se
+  quedaban flotando mientras el suelo se movía bajo ellos. Armando a 215 no hay
+  nada que corregir: cuando el tramo llega, ya nació con el cambio dentro.
+  Medido: al armar, el desplazamiento a 60 y a 150 unidades es 0,01.
+- **Apagar la bajada sí necesita corrección, apagar la curva no.** La curva
+  entra por `(o.curve - curveBase) * mask`: es una resta, y al apagarla los dos
+  términos caen a cero a la vez. La bajada va sin máscara —si se enmascarase
+  cerca, la cuesta arrancaría a diez metros de los pies y se vería el escalón—,
+  así que al apagarla hay que devolverles las quince unidades a todo lo vivo.
+  Se espera a que TODO haya pasado la cuesta, y entonces la corrección es la
+  misma para todos y no se mueve nada. Medido: cero salto al apagarla.
+- **Dentro de una cuesta o una curva solo entran enemigos.** Un obstáculo del
+  suelo no se ve venir cuando la calzada se va hacia abajo o hacia un lado, y un
+  tramo elevado ni siquiera se apoyaría bien. Dentro del estrechamiento no entra
+  nada: es un carril, y pedir dos cosas a la vez donde menos margen hay no es
+  dificultad, es una encerrona.
+
+- **Salirse de la carretera no es un golpe.** El estrechamiento y la curva
+  cerrada no te quitan una vida: te quedas donde ya no hay calzada y te caes. Por
+  eso ignoran el escudo —un escudo no pone suelo donde no lo hay— y por eso se
+  ve al personaje caer dando vueltas antes de que termine. Sin esa caída, morir
+  ahí se leería como un fallo del juego y no como uno propio, que es justo lo
+  que hay que evitar cuando algo mata de golpe.
+- **La piedra que aún cae no golpea, y eso salió gratis.** La franja de daño se
+  mide desde el ancla de la amenaza, y el ancla de una piedra en el aire va
+  alta. Medido: caen desde y=30, 25 y 20 escalonadas y solo pegan al tocar.
+- **La vaca cruza atada a la velocidad del mundo, no al reloj.** Así pasa
+  siempre por el mismo punto vaya el jugador a la velocidad que vaya. Un
+  obstáculo móvil que se pueda aprender es difícil; uno que no, es una lotería.
+- **El ramal cortado devuelve al bueno al revivir.** Repetir la misma pared de
+  piedras cinco segundos después no sería una segunda oportunidad, sería la
+  misma muerte otra vez: `doRevive` vuelve a resolver la salida por el carril
+  que tocaba. Medido: se entra por el ramal cortado, se muere, y al revivir el
+  ramal es el contrario y el muro ya no está.
 - **Las placas de impulso se pisan, no se recogen.** Saltando por encima no
   cuentan, y eso las convierte en una decisión. El empujón se aplica *después*
   del tope de velocidad: su gracia es pasar del techo unos segundos, con el
