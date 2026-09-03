@@ -88,11 +88,13 @@
         .panel { max-width: 34rem; }
         .panel-wide { max-width: 54rem; width: 100%; }
 
+        /* Cabecera comprimida: con el patrocinio al pie, el menu se pasaba
+           del alto de pantalla y la franja quedaba fuera de vista. */
         .glyph-mark {
-            font-size: 2.75rem;
+            font-size: 2.1rem;
             letter-spacing: 0.3em;
             color: var(--jade);
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.25rem;
         }
 
         h1 {
@@ -113,14 +115,14 @@
             font-size: 0.8rem;
             letter-spacing: 0.22em;
             text-transform: uppercase;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.1rem;
         }
 
         .blurb {
             font-size: 0.95rem;
-            line-height: 1.65;
+            line-height: 1.6;
             opacity: 0.82;
-            margin-bottom: 1.75rem;
+            margin-bottom: 1.25rem;
         }
 
         /* ===== Controles ===== */
@@ -129,8 +131,8 @@
         .keys {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
-            gap: 0.6rem;
-            margin-bottom: 1.5rem;
+            gap: 0.55rem;
+            margin-bottom: 1.1rem;
             font-size: 0.78rem;
         }
 
@@ -726,28 +728,37 @@
               carrera no aparece nada.
            2. El panel de revivir: solo se ofrece cuando ya has perdido, es
               decir cuando la alternativa es cerrar. Una vez por carrera. */
+        /* Una sola fila donde quepa. Apilada ocupaba tanto que en el menu
+           quedaba por debajo del pliegue, y un patrocinio que hay que buscar
+           haciendo scroll no patrocina nada. */
         .sponsor {
-            margin-top: 1.6rem;
+            margin-top: 1.4rem;
             border: 1px solid rgba(200, 134, 47, 0.3);
             background: rgba(200, 134, 47, 0.07);
             border-radius: 0.7rem;
-            padding: 0.9rem 1rem;
+            padding: 0.7rem 0.85rem;
             text-align: left;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.7rem 0.9rem;
         }
 
         .sponsor-head {
             display: flex;
             align-items: center;
-            gap: 0.7rem;
-            margin-bottom: 0.7rem;
+            gap: 0.6rem;
+            flex: none;
         }
 
+        /* Placa blanca: el logotipo es negro sobre blanco, asi que sobre el
+           fondo oscuro del juego necesita su propio soporte o desaparece. */
         .sponsor-logo {
             width: 2.6rem;
             height: 2.6rem;
             border-radius: 0.5rem;
             object-fit: contain;
-            background: rgba(239, 230, 210, 0.9);
+            background: #fff;
             flex: none;
         }
 
@@ -782,7 +793,13 @@
             opacity: 0.6;
         }
 
-        .sponsor-links { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+        .sponsor-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            flex: 1 1 14rem;
+            justify-content: flex-end;
+        }
 
         .slink {
             display: inline-flex;
@@ -910,14 +927,11 @@
 
             <p class="blurb">
                 Los mayas unían sus ciudades con <b>sacbeob</b>: calzadas de piedra
-                caliza blanca. La tuya cruza Guatemala entera en <b>doce tramos</b>,
-                de Tikal a Monterrico pasando por Flores, Semuc Champey, Río Dulce,
-                Esquipulas, Antigua, el Fuego, Atitlán, Chichicastenango, Todos Santos
-                y el Tajumulco. En cada uno cambian el cielo, la vegetación y hasta el
-                firme que pisas —el adoquín de Antigua no se parece a la caliza de
-                Tikal—. La calzada gira, sube por rampas a tramos elevados y de vez en
-                cuando algo viene de frente. Esquiva, recoge jade y llega lo más lejos
-                que puedas.
+                caliza blanca. La tuya cruza Guatemala en <b>doce tramos</b>, de Tikal
+                a Monterrico, y en cada uno cambian el cielo, la vegetación y el firme
+                que pisas —el adoquín de Antigua no se parece a la caliza de Tikal—.
+                La calzada gira, sube por rampas y de vez en cuando algo viene de
+                frente.
             </p>
 
             <div class="keys">
@@ -927,12 +941,10 @@
                 <div class="key-row"><b>Táctil</b> desliza o toca</div>
             </div>
 
-            <p class="notice" style="border-color:rgba(46,196,160,.35);background:rgba(46,196,160,.07)">
-                <b style="color:var(--jade)">Los desniveles.</b> Algunos carriles suben a
-                un segundo nivel. Se entra por la <b>rampa de ese carril</b>, o
-                <b>saltando</b>: por el costado no se pasa. Bajar es solo dejarse caer.
-                Y si el quetzal te levanta, arriba hay filas de jade que no se ven
-                desde el suelo.
+            <p class="notice" style="border-color:rgba(46,196,160,.35);background:rgba(46,196,160,.07);margin-bottom:1.25rem">
+                <b style="color:var(--jade)">Los desniveles.</b> Algunos carriles suben
+                a un segundo nivel: se entra por la <b>rampa de ese carril</b> o
+                <b>saltando</b>, porque por el costado no se pasa.
             </p>
 
             <div class="actions">

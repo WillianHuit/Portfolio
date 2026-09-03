@@ -405,9 +405,9 @@ const CEFAS = {
     name: 'Cefas Panadería',
     tag: 'Patrocina esta calzada',
     blurb: 'Pan de todos los días, hecho en Guatemala.',
-    // Se coloca el archivo en esa ruta y aparece solo; mientras no exista, el
-    // hueco lo ocupa un sustituto tipografico del mismo tamano.
-    logo: 'src/img/cefas-logo.png',
+    // Si el archivo falta, el hueco lo ocupa un sustituto tipografico del
+    // mismo tamano y no se rompe nada.
+    logo: 'src/img/logo-cefas.png',
     initials: 'CP',
     order: 'https://www.pedidosya.com.gt/restaurantes/ciudad-de-guatemala/cefas-panaderia-6374a132-54b4-4157-8e55-ebbc0e6cf786-menu',
     channel: 'https://www.youtube.com/@cefas.panaderia/shorts',
