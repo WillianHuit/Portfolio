@@ -269,7 +269,7 @@ Lo que importa mantener si se toca:
   isleta y ya: no había forma de saber qué camino habías tomado, porque los dos
   eran el mismo camino.
 - **El ramal se fija incluso si se salta el divisor por arriba.** Sin fijarlo,
-   pierde el término que recoloca el mundo y la calzada se le desliza
+  `forkDX` pierde el término que recoloca el mundo y la calzada se le desliza
   al jugador de debajo de los pies hasta ocho unidades.
 - **Toda la bifurcación va limpia de objetos.** Un obstáculo ahí dentro caería
   sobre un ramal que se está abriendo, o sobre el que no se ha tomado, o justo
