@@ -224,6 +224,28 @@ Lo que importa mantener si se toca:
   una calzada que se doblaba bajo ella. Con la máscara de distancia, la zona
   donde se juega es recta —y por tanto todo casa— y el giro vive en el fondo,
   que es donde se lee. La ondulación vertical va por la misma máscara.
+- **Toda instancia de un  hay que apagarla al crearla.** Una
+  instancia recién creada lleva la matriz identidad: un cubo de 1×1×1 en el
+  origen —que es exactamente donde vive el jugador—. Como 
+  solo apaga las celdas que alguna vez estuvieron encendidas, las que una zona
+  no llega a usar (diecisiete de dieciocho en Tikal) se quedaban ahí, con el
+  color en cero del buffer recién reservado: un cubo negro pegado a los pies
+  del corredor. Antigua era la única zona que se libraba, porque su adoquín de
+  seis por tres gasta las dieciocho.
+- **Nunca dos caras en el mismo plano.** Tres bugs distintos eran el mismo
+  error: el hueco y el agua del cenote acababan los dos en  (y ganaba
+  el material casi negro, así que el cenote era una plancha sin agua ni borde);
+  la tapa y el costado de los tramos elevados terminaban los dos en
+  , y el z-fighting resultante se arrastraba al avanzar, que se
+  veía como una textura moviéndose. Las capas van a alturas separadas.
+- **Las vetas rojas de la piedra rodante van por FUERA del núcleo.** Medían
+  1,5 dentro de un cubo de 1,45: sobresalían dos centímetros y quedaban
+  enterradas, y la amenaza se veía como un cubo negro sin más. El filo rojo es
+  además emisivo, o en las zonas de noche no se ve venir.
+- **Las placas de impulso se pisan, no se recogen.** Saltando por encima no
+  cuentan, y eso las convierte en una decisión. El empujón se aplica *después*
+  del tope de velocidad: su gracia es pasar del techo unos segundos, con el
+  riesgo que eso trae, porque los huecos entre obstáculos no se ensanchan.
 - **Cada losa consulta su propia región**, así que el cambio de firme es una
   LÍNEA en el mundo que se ve venir de lejos, no un fundido global: llegar a
   Antigua es ver aparecer el adoquín. La línea cae en la mitad de la

@@ -133,6 +133,15 @@ const OBSTACLE_POOL = 30;
 // piezas de golpe, y con el pool anterior se comia el recorrido de a pie.
 const PICKUP_POOL = 96;
 const PLATFORM_POOL = 9;            // tres tramos de terreno a la vez, como mucho
+const BOOST_POOL = 8;
+
+// --- Placas de impulso ---------------------------------------------------
+// Van pegadas al suelo y se pisan al pasar por encima: no son un objeto que
+// se recoge, son un trozo de calzada que empuja. Breve a proposito, porque
+// ir mas rapido con los mismos huecos entre obstaculos es tambien mas
+// peligroso: el premio y el riesgo son la misma cosa.
+const BOOST_TIME = 2.6;
+const BOOST_MULT = 1.45;
 const HAZARD_POOL = 10;
 
 // Tipos de obstaculo. Los tres verbos del juego: esquivar, agacharse, saltar.
@@ -623,6 +632,7 @@ const game = {
     region: 0,           // indice del departamento actual
     powers: { magnet: 0, double: 0, amber: 0, flight: 0 },
     powerMax: { magnet: 1, double: 1, amber: 1, flight: 1 },
+    boost: 0,            // segundos que quedan de impulso
     revived: false,      // el revivir del patrocinador ya se gasto en esta carrera
     curveBase: 0,        // desplazamiento de la curva justo donde esta el jugador
     riseBase: 0,         // altura de la ondulacion en ese mismo punto
@@ -682,7 +692,7 @@ const dom = {
     powers: $('powers'),
     pw: {
         magnet: $('pwMagnet'), flight: $('pwFlight'),
-        double: $('pwDouble'), amber: $('pwAmber')
+        double: $('pwDouble'), amber: $('pwAmber'), boost: $('pwBoost')
     }
 };
 
@@ -826,6 +836,7 @@ const sfx = {
     // golpe, es un "por ahi no".
     bump: () => blip(110, 0.1, 'square', 0.3, 70),
     ramp: () => blip(300, 0.12, 'sine', 0.2, 430),
+    boost: () => blip(420, 0.26, 'sawtooth', 0.45, 1180),
     jade: () => {
         blip(PENTA[Math.min(jadeStreak, PENTA.length - 1)], 0.19, 'triangle', 0.55);
         jadeStreak++;
@@ -864,9 +875,12 @@ const sfx = {
 //
 // Lo que suena es un vals ORIGINAL escrito para el juego, en el molde del
 // vals guatemalteco: compas de 3/4, bajo en el primer tiempo y acordes en el
-// segundo y el tercero, melodia de marimba encima y giro de la menor a do
-// mayor en la segunda mitad. Si algun dia se quiere la pieza real, basta con
-// cambiar VALS.bars: el resto del sistema no se entera de que suena.
+// segundo y el tercero, melodia en terceras encima —como se toca la marimba,
+// con dos baquetas— y giro de la menor a do mayor en la segunda mitad.
+//
+// NO ES, NI PRETENDE SER, "LUNA DE XELAJU". Si suena distinto es porque es
+// otra pieza. Para poner la de verdad basta con reescribir VALS.bars con sus
+// notas y sus duraciones; el resto del sistema no se entera de que suena.
 //
 // La marimba se sintetiza como lo que es: una barra golpeada. Un seno para el
 // fundamental, otro cuatro veces mas agudo y muy corto para el golpe de la
@@ -947,6 +961,20 @@ function marimba(freq, t, dur, vol) {
     o2.stop(t + dur * 0.35 + 0.03);
 }
 
+// La marimba guatemalteca casi nunca toca la melodia sola: va en terceras,
+// dos baquetas a la vez. Es lo que mas distingue su sonido, y sin ello el
+// vals sonaba a piano de juguete por muy bien que estuvieran las notas.
+const SCALE_ORDER = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+
+function thirdBelow(n) {
+    const name = n.slice(0, -1);
+    const i = SCALE_ORDER.indexOf(name);
+    if (i < 0) return null;              // alterada (el sol sostenido): sin tercera
+    let j = i - 2, o = parseInt(n.slice(-1), 10);
+    if (j < 0) { j += 7; o -= 1; }
+    return SCALE_ORDER[j] + o;
+}
+
 function scheduleBar(bar, t0, beat) {
     const ch = CHORDS[bar.ch];
 
@@ -962,7 +990,22 @@ function scheduleBar(bar, t0, beat) {
 
     let t = t0;
     for (const [n, len] of bar.mel) {
-        if (n) marimba(hz(n), t, beat * len * 0.92, 0.34);
+        if (n) {
+            const dur = beat * len;
+            const low = thirdBelow(n);
+            // Una barra de madera no sostiene: lo que en un violin es una nota
+            // larga, en marimba es un redoble de baqueta. Las notas de mas de
+            // un tiempo se repican en vez de dejarse morir.
+            const hits = len > 1 ? Math.round(len * 2.5) : 1;
+            const step = dur / hits;
+            for (let k = 0; k < hits; k++) {
+                const at = t + k * step;
+                const d = (hits > 1 ? step * 1.6 : dur * 0.92);
+                const v = k === 0 ? 0.34 : 0.2;      // el primer golpe marca
+                marimba(hz(n), at, d, v);
+                if (low) marimba(hz(low), at, d, v * 0.62);
+            }
+        }
         t += beat * len;
     }
 }
@@ -1038,6 +1081,7 @@ const mat = {};
 const obstacles = [];
 const pickups = [];
 const platforms = [];
+const boosts = [];
 const hazards = [];
 const particles = [];
 
@@ -1167,8 +1211,16 @@ function buildMaterials() {
     // por vuelta, y una fuente de dano que a veces es clara sobre fondo oscuro
     // y a veces al reves se vuelve ilegible justo cuando importa. Silueta
     // oscura y filo rojo, iguales en los ocho departamentos.
-    mat.danger     = lam(0x241a1a);
-    mat.dangerTrim = lam(0xef4444);
+    // La placa de impulso tampoco se tematiza: es informacion de juego, y
+    // tiene que decir lo mismo en las doce zonas.
+    mat.boostPad  = lam(0x0d3a33);
+    mat.boostMark = lam(0x4affd0, { emissive: 0x4affd0, emissiveIntensity: 0.7 });
+
+    mat.danger     = lam(0x4a352e);
+    // Emisivo: en las zonas de noche —Tajumulco, Chichicastenango, el Fuego—
+    // una silueta oscura sobre fondo oscuro no se ve venir, y una amenaza que
+    // no se ve venir no se puede esquivar.
+    mat.dangerTrim = lam(0xef4444, { emissive: 0xef4444, emissiveIntensity: 0.5 });
 
     // Emisivos de las recogidas: uno por tipo, para que el pulso de brillo se
     // anime una vez por frame en vez de una vez por pieza.
@@ -1208,6 +1260,24 @@ function buildRoad() {
     roadMesh.instanceColor = new THREE.InstancedBufferAttribute(
         new Float32Array(TILE_COUNT * ROAD_CELLS * 3), 3
     );
+
+    // Todas las celdas arrancan apagadas, y esto NO es una precaucion
+    // decorativa. Una instancia recien creada lleva la matriz identidad: un
+    // cubo de 1x1x1 en el origen. Y el origen es justo donde vive el jugador.
+    //
+    // Como updateRoadCurve solo apaga las celdas que ALGUNA VEZ estuvieron
+    // encendidas, las que una zona no llega a usar —diecisiete de dieciocho en
+    // Tikal— se quedaban con esa identidad, y con el color en cero del buffer
+    // recien reservado. Resultado: un cubo negro pegado a los pies del
+    // corredor que lo seguia a todas partes. Solo Antigua se libraba, porque
+    // su adoquin de seis por tres gasta las dieciocho.
+    for (let i = 0; i < TILE_COUNT * ROAD_CELLS; i++) {
+        dummy.position.set(0, -999, 0);
+        dummy.scale.set(0.0001, 0.0001, 0.0001);
+        dummy.rotation.set(0, 0, 0);
+        dummy.updateMatrix();
+        roadMesh.setMatrixAt(i, dummy.matrix);
+    }
     roadMesh.instanceMatrix.needsUpdate = true;
     // Sin descarte por frustum: three.js lo calcula sobre la caja de la
     // geometria base, que en un InstancedMesh no dice nada de donde estan
@@ -1824,15 +1894,34 @@ function makeObstacle() {
     group.add(dintel);
 
     // Cenote: hueco en la calzada. Hay que saltar.
+    //
+    // Las tres capas van a alturas SEPARADAS a proposito. Antes el hueco y el
+    // agua acababan los dos en y = 0.09 —dos caras en el mismo plano peleando
+    // por el pixel— y ganaba la del hueco, que es un material basico casi
+    // negro: el cenote se veia como una plancha negra, sin agua y sin borde.
+    // Con el brocal arriba, el agua en medio y el fondo debajo, se lee como lo
+    // que es: un pozo.
     const cenote = new THREE.Group();
+
     const hole = new THREE.Mesh(BOX, mat.pit);
-    hole.scale.set(2.05, 0.12, 2.6);
-    hole.position.y = 0.03;
+    hole.scale.set(2.05, 0.06, 2.6);
+    hole.position.y = 0.0;                     // fondo oscuro, hasta y = 0.03
     cenote.add(hole);
+
     const water = new THREE.Mesh(BOX, mat.water);
-    water.scale.set(1.6, 0.08, 2.1);
-    water.position.y = 0.05;
+    water.scale.set(1.5, 0.05, 2.0);
+    water.position.y = 0.07;                   // agua, de 0.045 a 0.095
     cenote.add(water);
+
+    // Brocal: cuatro piezas que enmarcan el pozo. Es lo que hace que se lea
+    // como una abertura y no como una mancha pintada en el suelo.
+    for (const [sx, sz, w, d] of [[0, -1, 2.3, 0.28], [0, 1, 2.3, 0.28],
+                                  [-1, 0, 0.28, 2.86], [1, 0, 0.28, 2.86]]) {
+        const kerbPiece = new THREE.Mesh(BOX, mat.stone);
+        kerbPiece.scale.set(w, 0.18, d);
+        kerbPiece.position.set(sx * 1.16, 0.09, sz * 1.44);
+        cenote.add(kerbPiece);
+    }
     group.add(cenote);
 
     group.visible = false;
@@ -1886,7 +1975,11 @@ function makePlatform() {
 
     // Cuerpo: el costado da el volumen y la tapa el color de la calzada.
     const side = new THREE.Mesh(BOX, mat.deckSide);
-    side.scale.set(2.15, LEVEL_HIGH, 1);
+    // Hasta donde empieza la tapa y ni un milimetro mas. Llegando los dos a
+    // LEVEL_HIGH sus caras superiores quedaban en el mismo plano, y el
+    // z-fighting resultante se arrastraba al avanzar: parecia una textura
+    // moviendose sobre la plataforma.
+    side.scale.set(2.15, LEVEL_HIGH - 0.26, 1);
     group.add(side);
 
     const deck = new THREE.Mesh(BOX, mat.deck);
@@ -1942,10 +2035,17 @@ function makeHazard() {
 
     // Piedra rodante: baja por el carril girando. Solo se salta.
     const rock = new THREE.Group();
-    piece(rock, mat.danger, 1.45, 1.45, 1.45, 0, 0, 0);
-    piece(rock, mat.danger, 1.1, 1.1, 1.75, 0, 0, 0);
-    piece(rock, mat.dangerTrim, 1.5, 0.2, 0.2, 0, 0.5, 0);
-    piece(rock, mat.dangerTrim, 0.2, 0.2, 1.5, 0.45, 0.3, 0);
+    piece(rock, mat.danger, 1.3, 1.3, 1.3, 0, 0, 0);          // nucleo
+    // Salientes en los tres ejes: rompen la silueta de cubo y al girar dejan
+    // ver que la cosa rueda. Un cubo liso girando parece quieto.
+    piece(rock, mat.danger, 1.62, 0.86, 0.86, 0, 0, 0);
+    piece(rock, mat.danger, 0.86, 1.62, 0.86, 0, 0, 0);
+    piece(rock, mat.danger, 0.86, 0.86, 1.62, 0, 0, 0);
+    // Vetas al rojo, POR FUERA del nucleo y no dentro como estaban. Son lo
+    // unico que dice "esto te hace dano" en las doce zonas.
+    piece(rock, mat.dangerTrim, 1.72, 0.3, 0.3, 0, 0.36, 0.36);
+    piece(rock, mat.dangerTrim, 0.3, 0.3, 1.72, -0.36, -0.3, 0);
+    piece(rock, mat.dangerTrim, 0.3, 1.72, 0.3, 0.38, 0, -0.34);
     group.add(rock);
 
     group.visible = false;
@@ -1957,11 +2057,41 @@ function makeHazard() {
     };
 }
 
+// --- Placa de impulso ---
+// Una losa hundida en la calzada con galones apuntando hacia delante. Los
+// galones van por encima de la losa y no a su misma altura, o volveriamos al
+// problema del cenote: dos caras en el mismo plano.
+function makeBoost() {
+    const group = new THREE.Group();
+
+    const pad = new THREE.Mesh(BOX, mat.boostPad);
+    pad.scale.set(2.05, 0.09, 3.4);
+    pad.position.y = 0.04;
+    group.add(pad);
+
+    const marks = [];
+    for (let k = 0; k < 3; k++) {
+        for (const sx of [-1, 1]) {
+            const m = new THREE.Mesh(BOX, mat.boostMark);
+            m.scale.set(1.15, 0.1, 0.3);
+            m.position.set(sx * 0.4, 0.13, -1.15 + k * 1.15);
+            m.rotation.y = sx * 0.58;
+            group.add(m);
+            marks.push(m);
+        }
+    }
+
+    group.visible = false;
+    scene.add(group);
+    return { group, marks, lane: 1, z: 0, y: 0, curve: 0, rise: 0, active: false };
+}
+
 function buildPools() {
     for (let i = 0; i < OBSTACLE_POOL; i++) obstacles.push(makeObstacle());
     for (let i = 0; i < PICKUP_POOL; i++) pickups.push(makePickup());
     for (let i = 0; i < PLATFORM_POOL; i++) platforms.push(makePlatform());
     for (let i = 0; i < HAZARD_POOL; i++) hazards.push(makeHazard());
+    for (let i = 0; i < BOOST_POOL; i++) boosts.push(makeBoost());
 }
 
 // ---------------------------------------------------------------------------
@@ -2308,6 +2438,7 @@ function resetWorld() {
     pickups.forEach(p => { p.active = false; p.mesh.visible = false; });
     platforms.forEach(p => { p.active = false; p.group.visible = false; });
     hazards.forEach(h => { h.active = false; h.group.visible = false; });
+    boosts.forEach(b => { b.active = false; b.group.visible = false; });
     game.nextSpawnZ = SPAWN_Z + 40;   // margen inicial para orientarse
 }
 
@@ -2401,12 +2532,34 @@ function spawnPlatform(lane, z, len) {
     // El llano y su costado se estiran al largo pedido; las rampas son fijas.
     const mid = -RAMP_LEN - len / 2;
     p.side.scale.z = len;
-    p.side.position.set(0, LEVEL_HIGH / 2, mid);
+    p.side.position.set(0, (LEVEL_HIGH - 0.26) / 2, mid);
     p.deck.scale.z = len + 0.3;
     // La tapa tambien termina exactamente en LEVEL_HIGH: es la superficie que
     // el jugador pisa, y tiene que coincidir con lo que dice terrainAt.
     p.deck.position.set(0, LEVEL_HIGH - 0.13, mid);
     p.down.position.set(0, p.rampY, -RAMP_LEN - len - RAMP_LEN / 2);
+}
+
+function freeBoost() {
+    let best = null;
+    for (const b of boosts) {
+        if (!b.active) return b;
+        if (!best || b.z > best.z) best = b;
+    }
+    return best;
+}
+
+function spawnBoost(lane, z, baseY) {
+    const b = freeBoost();
+    if (!b) return;
+    b.lane = lane;
+    b.z = z;
+    b.y = baseY;
+    b.curve = trackCurve(z);
+    b.rise = trackRise(z);
+    b.active = true;
+    b.group.visible = true;
+    b.group.position.set(LANE_X[lane] + curveOf(b), baseY + riseOf(b), z);
 }
 
 function spawnHazard(type, lane, z) {
@@ -2507,6 +2660,17 @@ function generateChunk(z) {
         if (y >= 0) spawnPickup(l, z - 12, y + 1.3, rollPower());
     }
 
+    // --- Placa de impulso ---
+    // Nunca en el mismo compas que un obstaculo del propio carril: la placa
+    // es un premio, y un premio que te mete de cabeza en una estela no lo es.
+    // Por eso se pone antes y se apunta el carril para no estorbarlo.
+    let boostLane = -1;
+    if (game.distance > 90 && Math.random() < 0.2) {
+        const l = (Math.random() * 3) | 0;
+        const y = flat(l);
+        if (y >= 0) { spawnBoost(l, z - 4, y); boostLane = l; }
+    }
+
     let pattern = Math.random();
     // Sobre terreno desigual se descarta el patron de dos obstaculos. Deja un
     // unico carril libre, y si ese carril esta arriba y el jugador abajo, el
@@ -2520,7 +2684,8 @@ function generateChunk(z) {
         // Un solo obstaculo, jade en los carriles libres. En terreno desigual
         // va siempre en el nivel que tiene dos carriles, para que quien corra
         // por ahi pueda apartarse sin cambiar de altura.
-        const lane = pick(safeLanes);
+        const free2 = safeLanes.filter(l => l !== boostLane);
+        const lane = pick(free2.length ? free2 : safeLanes);
         const y = flat(lane);
         // Sobre un tramo elevado no hay cenotes: un agujero en una plataforma
         // que ya esta en alto no se entiende, y ademas se sale por los lados.
@@ -2970,7 +3135,7 @@ function scrollWorld(dt) {
         p.up.position.x = curveAtZ(p.z - RAMP_LEN / 2);
         p.up.position.y = p.rampY + riseAtZ(p.z - RAMP_LEN / 2);
         p.side.position.x = curveAtZ(p.z + p.side.position.z);
-        p.side.position.y = LEVEL_HIGH / 2 + riseAtZ(p.z + p.side.position.z);
+        p.side.position.y = (LEVEL_HIGH - 0.26) / 2 + riseAtZ(p.z + p.side.position.z);
         p.deck.position.x = curveAtZ(p.z + p.deck.position.z);
         p.deck.position.y = LEVEL_HIGH - 0.13 + riseAtZ(p.z + p.deck.position.z);
         p.down.position.x = curveAtZ(p.z + p.down.position.z);
@@ -2991,6 +3156,22 @@ function scrollWorld(dt) {
         o.group.position.y = o.baseY + riseOf(o);
         o.group.position.z = o.z;
         if (o.z > DESPAWN_Z) { o.active = false; o.group.visible = false; }
+    }
+
+    // --- Placas de impulso ---
+    for (const b of boosts) {
+        if (!b.active) continue;
+        b.z += dz;
+        b.group.position.x = LANE_X[b.lane] + curveOf(b);
+        b.group.position.y = b.y + riseOf(b);
+        b.group.position.z = b.z;
+        // Los galones laten hacia delante: sin movimiento la placa se leia
+        // como una mancha en el suelo y no como algo que hay que pisar.
+        for (let k = 0; k < b.marks.length; k++) {
+            const ph = (game.elapsed * 2.6 + k * 0.18) % 1;
+            b.marks[k].position.y = 0.13 + ph * 0.06;
+        }
+        if (b.z > DESPAWN_Z) { b.active = false; b.group.visible = false; }
     }
 
     // --- Amenazas ---
@@ -3077,6 +3258,23 @@ function checkCollisions() {
         p.active = false;
         p.mesh.visible = false;
         collect(p);
+    }
+
+    // --- Placas de impulso ---
+    // Se pisan, no se recogen: hay que ir por el suelo. Pasar por encima
+    // saltando no cuenta, y eso las convierte en una decision.
+    for (const b of boosts) {
+        if (!b.active) continue;
+        if (Math.abs(b.z - PLAYER_Z) > 1.8) continue;
+        if (Math.abs(player.x - b.group.position.x) > 1.15) continue;
+        if (player.y - b.y > 1.2) continue;
+
+        b.active = false;
+        b.group.visible = false;
+        game.boost = BOOST_TIME;
+        sfx.boost();
+        burstParticles(player.x, player.y + 0.4, PLAYER_Z, 16, 0.9, 0x4affd0);
+        hudDirty = true;
     }
 
     if (game.invuln > 0 || flying) return;
@@ -3193,6 +3391,10 @@ function takeHit() {
 
 function updatePowers(dt) {
     let changed = false;
+    if (game.boost > 0) {
+        game.boost = Math.max(0, game.boost - dt);
+        if (game.boost === 0) changed = true;
+    }
     for (const k of ['magnet', 'double', 'amber', 'flight']) {
         if (game.powers[k] <= 0) continue;
         game.powers[k] = Math.max(0, game.powers[k] - dt);
@@ -3271,6 +3473,14 @@ function renderHud() {
     if (game.shield !== hudLast.shield) {
         hudLast.shield = game.shield;
         dom.shield.hidden = !game.shield;
+    }
+
+    if (game.boost > 0) {
+        if (dom.pw.boost.hidden) dom.pw.boost.hidden = false;
+        dom.pw.boost.firstElementChild.style.width =
+            (game.boost / BOOST_TIME * 100).toFixed(1) + '%';
+    } else if (!dom.pw.boost.hidden) {
+        dom.pw.boost.hidden = true;
     }
 
     // Los poderes activos: solo cambia el ancho de la barra, nunca el arbol
@@ -3533,6 +3743,7 @@ function startGame() {
     game.startRegion = save.start;
     game.region = save.start;
     for (const k of POWER_KEYS) if (k !== 'shield') game.powers[k] = 0;
+    game.boost = 0;
     game.revived = false;
     game.curveBase = curveX(0);
     game.riseBase = curveY(0);
@@ -3974,7 +4185,10 @@ function frame(now) {
         let steps = 0;
         while (accumulator >= STEP && steps < MAX_STEPS) {
             game.elapsed += STEP;
+            // El impulso se aplica DESPUES del tope: su gracia es justamente
+            // pasar del techo de velocidad, aunque sea unos segundos.
             game.speed = Math.min(SPEED_MAX, SPEED_START + game.elapsed * SPEED_RAMP) * scale;
+            if (game.boost > 0) game.speed *= BOOST_MULT;
             updatePowers(STEP);
             updatePlayer(STEP);
             scrollWorld(STEP);
@@ -4020,7 +4234,8 @@ function frame(now) {
 
         // Vineta y campo de vision segun la velocidad: es la unica pista de
         // que aceleras de 15 a 31.
-        const rush = Math.max(0, (game.speed - SPEED_START) / (SPEED_MAX - SPEED_START));
+        const rush = Math.max(0, Math.min(1.25,
+            (game.speed - SPEED_START) / (SPEED_MAX - SPEED_START)));
         dom.speedVeil.style.opacity = (rush * 0.85).toFixed(2);
         const wantFov = cam.fov + rush * 6;
         if (Math.abs(camera.fov - wantFov) > 0.05) {
