@@ -52,8 +52,29 @@ const LAND_TOTAL = LAND_PER_CYCLE * LAND_CYCLES;     // 42 hitos
 const LAND_PARTS = 8;                                // cubos por hito
 
 const SPEED_START = 15;
-const SPEED_MAX = 31;
-const SPEED_RAMP = 0.5;             // unidades/s ganadas por segundo
+// Techo duro por seguridad, no por diseno: a un paso fijo de 1/60 el mundo
+// avanza speed/60 por paso, y la ventana de colision mide 2,2 de fondo. Por
+// encima de unos 66 los obstaculos empezarian a colarse entre dos pasos.
+const SPEED_MAX = 52;
+
+// La velocidad sube con la DISTANCIA RECORRIDA y no con el reloj. Con el reloj,
+// quedarse quieto en el menu de pausa aceleraba igual, y sobre todo el que
+// juega bien no notaba ninguna recompensa: llegaba al techo a los 32 segundos
+// y de ahi no se movia. Ahora acelera el que avanza.
+//
+// La curva es una raiz: sube deprisa al principio, donde se nota, y se va
+// aplanando, de modo que nunca hay un salto brusco. A los 100 m van 21, a los
+// 500 m van 29, a los 1000 m van 35 y a los 3000 m se roza el techo.
+const SPEED_GAIN = 6.2;
+
+// El hueco entre compases se mide en SEGUNDOS, no en unidades. Con un hueco
+// fijo en unidades, doblar la velocidad partia por la mitad el tiempo de
+// reaccion y el juego se volvia imposible en vez de dificil. Asi lo que se
+// estrecha es el margen, de un segundo y medio a menos de uno, y la
+// dificultad la pone la velocidad y no un muro de obstaculos.
+const GAP_TIME_START = 1.55;
+const GAP_TIME_MIN = 0.92;
+const GAP_TIME_OVER = 2500;         // metros en los que se cierra del todo
 
 const GRAVITY = -58;
 const FALL_GRAVITY = 1.32;          // la bajada pesa mas que la subida
@@ -135,6 +156,19 @@ const PICKUP_POOL = 96;
 const PLATFORM_POOL = 9;            // tres tramos de terreno a la vez, como mucho
 const BOOST_POOL = 8;
 
+// --- Intersecciones -------------------------------------------------------
+// Cada cierto tramo la calzada llega a un distribuidor vial: un rotulo verde
+// colgado sobre la via anuncia las dos salidas y, mas adelante, una isleta
+// central obliga a tomar una o la otra. Una devuelve al mismo departamento
+// (RETORNO) y la otra lleva a uno nuevo (el CAMBIO).
+//
+// Cual esta a la izquierda y cual a la derecha se sortea cada vez. Si fuera
+// siempre el mismo lado dejaria de ser una decision a los dos minutos: lo que
+// se lee es el rotulo, no la costumbre.
+const CROSS_EVERY = 620;            // metros entre distribuidores
+const CROSS_SIGN_AHEAD = 62;        // el rotulo, adelantado a la isleta
+const CROSS_ISLAND_LEN = 16;
+
 // --- Placas de impulso ---------------------------------------------------
 // Van pegadas al suelo y se pisan al pasar por encima: no son un objeto que
 // se recoge, son un trozo de calzada que empuja. Breve a proposito, porque
@@ -147,7 +181,18 @@ const HAZARD_POOL = 10;
 // Tipos de obstaculo. Los tres verbos del juego: esquivar, agacharse, saltar.
 const ESTELA = 0;   // monolito alto: hay que cambiar de carril
 const DINTEL = 1;   // viga elevada: hay que deslizarse
-const CENOTE = 2;   // sumidero: hay que saltar
+const CENOTE = 2;   // sumidero de un carril: hay que saltar
+// Los dos siguientes cruzan la calzada ENTERA. No se esquivan cambiandose de
+// carril: o se saltan o no se pasa, y son lo que convierte el salto en una
+// herramienta obligatoria en vez de un adorno.
+const TRONCO = 3;   // arbol caido de lado a lado
+const VACIO = 4;    // la calzada se acaba y vuelve a empezar mas alla
+
+// Ancho de los que cruzan de lado a lado: no dependen del carril.
+const WIDE = [false, false, false, true, true];
+// Media profundidad de colision de cada tipo. El vacio es el unico que mide
+// mas que la ventana normal, porque su peligro no es un borde sino un tramo.
+const VACIO_LEN = 7.5;
 
 // ---------------------------------------------------------------------------
 // Terreno a dos niveles
@@ -633,6 +678,9 @@ const game = {
     powers: { magnet: 0, double: 0, amber: 0, flight: 0 },
     powerMax: { magnet: 1, double: 1, amber: 1, flight: 1 },
     boost: 0,            // segundos que quedan de impulso
+    regionShift: 0,      // saltos de departamento tomados en los cruces
+    nextCross: CROSS_EVERY,
+    crossTaken: 0,
     revived: false,      // el revivir del patrocinador ya se gasto en esta carrera
     curveBase: 0,        // desplazamiento de la curva justo donde esta el jugador
     riseBase: 0,         // altura de la ondulacion en ese mismo punto
@@ -1185,6 +1233,7 @@ const obstacles = [];
 const pickups = [];
 const platforms = [];
 const boosts = [];
+const crossings = [];
 const hazards = [];
 const particles = [];
 
@@ -1316,6 +1365,13 @@ function buildMaterials() {
     // oscura y filo rojo, iguales en los ocho departamentos.
     // La placa de impulso tampoco se tematiza: es informacion de juego, y
     // tiene que decir lo mismo en las doce zonas.
+    // Senalizacion: verde de carretera y gris de poste, iguales en las doce
+    // zonas. Un rotulo que cambiase de color por departamento dejaria de
+    // leerse como senal y pasaria a ser decorado.
+    mat.signPost  = lam(0x8d9298);
+    mat.island    = lam(0xb9b2a4);
+    mat.islandTop = lam(0xe8e2d4);
+
     mat.boostPad  = lam(0x0d3a33);
     mat.boostMark = lam(0x4affd0, { emissive: 0x4affd0, emissiveIntensity: 0.7 });
 
@@ -1463,7 +1519,7 @@ const riseAtZ = z => (curveY(game.distance - z) - game.riseBase) * curveMask(z);
 // asi que el cambio de firme es una LINEA en el mundo que se ve venir de
 // lejos, no un fundido global: llegar a Antigua es ver aparecer el adoquin.
 function roadRegionOf(s) {
-    const rp = game.startRegion + s / REGION_LENGTH + ROAD_SHIFT;
+    const rp = game.startRegion + game.regionShift + s / REGION_LENGTH + ROAD_SHIFT;
     const i = Math.floor(rp) % REGION_N;
     return i < 0 ? i + REGION_N : i;
 }
@@ -1484,9 +1540,34 @@ const _rc = new THREE.Color();
 // cambia de forma continua, y con ella su curva, su altura y su material. El
 // codigo original hacia este mismo trabajo por PASO DE SIMULACION, que a 60 Hz
 // eran seis veces mas.
+// Tramos de calzada que ahora mismo NO existen. Se recogen una vez por frame
+// en vez de preguntarle a los treinta obstaculos por cada una de las sesenta
+// losas, que serian mil ochocientas comprobaciones.
+const gapZ0 = new Float32Array(6);
+const gapZ1 = new Float32Array(6);
+let gapCount = 0;
+
+function collectGaps() {
+    gapCount = 0;
+    for (const o of obstacles) {
+        if (!o.active || o.type !== VACIO || gapCount >= 6) continue;
+        gapZ0[gapCount] = o.z - VACIO_LEN / 2;
+        gapZ1[gapCount] = o.z + VACIO_LEN / 2;
+        gapCount++;
+    }
+}
+
+function inGap(z) {
+    for (let g = 0; g < gapCount; g++) {
+        if (z > gapZ0[g] && z < gapZ1[g]) return true;
+    }
+    return false;
+}
+
 function updateRoadCurve() {
     const off = roadGroup.position.z;
     let colorDirty = false;
+    collectGaps();
 
     for (let i = 0; i < TILE_COUNT; i++) {
         const zLocal = ROAD_FROM + i * TILE_DEPTH;
@@ -1494,6 +1575,33 @@ function updateRoadCurve() {
         const mask = curveMask(zWorld);
         const dx = (curveX(game.distance - zWorld) - game.curveBase) * mask;
         const dy = (curveY(game.distance - zWorld) - game.riseBase) * mask;
+
+        // Dentro de un vacio la losa no se dibuja: el agujero es de verdad, no
+        // una mancha oscura pintada encima. Es lo que hace que se lea como un
+        // sitio por el que se puede caer.
+        if (inGap(zWorld)) {
+            for (let c = 0; c < ROAD_CELLS; c++) {
+                const id = i * ROAD_CELLS + c;
+                if (!roadCellOn[id]) continue;
+                roadCellOn[id] = 0;
+                dummy.position.set(0, -999, 0);
+                dummy.scale.set(0.0001, 0.0001, 0.0001);
+                dummy.rotation.set(0, 0, 0);
+                dummy.updateMatrix();
+                roadMesh.setMatrixAt(id, dummy.matrix);
+            }
+            dummy.position.set(0, -999, 0);
+            dummy.scale.set(0.0001, 0.0001, 0.0001);
+            dummy.rotation.set(0, 0, 0);
+            dummy.updateMatrix();
+            baseMesh.setMatrixAt(i, dummy.matrix);
+            kerbMesh.setMatrixAt(i * 2, dummy.matrix);
+            kerbMesh.setMatrixAt(i * 2 + 1, dummy.matrix);
+            // La losa vuelve a existir al salir del hueco, y entonces hay que
+            // repintarla: se invalida su cache de region.
+            roadTileRegion[i] = -1;
+            continue;
+        }
 
         const ri = roadRegionOf(game.distance - zWorld);
         const R = REGIONS[ri];
@@ -2027,11 +2135,45 @@ function makeObstacle() {
     }
     group.add(cenote);
 
+    // Tronco: un arbol caido cruzando los tres carriles. Se salta y punto.
+    const tronco = new THREE.Group();
+    const trunk = new THREE.Mesh(BOX, mat.stone);
+    trunk.scale.set(9.2, 0.95, 1.05);
+    trunk.position.y = 0.5;
+    tronco.add(trunk);
+    // Vetas y munones, para que se lea como madera y no como una barra
+    for (const [x, y, z, w, h, d] of [[-2.2, 1.0, 0, 1.6, 0.22, 0.9],
+                                      [1.4, 1.0, 0.1, 2.0, 0.22, 0.9],
+                                      [-3.6, 1.15, 0.2, 0.5, 0.7, 0.5],
+                                      [2.9, 1.2, -0.2, 0.45, 0.8, 0.45]]) {
+        const bit = new THREE.Mesh(BOX, mat.accent);
+        bit.scale.set(w, h, d);
+        bit.position.set(x, y, z);
+        tronco.add(bit);
+    }
+    group.add(tronco);
+
+    // Vacio: la calzada se interrumpe. El agujero de verdad lo hace
+    // updateRoadCurve apagando las losas; esto es el fondo del precipicio y
+    // los dos bordes rotos, para que se vea profundidad y no un pintarrajo.
+    const vacio = new THREE.Group();
+    const chasm = new THREE.Mesh(BOX, mat.pit);
+    chasm.scale.set(ROAD_WIDTH + 0.4, 2.4, VACIO_LEN);
+    chasm.position.y = -1.35;
+    vacio.add(chasm);
+    for (const sd of [-1, 1]) {
+        const lip = new THREE.Mesh(BOX, mat.kerb);
+        lip.scale.set(ROAD_WIDTH + 0.5, 0.5, 0.7);
+        lip.position.set(0, -0.22, sd * (VACIO_LEN / 2 - 0.3));
+        vacio.add(lip);
+    }
+    group.add(vacio);
+
     group.visible = false;
     scene.add(group);
 
     return {
-        group, parts: [estela, dintel, cenote],
+        group, parts: [estela, dintel, cenote, tronco, vacio],
         shaft, cap, beam, posts,
         type: -1, lane: 1, z: 0, baseY: 0, curve: 0, rise: 0, active: false
     };
@@ -2189,12 +2331,127 @@ function makeBoost() {
     return { group, marks, lane: 1, z: 0, y: 0, curve: 0, rise: 0, active: false };
 }
 
+// --- Rotulo de destino ---
+// Texto blanco sobre verde en un canvas, como los de la CA-9. Es la unica
+// forma de tener texto de verdad en la escena sin cargar una fuente 3D, y
+// ademas permite que el rotulo diga el nombre real del departamento al que
+// lleva cada salida.
+function signTexture(titulo, sub, flecha) {
+    const c = document.createElement('canvas');
+    c.width = 512;
+    c.height = 256;
+    const x = c.getContext('2d');
+
+    x.fillStyle = '#1a6b3c';
+    x.fillRect(0, 0, 512, 256);
+    x.strokeStyle = '#ffffff';
+    x.lineWidth = 7;
+    x.strokeRect(14, 14, 484, 228);
+
+    x.fillStyle = '#ffffff';
+    x.textAlign = 'center';
+    x.textBaseline = 'middle';
+    x.font = 'bold 62px Poppins, Arial, sans-serif';
+    x.fillText(titulo, 256, sub ? 96 : 118, 440);
+    if (sub) {
+        x.font = '38px Poppins, Arial, sans-serif';
+        x.fillText(sub, 256, 152, 440);
+    }
+
+    // La flecha, dibujada a mano: una punta y un asta.
+    const cx = 256, cy = sub ? 206 : 186, d = flecha < 0 ? -1 : 1;
+    x.beginPath();
+    x.moveTo(cx + d * 46, cy);
+    x.lineTo(cx + d * 12, cy - 24);
+    x.lineTo(cx + d * 12, cy - 9);
+    x.lineTo(cx - d * 46, cy - 9);
+    x.lineTo(cx - d * 46, cy + 9);
+    x.lineTo(cx + d * 12, cy + 9);
+    x.lineTo(cx + d * 12, cy + 24);
+    x.closePath();
+    x.fill();
+
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    t.anisotropy = 4;
+    return t;
+}
+
+const SIGN_GEO = new THREE.PlaneGeometry(4.6, 2.3);
+
+function makeCrossing() {
+    const group = new THREE.Group();
+
+    // Portico: dos postes y el travesano del que cuelgan los rotulos.
+    for (const sd of [-1, 1]) {
+        const post = new THREE.Mesh(BOX, mat.signPost);
+        post.scale.set(0.34, 8.4, 0.34);
+        post.position.set(sd * (ROAD_WIDTH / 2 + 1.1), 3.2, 0);
+        group.add(post);
+    }
+    const beam = new THREE.Mesh(BOX, mat.signPost);
+    beam.scale.set(ROAD_WIDTH + 2.8, 0.34, 0.34);
+    beam.position.y = 7.2;
+    group.add(beam);
+
+    // Un rotulo por salida. La textura se rehace en cada aparicion, porque el
+    // destino y el lado cambian.
+    const panels = [];
+    for (const sd of [-1, 1]) {
+        const m = new THREE.Mesh(
+            SIGN_GEO,
+            new THREE.MeshBasicMaterial({ color: 0xffffff, fog: true })
+        );
+        m.position.set(sd * 2.6, 5.6, 0);
+        group.add(m);
+        panels.push(m);
+    }
+
+    group.visible = false;
+    scene.add(group);
+    return { group, panels, tex: [null, null], z: 0, curve: 0, rise: 0, active: false };
+}
+
+// --- Isleta central ---
+// El divisor que obliga a elegir. Ocupa el carril del medio: es un muro, no
+// un adorno, y chocar con el cuesta una vida como cualquier otro.
+function makeIsland() {
+    const group = new THREE.Group();
+
+    const body = new THREE.Mesh(BOX, mat.island);
+    body.scale.set(2.0, 1.0, CROSS_ISLAND_LEN);
+    body.position.y = 0.5;
+    group.add(body);
+
+    const top = new THREE.Mesh(BOX, mat.islandTop);
+    top.scale.set(2.1, 0.16, CROSS_ISLAND_LEN);
+    top.position.y = 1.05;
+    group.add(top);
+
+    // Punta en cuna hacia el jugador, que es lo que hace legible por donde
+    // hay que pasar antes de estar encima.
+    const nose = new THREE.Mesh(BOX, mat.islandTop);
+    nose.scale.set(1.3, 1.15, 2.6);
+    nose.position.set(0, 0.55, CROSS_ISLAND_LEN / 2 + 1.0);
+    nose.rotation.y = Math.PI / 4;
+    group.add(nose);
+
+    group.visible = false;
+    scene.add(group);
+    return { group, z: 0, curve: 0, rise: 0, active: false };
+}
+
 function buildPools() {
     for (let i = 0; i < OBSTACLE_POOL; i++) obstacles.push(makeObstacle());
     for (let i = 0; i < PICKUP_POOL; i++) pickups.push(makePickup());
     for (let i = 0; i < PLATFORM_POOL; i++) platforms.push(makePlatform());
     for (let i = 0; i < HAZARD_POOL; i++) hazards.push(makeHazard());
     for (let i = 0; i < BOOST_POOL; i++) boosts.push(makeBoost());
+    // Dos cruces a la vez como mucho: el que se acerca y el que acaba de pasar
+    for (let i = 0; i < 2; i++) {
+        crossings.push({ sign: makeCrossing(), island: makeIsland(),
+                         swapLane: 0, target: 0, z: 0, active: false, done: false });
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -2542,6 +2799,14 @@ function resetWorld() {
     platforms.forEach(p => { p.active = false; p.group.visible = false; });
     hazards.forEach(h => { h.active = false; h.group.visible = false; });
     boosts.forEach(b => { b.active = false; b.group.visible = false; });
+    crossings.forEach(c => {
+        c.active = false;
+        c.done = false;
+        c.sign.active = false;
+        c.sign.group.visible = false;
+        c.island.active = false;
+        c.island.group.visible = false;
+    });
     game.nextSpawnZ = SPAWN_Z + 40;   // margen inicial para orientarse
 }
 
@@ -2729,7 +2994,7 @@ function generateChunk(z) {
     // tramo elevado salia cada 190 unidades y la partida corriente veia dos:
     // demasiado poco para que el desnivel llegue a ser una mecanica y no una
     // curiosidad.
-    if (game.distance > 120 && !platformNear(z) && Math.random() < 0.5) {
+    if (game.distance > 120 && !platformNear(z) && Math.random() < 0.4) {
         generateTerrain(z - 10);
     }
 
@@ -2756,6 +3021,47 @@ function generateChunk(z) {
     // Carriles donde es seguro estorbar: si el terreno es plano, cualquiera.
     const safeLanes = [0, 1, 2].filter(l => !mixed || lv[l] === major);
     const pick = arr => arr[(Math.random() * arr.length) | 0];
+
+    // Un compas que caiga sobre la isleta no genera nada: los obstaculos se
+    // amontonarian justo donde el jugador tiene que estar leyendo el rotulo y
+    // colocandose, que es el peor sitio posible para pedirle otra cosa.
+    for (const c of crossings) {
+        if (!c.active || !c.island.active) continue;
+        if (Math.abs(c.island.z - z) < CROSS_ISLAND_LEN / 2 + 22) return;
+    }
+
+    // --- Obstaculos que cruzan de lado a lado ---
+    // Van solos en su compas y solo sobre terreno llano y parejo: un tronco
+    // tumbado sobre carriles a distinta altura no se entiende, y un vacio en
+    // un tramo elevado dejaria al jugador cayendo a ninguna parte. Al no
+    // haber carril donde librarse, el compas no lleva nada mas.
+    //
+    // La probabilidad parece alta, pero se le acumulan tres filtros: terreno
+    // llano, parejo y sin tramo elevado cerca. Con 0,14 salia uno cada 900 m,
+    // es decir casi nunca, y el salto volvia a ser un adorno.
+    //
+    // Va lo PRIMERO del compas y corta con return: si se decidiera despues,
+    // la placa de impulso ya estaria puesta en z-4 y su losa de 3,4 de
+    // largo acabaria flotando sobre el borde del vacio.
+    // El filtro es la altura del terreno a lo LARGO de su huella, no
+    // platformNear. Ese comprueba una ventana de casi cien unidades alrededor
+    // del compas, y como los tramos elevados salen medio compas de cada dos,
+    // casi siempre habia uno "cerca": con el filtro ancho salia un tronco cada
+    // novecientos metros, o sea nunca. Lo que de verdad hace falta es que los
+    // tres carriles esten al ras donde va a caer la pieza y donde cae el jade.
+    const raso = zz => terrainAt(0, zz) < 0.01 &&
+                       terrainAt(1, zz) < 0.01 &&
+                       terrainAt(2, zz) < 0.01;
+    if (game.distance > 200 && raso(z + 8) && raso(z) && raso(z - 16) &&
+        Math.random() < 0.5 + hard * 0.12) {
+        const tipo = Math.random() < 0.55 ? TRONCO : VACIO;
+        spawnObstacle(tipo, 1, z, 0);
+        // Jade justo detras: premia el salto y, de paso, ensena donde cae.
+        for (let k = 0; k < 3; k++) {
+            spawnPickup(1, z - 9 - k * 3, 1.4);
+        }
+        return;
+    }
 
     if (Math.random() < powerChance()) {
         const l = (Math.random() * 3) | 0;
@@ -2843,6 +3149,149 @@ function spawnSkyTrail() {
         if (k === 11) spawnPickup(lane, z, FLY_Y + 1.1, rollPower());
         else spawnPickup(lane, z, FLY_Y + 1.1);
     }
+}
+
+// ===========================================================================
+// Distribuidores viales
+// ===========================================================================
+// Un cruce se compone de dos piezas separadas en el tiempo: primero el rotulo
+// colgado del portico, y sesenta unidades despues la isleta que obliga a
+// elegir. Ese hueco es el que da tiempo a leer y a colocarse; juntos serian
+// una trampa.
+function freeCrossing() {
+    for (const c of crossings) if (!c.active) return c;
+    return null;
+}
+
+function spawnCrossing(z) {
+    const c = freeCrossing();
+    if (!c) return;
+
+    const here = Math.floor(routePos()) % REGION_N;
+    // Destino: cualquier departamento menos en el que ya se esta.
+    let target = (Math.random() * (REGION_N - 1)) | 0;
+    if (target >= here) target++;
+
+    // El sorteo del lado es lo que obliga a leer el rotulo en vez de
+    // memorizar. 0 = el cambio esta a la izquierda, 2 = a la derecha.
+    c.swapLane = Math.random() < 0.5 ? 0 : 2;
+    c.target = target;
+    c.z = z - CROSS_SIGN_AHEAD;
+    c.active = true;
+    c.done = false;
+
+    const izq = c.swapLane === 0;
+    const nombre = REGIONS[target].name.toUpperCase();
+    const aqui = REGIONS[here].name.toUpperCase();
+
+    // Se rehacen las dos texturas: el destino y el lado cambian cada vez.
+    const put = (i, titulo, sub, flecha) => {
+        if (c.sign.tex[i]) c.sign.tex[i].dispose();
+        c.sign.tex[i] = signTexture(titulo, sub, flecha);
+        c.sign.panels[i].material.map = c.sign.tex[i];
+        c.sign.panels[i].material.needsUpdate = true;
+    };
+    put(0, izq ? nombre : 'RETORNO', izq ? 'DESVÍO' : aqui, -1);
+    put(1, izq ? 'RETORNO' : nombre, izq ? aqui : 'DESVÍO', 1);
+
+    c.sign.z = z;
+    c.sign.curve = trackCurve(c.sign.z);
+    c.sign.rise = trackRise(c.sign.z);
+    c.sign.active = true;
+    c.sign.group.visible = true;
+
+    c.island.z = z - CROSS_SIGN_AHEAD;
+    c.island.curve = trackCurve(c.island.z);
+    c.island.rise = trackRise(c.island.z);
+    c.island.active = true;
+    c.island.group.visible = true;
+}
+
+// Tomar una salida. El CAMBIO adelanta la ruta al principio del departamento
+// elegido; el RETORNO la devuelve al principio del actual. En los dos casos se
+// recoloca routePos, que es una funcion de la distancia, con regionShift.
+function takeExit(c, lane) {
+    // Por encima del divisor no se toma ninguna salida. Saltarlo es legitimo
+    // —el muro se puede librar— pero entonces no se ha elegido nada, y cobrar
+    // el premio del retorno por ello seria pagar por no decidir.
+    if (lane === 1) return;
+
+    const cambio = lane === c.swapLane;
+    const destino = cambio ? c.target : Math.floor(routePos()) % REGION_N;
+
+    // Se busca el desplazamiento que deja routePos justo al empezar el tramo.
+    game.regionShift = destino + 0.02 - game.startRegion - game.distance / REGION_LENGTH;
+
+    game.crossTaken++;
+    lastBlendKey = -1;          // la escena se repinta entera, sin cache
+    mmLastName = '';
+    resetRoadColors();
+    showRegionBanner(destino);
+
+    if (cambio) {
+        const id = REGIONS[destino].id;
+        if (!save.regions.includes(id)) {
+            save.regions.push(id);
+            persist();
+            refreshMinimapDots();
+        }
+    } else {
+        // El retorno no lleva a ningun sitio nuevo, asi que paga en jade: sin
+        // nada a cambio nadie lo tomaria jamas y la mitad del cruce sobraria.
+        game.jade += 3;
+        game.jadeScore += Math.round(75 * jadeScale());
+        burstParticles(player.x, player.y + 1.2, PLAYER_Z, 18, 1.1, C.jade);
+    }
+
+    game.region = destino;
+    hudDirty = true;
+    sfx.region();
+}
+
+function updateCrossings(dt) {
+    const dz = game.speed * dt;
+
+    for (const c of crossings) {
+        if (!c.active) continue;
+        c.z += dz;
+
+        const sg = c.sign;
+        sg.z += dz;
+        sg.group.position.set(curveOf(sg), riseOf(sg), sg.z);
+        if (sg.active && sg.z > DESPAWN_Z + 8) { sg.active = false; sg.group.visible = false; }
+
+        const il = c.island;
+        il.z += dz;
+        il.group.position.set(curveOf(il), riseOf(il), il.z);
+
+        // La salida se resuelve cuando la COLA de la isleta deja atras al
+        // jugador: antes de eso todavia puede cambiarse de carril, y decidirlo
+        // al llegar la punta le quitaria al tramo toda su tension.
+        if (!c.done && il.z - CROSS_ISLAND_LEN / 2 > PLAYER_Z) {
+            c.done = true;
+            takeExit(c, player.lane);
+        }
+
+        if (il.z - CROSS_ISLAND_LEN / 2 > DESPAWN_Z) {
+            il.active = false;
+            il.group.visible = false;
+            if (!sg.active) c.active = false;
+        }
+    }
+}
+
+// La isleta es un muro. Se comprueba aparte de los obstaculos porque es larga
+// y porque no vive en el pool de obstaculos.
+function islandHit() {
+    for (const c of crossings) {
+        if (!c.active || !c.island.active) continue;
+        const il = c.island;
+        if (Math.abs(il.z - PLAYER_Z) > CROSS_ISLAND_LEN / 2 + 1.4) continue;
+        if (Math.abs(player.x - LANE_X[1]) > LANE_HALF) continue;
+        if (player.y > 1.35) continue;            // por encima si que se pasa
+        return true;
+    }
+    return false;
 }
 
 // ===========================================================================
@@ -3122,10 +3571,17 @@ function updatePlayer(dt) {
     let sy = 1 - squashK * 0.26;
     let sxz = 1 + squashK * 0.16;
 
-    if (sliding) { sy *= 0.45; sxz = 1; }
+    // Ya no se achata: lo que baja la silueta es la inclinacion del cuerpo.
+    // Achatar Y tumbar dejaba una figura deforme.
+    if (sliding) { sy = 0.92; sxz = 1; }
 
     playerBody.scale.set(sxz, sy, sliding ? 1.5 : sxz);
-    playerBody.rotation.x = sliding ? -0.55 : -0.06 - (game.speed - SPEED_START) * 0.006;
+    // Deslizarse no es encogerse: es tirarse. El cuerpo se tumba casi en
+    // horizontal y baja al ras, en vez de achatarse en el sitio como hacia
+    // antes, que se leia como un personaje agachado y no como uno derrapando.
+    playerBody.rotation.x = sliding ? -1.12 : -0.06 - (game.speed - SPEED_START) * 0.006;
+    playerBody.position.y = sliding ? 0.12 : 0;
+    playerBody.rotation.z = sliding ? Math.sin(player.run * 1.6) * 0.07 : 0;
 
     // Inclinacion lateral: se calcula contra el destino, asi que el cuerpo se
     // tumba al salir y se endereza al llegar.
@@ -3148,11 +3604,17 @@ function updatePlayer(dt) {
         playerParts.torso.position.y = 1.28;
         playerParts.head.rotation.set(-0.12, 0, 0);
     } else if (sliding) {
-        playerParts.armL.rotation.set(-0.4, 0, 0.3);
-        playerParts.armR.rotation.set(-0.4, 0, -0.3);
-        playerParts.legL.rotation.set(0.5, 0, 0);
-        playerParts.legR.rotation.set(0.65, 0, 0);
-        playerParts.head.rotation.x = 0.4;
+        // Un brazo estirado hacia delante y el otro recogido, piernas
+        // arrastrando y la cabeza levantada mirando la calzada: la postura de
+        // quien se ha tirado, no la de quien se ha agachado.
+        playerParts.armL.rotation.set(-2.5, 0, 0.25);
+        playerParts.armR.rotation.set(0.5, 0, -0.5);
+        playerParts.legL.rotation.set(0.28 + s * 0.08, 0, 0.12);
+        playerParts.legR.rotation.set(0.12 - s * 0.08, 0, -0.12);
+        playerParts.torso.position.y = 1.28;
+        // La cabeza compensa la inclinacion del cuerpo para seguir mirando al
+        // frente. Sin esto va de cara contra el suelo.
+        playerParts.head.rotation.set(1.0, 0, 0);
     } else if (player.grounded) {
         // Zancada: los miembros giran desde la articulacion y los brazos van
         // en contrafase con las piernas, como al correr de verdad.
@@ -3331,11 +3793,23 @@ function scrollWorld(dt) {
         if (p.z > DESPAWN_Z) { p.active = false; p.mesh.visible = false; }
     }
 
+    updateCrossings(dt);
+
     // --- Nuevos compases ---
     // El hueco se estrecha con el tiempo, pero nunca por debajo de lo que el
     // jugador alcanza a leer: a velocidad maxima 24 unidades son ~0.8 s.
+    // --- Distribuidor vial ---
+    // Se dispara por distancia y no dentro de un compas: tiene que aparecer
+    // donde toca, no cuando le venga bien al generador.
+    if (game.distance > game.nextCross) {
+        game.nextCross += CROSS_EVERY;
+        spawnCrossing(SPAWN_Z);
+    }
+
     game.nextSpawnZ += dz;
-    const gap = 34 - Math.min(game.elapsed / 95, 1) * 10;   // 34 -> 24 unidades
+    const gapTime = GAP_TIME_START -
+        Math.min(game.distance / GAP_TIME_OVER, 1) * (GAP_TIME_START - GAP_TIME_MIN);
+    const gap = game.speed * gapTime;
     if (game.nextSpawnZ > SPAWN_Z + gap) {
         generateChunk(SPAWN_Z);
         game.nextSpawnZ = SPAWN_Z;
@@ -3382,15 +3856,20 @@ function checkCollisions() {
 
     if (game.invuln > 0 || flying) return;
 
+    if (islandHit()) { takeHit(); return; }
+
     const sliding = player.sliding > 0 && player.grounded;
 
     // --- Obstaculos ---
     for (const o of obstacles) {
         if (!o.active) continue;
-        if (Math.abs(o.z - PLAYER_Z) > HIT_WINDOW) continue;
+        // El vacio ocupa un tramo entero, no un borde: su ventana es su largo.
+        const zHalf = o.type === VACIO ? VACIO_LEN / 2 + 0.4 : HIT_WINDOW;
+        if (Math.abs(o.z - PLAYER_Z) > zHalf) continue;
         // Igual que las recogidas: cuenta donde esta el cuerpo, no a que
-        // carril apunta la ultima tecla pulsada.
-        if (Math.abs(player.x - LANE_X[o.lane]) > LANE_HALF) continue;
+        // carril apunta la ultima tecla pulsada. Los que cruzan de lado a
+        // lado se saltan ese filtro: no hay carril donde librarse.
+        if (!WIDE[o.type] && Math.abs(player.x - LANE_X[o.lane]) > LANE_HALF) continue;
 
         // Altura RELATIVA a la base del obstaculo: sobre un tramo elevado el
         // dintel esta a 1,6 mas arriba, y compararlo contra el cero absoluto
@@ -3404,6 +3883,10 @@ function checkCollisions() {
             hit = !sliding;                   // hay que ir agachado
         } else if (o.type === CENOTE) {
             hit = rel < 0.9;                  // hay que estar en el aire
+        } else if (o.type === TRONCO) {
+            hit = rel < 1.15;                 // por encima del tronco o nada
+        } else if (o.type === VACIO) {
+            hit = rel < 0.9;                  // si no vas en el aire, caes
         }
 
         if (hit) { takeHit(); return; }
@@ -3643,7 +4126,11 @@ function mixHex(a, b, t, out) {
 // Posicion en la ruta como numero real: la parte entera es el departamento,
 // la decimal lo recorrido dentro de el.
 function routePos() {
-    return game.startRegion + game.distance / REGION_LENGTH;
+    // regionShift lo mueven los distribuidores viales: tomar la salida de
+    // CAMBIO adelanta la ruta a otro departamento, y la de RETORNO la devuelve
+    // al principio del actual. Sin ese sumando la ruta seria una funcion de la
+    // distancia y nada podria alterarla.
+    return game.startRegion + game.regionShift + game.distance / REGION_LENGTH;
 }
 
 function applyBlend(pos) {
@@ -3847,6 +4334,9 @@ function startGame() {
     game.region = save.start;
     for (const k of POWER_KEYS) if (k !== 'shield') game.powers[k] = 0;
     game.boost = 0;
+    game.regionShift = 0;
+    game.nextCross = CROSS_EVERY;
+    game.crossTaken = 0;
     game.revived = false;
     game.curveBase = curveX(0);
     game.riseBase = curveY(0);
@@ -4290,7 +4780,10 @@ function frame(now) {
             game.elapsed += STEP;
             // El impulso se aplica DESPUES del tope: su gracia es justamente
             // pasar del techo de velocidad, aunque sea unos segundos.
-            game.speed = Math.min(SPEED_MAX, SPEED_START + game.elapsed * SPEED_RAMP) * scale;
+            game.speed = Math.min(
+                SPEED_MAX,
+                SPEED_START + SPEED_GAIN * Math.sqrt(game.distance / 100)
+            ) * scale;
             if (game.boost > 0) game.speed *= BOOST_MULT;
             updatePowers(STEP);
             updatePlayer(STEP);
@@ -4338,7 +4831,7 @@ function frame(now) {
         // Vineta y campo de vision segun la velocidad: es la unica pista de
         // que aceleras de 15 a 31.
         const rush = Math.max(0, Math.min(1.25,
-            (game.speed - SPEED_START) / (SPEED_MAX - SPEED_START)));
+            (game.speed - SPEED_START) / (34 - SPEED_START)));
         dom.speedVeil.style.opacity = (rush * 0.85).toFixed(2);
         const wantFov = cam.fov + rush * 6;
         if (Math.abs(camera.fov - wantFov) > 0.05) {

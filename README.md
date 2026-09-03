@@ -160,6 +160,13 @@ moviendo el marcador.
 golpe, multiplicador por racha de jade, hitos cada 250 m, jaguar que se acerca
 conforme pierdes vidas y quetzal de acompañante.
 
+**Los distribuidores viales.** Cada 620 m la calzada llega a un cruce. Un
+pórtico con dos rótulos verdes anuncia las salidas —una lleva a otro
+departamento, la otra es el **retorno** al actual— y sesenta unidades después
+una isleta central obliga a tomar una o la otra. **Qué lado es cuál se sortea
+cada vez**: si fuera siempre el mismo dejaría de ser una decisión a los dos
+minutos. El retorno paga en jade; el cambio, en paisaje nuevo.
+
 **La calzada no es recta ni plana.** Gira, ondula y a partir de los 120 m
 aparecen tramos elevados: uno de los cinco repartos alto/bajo entre los tres
 carriles, cada carril alto con su rampa de subida y de bajada. Se sube por la
@@ -244,6 +251,40 @@ Lo que importa mantener si se toca:
   1,5 dentro de un cubo de 1,45: sobresalían dos centímetros y quedaban
   enterradas, y la amenaza se veía como un cubo negro sin más. El filo rojo es
   además emisivo, o en las zonas de noche no se ve venir.
+- **La velocidad sube con la DISTANCIA, no con el reloj.** Con el reloj,
+  quedarse en el menú de pausa aceleraba igual, y sobre todo el que juega bien
+  no notaba recompensa: llegaba al techo a los 32 s y de ahí no se movía. La
+  curva es una raíz —sube donde se nota y se va aplanando—: 21 a los 100 m,
+  29 a los 500, 35 a los 1000 y el techo de 52 hacia los 3600. El techo es de
+  seguridad, no de diseño: por encima de unos 66 los obstáculos empezarían a
+  colarse entre dos pasos de simulación.
+- **El hueco entre compáses se mide en SEGUNDOS, no en unidades.** Con un hueco
+  fijo, doblar la velocidad partía por la mitad el tiempo de reacción y el
+  juego se volvía imposible en vez de difícil. Lo que se estrecha es el margen,
+  de 1,55 s a 0,92 s, y la dificultad la pone la velocidad.
+- **El tronco y el vacío van solos en su compás y se deciden los primeros.** Si
+  se decidieran después, la placa de impulso ya estaría puesta y su losa de 3,4
+  de largo acabaría flotando sobre el borde del vacío. Su filtro es la altura
+  del terreno a lo largo de su huella, no `platformNear`: ese comprueba una
+  ventana de casi cien unidades y, como los tramos elevados salen medio compás
+  de cada dos, casi siempre había uno «cerca» —salía un tronco cada 900 m, o
+  sea nunca—.
+- **El agujero del vacío es de verdad**: `updateRoadCurve` apaga las losas que
+  caen dentro, en vez de pintar una mancha oscura encima. Es lo que hace que se
+  lea como un sitio por el que se puede caer.
+- **La salida se resuelve cuando la COLA de la isleta deja atrás al jugador.**
+  Resolverla al llegar la punta le quitaría al tramo toda su tensión: hasta el
+  último momento se puede cambiar de carril.
+- **Saltar la isleta no toma ninguna salida.** El muro se puede librar por
+  arriba, pero entonces no se ha elegido nada, y cobrar el premio del retorno
+  por ello sería pagar por no decidir.
+- **`roadRegionOf` también suma `regionShift`.** Sin eso, al tomar la salida de
+  cambio el cielo y la vegetación saltaban al departamento nuevo y la calzada se
+  quedaba con el adoquín del anterior.
+- **Deslizarse no es encogerse, es tirarse.** El cuerpo se tumba a 64° y baja al
+  ras, con un brazo estirado y la cabeza compensando la inclinación para seguir
+  mirando al frente. Achatar la figura en el sitio, como hacía antes, se leía
+  como un personaje agachado y no como uno derrapando.
 - **Las placas de impulso se pisan, no se recogen.** Saltando por encima no
   cuentan, y eso las convierte en una decisión. El empujón se aplica *después*
   del tope de velocidad: su gracia es pasar del techo unos segundos, con el
