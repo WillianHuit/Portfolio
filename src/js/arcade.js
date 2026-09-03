@@ -386,6 +386,90 @@ const REGIONS = [
 const REGION_N = REGIONS.length;
 
 // ===========================================================================
+// Patrocinio
+// ===========================================================================
+// Todo lo del patrocinador sale de aqui. Cambiar de anunciante, de enlaces o
+// de videos es tocar este objeto y nada mas.
+//
+// Dos formatos, y ninguno interrumpe la partida:
+//   - La franja, en el menu y en la pantalla de fin: momentos en los que el
+//     jugador ya esta parado leyendo.
+//   - El panel de revivir, que solo se ofrece DESPUES de perder, cuando la
+//     alternativa es cerrar la pestana, y una sola vez por carrera.
+//
+// Nota deliberada: revivir se gana viendo el video, NO siguiendo las redes.
+// Un boton de seguir no se puede verificar desde aqui, asi que premiarlo
+// seria premiar el clic; y ademas las tres plataformas desaconsejan el
+// seguimiento incentivado. Los enlaces sociales estan, pero no dan nada.
+const CEFAS = {
+    name: 'Cefas Panadería',
+    tag: 'Patrocina esta calzada',
+    blurb: 'Pan de todos los días, hecho en Guatemala.',
+    // Se coloca el archivo en esa ruta y aparece solo; mientras no exista, el
+    // hueco lo ocupa un sustituto tipografico del mismo tamano.
+    logo: 'src/img/cefas-logo.png',
+    initials: 'CP',
+    order: 'https://www.pedidosya.com.gt/restaurantes/ciudad-de-guatemala/cefas-panaderia-6374a132-54b4-4157-8e55-ebbc0e6cf786-menu',
+    channel: 'https://www.youtube.com/@cefas.panaderia/shorts',
+    social: [
+        { id: 'ig', name: 'Instagram', url: 'https://www.instagram.com/cefas.pan/' },
+        { id: 'fb', name: 'Facebook',  url: 'https://facebook.com/cefas.pan' },
+        { id: 'tt', name: 'TikTok',    url: 'https://www.tiktok.com/@cefas.pan' }
+    ],
+    // Identificadores de los Shorts que se rotan al revivir. Con la lista
+    // vacia el panel sigue funcionando: ensena el cartel del patrocinador y
+    // concede el revivir igual, solo que sin video.
+    shorts: [],
+    // Segundos antes de habilitar "Continuar". Corre por reloj propio y no
+    // depende de que el reproductor llegue a cargar: si un bloqueador tumba
+    // el iframe, el jugador revive igual. Castigarle por tener un bloqueador
+    // seria cobrarle el fallo de otro.
+    watch: 8
+};
+
+// Marcas de las redes. Trazos simples y genericos, no calcos del logotipo:
+// aqui solo hacen falta para que se reconozca a donde lleva el enlace.
+const SOCIAL_ICONS = {
+    ig: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm0 2a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3zm5 3.5A4.5 4.5 0 1 1 7.5 12 4.5 4.5 0 0 1 12 7.5zm0 2A2.5 2.5 0 1 0 14.5 12 2.5 2.5 0 0 0 12 9.5zM17.8 6a1.2 1.2 0 1 1-1.2 1.2A1.2 1.2 0 0 1 17.8 6z"/></svg>',
+    fb: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 22v-8h2.7l.4-3.1h-3.1V8.9c0-.9.25-1.5 1.55-1.5h1.65V4.63A22 22 0 0 0 14.3 4.5c-2.4 0-4 1.47-4 4.16v2.23H7.6V14h2.7v8z"/></svg>',
+    tt: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2h3a5.5 5.5 0 0 0 4.5 4.4v3A8.4 8.4 0 0 1 17 8v6.6A6.4 6.4 0 1 1 10.6 8.2c.3 0 .6 0 .9.06v3.1a3.4 3.4 0 1 0 2.5 3.28z"/></svg>',
+    yt: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12s0-3.3-.42-4.88a2.54 2.54 0 0 0-1.79-1.8C18.2 4.9 12 4.9 12 4.9s-6.2 0-7.79.42a2.54 2.54 0 0 0-1.79 1.8C2 8.7 2 12 2 12s0 3.3.42 4.88a2.54 2.54 0 0 0 1.79 1.8C5.8 19.1 12 19.1 12 19.1s6.2 0 7.79-.42a2.54 2.54 0 0 0 1.79-1.8C22 15.3 22 12 22 12zM10 15.2V8.8l5.5 3.2z"/></svg>',
+    order: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h13l-1.6 8.4a2 2 0 0 1-2 1.6H9.1a2 2 0 0 1-2-1.65L5.6 3.5A1 1 0 0 0 4.6 2.7H2.5v2h1.3zM9.5 17.8a1.85 1.85 0 1 1-1.85 1.85A1.85 1.85 0 0 1 9.5 17.8zm7.4 0a1.85 1.85 0 1 1-1.85 1.85A1.85 1.85 0 0 1 16.9 17.8z"/></svg>'
+};
+
+// La franja. Se pinta en el menu, en el fin de partida y bajo el panel de
+// revivir; el mismo trozo de HTML en los tres sitios.
+function sponsorStrip() {
+    const link = (url, icon, label, cls) =>
+        '<a class="slink' + (cls ? ' ' + cls : '') + '" href="' + url +
+        '" target="_blank" rel="noopener noreferrer">' +
+        (SOCIAL_ICONS[icon] || '') + '<span>' + label + '</span></a>';
+
+    return '<div class="sponsor-head">' +
+        // El logo se oculta solo si el archivo no existe todavia, y entonces
+        // queda a la vista el sustituto con las iniciales.
+        '<img class="sponsor-logo" src="' + CEFAS.logo + '" alt="" hidden ' +
+        'onload="this.hidden=false;this.nextElementSibling.hidden=true" ' +
+        'onerror="this.remove()">' +
+        '<span class="sponsor-mark">' + CEFAS.initials + '</span>' +
+        '<span><span class="sponsor-tag">' + CEFAS.tag + '</span>' +
+        '<b class="sponsor-name">' + CEFAS.name + '</b></span>' +
+        '</div>' +
+        '<div class="sponsor-links">' +
+        link(CEFAS.order, 'order', 'Pedir en PedidosYa', 'slink-order') +
+        CEFAS.social.map(x => link(x.url, x.id, x.name)).join('') +
+        link(CEFAS.channel, 'yt', 'Shorts') +
+        '</div>';
+}
+
+function paintSponsors() {
+    const html = sponsorStrip();
+    for (const el of [dom.sponsorMenu, dom.sponsorOver, dom.sponsorRevive]) {
+        if (el) el.innerHTML = html;
+    }
+}
+
+// ===========================================================================
 // Trajes
 // ===========================================================================
 // Cada traje solo cambia colores: la silueta del corredor se mantiene para
@@ -515,7 +599,10 @@ const POWER_CHANCE = 0.17;          // por compas de recorrido
 // ===========================================================================
 // Estado
 // ===========================================================================
-const State = { MENU: 'menu', SHOP: 'shop', PLAYING: 'playing', PAUSED: 'paused', OVER: 'over' };
+const State = {
+    MENU: 'menu', SHOP: 'shop', PLAYING: 'playing', PAUSED: 'paused',
+    REVIVE: 'revive', OVER: 'over'
+};
 
 const game = {
     state: State.MENU,
@@ -535,6 +622,7 @@ const game = {
     region: 0,           // indice del departamento actual
     powers: { magnet: 0, double: 0, amber: 0, flight: 0 },
     powerMax: { magnet: 1, double: 1, amber: 1, flight: 1 },
+    revived: false,      // el revivir del patrocinador ya se gasto en esta carrera
     curveBase: 0,        // desplazamiento de la curva justo donde esta el jugador
     riseBase: 0,         // altura de la ondulacion en ese mismo punto
     camLift: 0           // 0 a pie, 1 en el aire: reencuadra la camara al volar
@@ -585,6 +673,11 @@ const dom = {
     shopBank: $('shopBank'), tabSkins: $('tabSkins'), tabUpg: $('tabUpg'), tabRoute: $('tabRoute'),
     minimap: $('minimap'), mmDots: $('mmDots'), mmYou: $('mmYou'),
     mmName: $('mmName'), mmDept: $('mmDept'), mmFill: $('mmFill'),
+    revive: $('revive'), reviveBtn: $('reviveBtn'), reviveSkip: $('reviveSkip'),
+    reviveTimer: $('reviveTimer'), reviveSub: $('reviveSub'),
+    shortHost: $('shortHost'), shortFallback: $('shortFallback'),
+    sponsorMenu: $('sponsorMenu'), sponsorOver: $('sponsorOver'),
+    sponsorRevive: $('sponsorRevive'),
     powers: $('powers'),
     pw: {
         magnet: $('pwMagnet'), flight: $('pwFlight'),
@@ -2568,6 +2661,12 @@ function initInput() {
     window.addEventListener('keydown', (e) => {
         if (e.repeat) return;
 
+        if (game.state === State.REVIVE) {
+            if (e.code === 'Enter' || e.code === 'Space') { e.preventDefault(); doRevive(); }
+            else if (e.code === 'Escape') { e.preventDefault(); declineRevive(); }
+            return;
+        }
+
         if (game.state === State.SHOP) {
             if (e.code === 'Escape') { e.preventDefault(); closeShop(); }
             return;
@@ -3433,6 +3532,7 @@ function startGame() {
     game.startRegion = save.start;
     game.region = save.start;
     for (const k of POWER_KEYS) if (k !== 'shield') game.powers[k] = 0;
+    game.revived = false;
     game.curveBase = curveX(0);
     game.riseBase = curveY(0);
     game.camLift = 0;
@@ -3484,6 +3584,7 @@ function startGame() {
     dom.menu.hidden = true;
     dom.shop.hidden = true;
     dom.over.hidden = true;
+    dom.revive.hidden = true;
     dom.hud.hidden = false;
     dom.soundBtn.hidden = false;
     dom.pauseBtn.hidden = false;
@@ -3493,7 +3594,140 @@ function startGame() {
     dom.milestone.classList.remove('show');
 }
 
+// Morir ya no cierra la carrera directamente: la primera vez se ofrece el
+// anuncio del patrocinador. Solo si se rechaza (o si ya se gasto) se cierra.
 function endGame() {
+    if (!game.revived) { offerRevive(); return; }
+    finishGame();
+}
+
+// ---------------------------------------------------------------------------
+// Revivir viendo un anuncio
+// ---------------------------------------------------------------------------
+let reviveTimerId = null;
+let reviveLeft = 0;
+
+function teardownRevive() {
+    if (reviveTimerId) { clearInterval(reviveTimerId); reviveTimerId = null; }
+    // Quitar el iframe es lo que detiene el video: dejarlo escondido lo
+    // mantiene sonando por debajo de la partida.
+    const frame = dom.shortHost.querySelector('iframe');
+    if (frame) frame.remove();
+    dom.shortFallback.hidden = false;
+    // La musica del juego se habia bajado para no pelearse con el anuncio
+    if (music.gain) music.gain.gain.value = music.on ? 0.075 : 0;
+}
+
+function offerRevive() {
+    game.state = State.REVIVE;
+    stopPendingTones();
+
+    dom.hud.hidden = true;
+    dom.pauseBtn.hidden = true;
+    dom.pauseTag.hidden = true;
+    dom.milestone.hidden = true;
+    dom.banner.hidden = true;
+    dom.speedVeil.style.opacity = '0';
+    jaguar.visible = false;
+    quetzal.visible = false;
+
+    // Silencio: dos musicas a la vez no es un anuncio, es ruido.
+    if (music.gain) music.gain.gain.value = 0;
+
+    const list = CEFAS.shorts;
+    if (list.length) {
+        const id = list[(Math.random() * list.length) | 0];
+        dom.reviveSub.textContent =
+            'Mira el anuncio de nuestro patrocinador y vuelves a la calzada con ' +
+            'una vida y el escudo puesto. Solo una vez por carrera.';
+        const f = document.createElement('iframe');
+        // nocookie: el dominio sin seguimiento de YouTube. Y el iframe no se
+        // crea hasta este momento, asi que quien no llega a morir —o rechaza
+        // el anuncio— no hace ni una peticion a terceros.
+        f.src = 'https://www.youtube-nocookie.com/embed/' + id +
+                '?autoplay=1&rel=0&playsinline=1&modestbranding=1';
+        f.title = 'Anuncio de ' + CEFAS.name;
+        f.allow = 'autoplay; encrypted-media; picture-in-picture';
+        f.referrerPolicy = 'strict-origin-when-cross-origin';
+        f.setAttribute('allowfullscreen', '');
+        dom.shortFallback.hidden = true;
+        dom.shortHost.appendChild(f);
+    } else {
+        dom.reviveSub.textContent =
+            'Un momento con nuestro patrocinador y vuelves a la calzada con una ' +
+            'vida y el escudo puesto. Solo una vez por carrera.';
+    }
+
+    reviveLeft = CEFAS.watch;
+    dom.reviveBtn.disabled = true;
+    tickRevive();
+    // Reloj propio, independiente del reproductor: si un bloqueador tumba el
+    // iframe el jugador revive igual. Cobrarle el fallo de otro seria injusto.
+    reviveTimerId = setInterval(tickRevive, 1000);
+
+    dom.revive.hidden = false;
+}
+
+function tickRevive() {
+    if (reviveLeft > 0) {
+        dom.reviveTimer.innerHTML = 'Disponible en <b>' + reviveLeft + '</b> s';
+        reviveLeft--;
+        return;
+    }
+    dom.reviveTimer.textContent = '¡Listo!';
+    dom.reviveBtn.disabled = false;
+    if (reviveTimerId) { clearInterval(reviveTimerId); reviveTimerId = null; }
+}
+
+function doRevive() {
+    if (dom.reviveBtn.disabled) return;
+    game.revived = true;
+    teardownRevive();
+    dom.revive.hidden = true;
+
+    // Vuelve con lo justo para tener otra oportunidad, no con la partida
+    // entera regalada: una vida, el escudo y unos segundos de margen.
+    game.lives = 1;
+    game.shield = true;
+    game.invuln = 3;
+    game.combo = 0;
+    jadeStreak = 0;
+
+    // Se despeja el tramo que tiene delante. Sin esto revivias dentro del
+    // mismo obstaculo que te acababa de matar.
+    for (const o of obstacles) {
+        if (o.active && o.z > -70) { o.active = false; o.group.visible = false; }
+    }
+    for (const h of hazards) {
+        if (h.active && h.z > -90) { h.active = false; h.group.visible = false; }
+    }
+
+    player.y = Math.max(player.y, player.groundY);
+    player.vy = 0;
+    player.sliding = 0;
+    player.wantSlide = false;
+
+    accumulator = 0;
+    lastTime = 0;
+    shake = 0;
+
+    game.state = State.PLAYING;
+    dom.hud.hidden = false;
+    dom.pauseBtn.hidden = false;
+    dom.pauseBtn.textContent = 'II';
+    hudDirty = true;
+    renderHud();
+    sfx.shield();
+}
+
+function declineRevive() {
+    game.revived = true;
+    teardownRevive();
+    dom.revive.hidden = true;
+    finishGame();
+}
+
+function finishGame() {
     game.state = State.OVER;
     stopPendingTones();
     sfx.over();
@@ -3740,6 +3974,10 @@ function frame(now) {
             updateCompanions(STEP);
             accumulator -= STEP;
             steps++;
+            // Una colision puede haber terminado la carrera a mitad del
+            // bucle; sin este corte el mundo seguia avanzando pasos con la
+            // partida ya cerrada.
+            if (game.state !== State.PLAYING) break;
         }
 
         if (hudDirty) { renderHud(); hudDirty = false; }
@@ -3870,6 +4108,9 @@ function boot() {
     dom.musicPref.addEventListener('click', () => { initAudio(); setMusic(!music.on); });
     dom.soundBtn.addEventListener('click', () => setSound(!audio.on));
     dom.pauseBtn.addEventListener('click', togglePause);
+    dom.reviveBtn.addEventListener('click', doRevive);
+    dom.reviveSkip.addEventListener('click', declineRevive);
+    paintSponsors();
 
     // Pausa al perder el foco: si no, vuelves a una partida que siguio sin ti
     document.addEventListener('visibilitychange', () => {

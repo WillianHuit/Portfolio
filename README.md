@@ -184,6 +184,17 @@ cualquiera de ellos.
 sonido: cero archivos. Se enciende y apaga por separado de los efectos (tecla
 `N`).
 
+**Patrocinio (Cefas Panadería).** Todo sale del objeto `CEFAS` en `arcade.js`:
+cambiar de anunciante, de enlaces o de vídeos es tocar ese objeto y nada más.
+Dos formatos, y ninguno interrumpe la partida:
+
+- **La franja**, en el menú y en la pantalla de fin: PedidosYa, Instagram,
+  Facebook, TikTok y el canal de Shorts. Son momentos en los que el jugador ya
+  está parado leyendo.
+- **El panel de revivir**, que solo se ofrece *después* de perder —cuando la
+  alternativa es cerrar la pestaña— y una sola vez por carrera. Se ve un Short
+  y se vuelve con una vida y el escudo puesto.
+
 Lo que importa mantener si se toca:
 
 - **No sobrecarga la página principal.** `index.html` no referencia ni
@@ -249,6 +260,25 @@ Lo que importa mantener si se toca:
   de respaldo del sistema: el `⬡` del escudo se dibujaba como una «O» en
   Windows. Los trajes no llevan glifo sino un muñeco pintado con sus propios
   colores, que es icono y vista previa a la vez.
+- **Revivir se gana viendo el vídeo, no siguiendo las redes.** Un botón de
+  «seguir» no se puede verificar desde el navegador, así que premiarlo sería
+  premiar el clic; y las tres plataformas desaconsejan el seguimiento
+  incentivado. Los enlaces sociales están, pero no dan nada a cambio.
+- **La cuenta atrás del anuncio corre por reloj propio**, no por el estado del
+  reproductor: si un bloqueador tumba el iframe, el jugador revive igual.
+  Cobrarle el fallo de otro sería injusto, y además le dejaría sin salida.
+- **El iframe no existe hasta que se abre el panel.** `arcade.html` no hace ni
+  una petición a terceros mientras nadie muera y acepte el anuncio, y se usa
+  el dominio `youtube-nocookie.com`. Al cerrar el panel el iframe se
+  **elimina**: esconderlo dejaba el vídeo sonando por debajo de la partida.
+- **Al revivir se despeja el tramo que tienes delante** (obstáculos a menos de
+  70 unidades, amenazas a menos de 90). Sin eso reaparecías dentro del mismo
+  obstáculo que acababa de matarte.
+- **El bucle de simulación corta al cambiar de estado.** Una colisión puede
+  terminar la carrera a mitad del bucle de pasos fijos, y sin ese corte el
+  mundo seguía avanzando con la partida ya cerrada.
+- **La música se baja a cero mientras suena el anuncio.** Dos músicas a la vez
+  no es un anuncio, es ruido.
 - **La música no es «Luna de Xelajú».** El encargo era esa pieza, pero no hay
   transcripción fiable y libre de la melodía (lo que circula son vídeos y
   partituras de pago) y además Paco Pérez murió en 1951, así que la obra sigue
