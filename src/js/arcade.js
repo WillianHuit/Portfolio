@@ -169,6 +169,18 @@ const CROSS_EVERY = 620;            // metros entre distribuidores
 const CROSS_SIGN_AHEAD = 62;        // el rotulo, adelantado a la isleta
 const CROSS_ISLAND_LEN = 16;
 
+// --- Senalizacion de aviso -------------------------------------------------
+// Las senales no son decorado: cada una se planta porque VIENE lo que anuncia.
+// Se colocan por delante de aquello que avisan, de modo que el jugador lee el
+// rombo antes de poder distinguir la silueta entre la bruma. Lo que ganan no
+// es tiempo de reaccion —el obstaculo ya se ve venir— sino saber DE QUE se
+// trata, que es lo que decide si hay que saltar, agacharse o cambiarse.
+const WARN_POOL = 12;
+// Treinta y cuatro unidades de adelanto. Mas seria plantarla fuera del punto
+// de aparicion, donde apareceria de golpe en mitad del campo visible; asi nace
+// a 136 y la bruma, que cierra a 185, se come su entrada.
+const WARN_AHEAD = 34;
+
 // --- Placas de impulso ---------------------------------------------------
 // Van pegadas al suelo y se pisan al pasar por encima: no son un objeto que
 // se recoge, son un trozo de calzada que empuja. Breve a proposito, porque
@@ -1234,6 +1246,7 @@ const pickups = [];
 const platforms = [];
 const boosts = [];
 const crossings = [];
+const warns = [];
 const hazards = [];
 const particles = [];
 
@@ -2331,6 +2344,224 @@ function makeBoost() {
     return { group, marks, lane: 1, z: 0, y: 0, curve: 0, rise: 0, active: false };
 }
 
+// ===========================================================================
+// Senales de aviso
+// ===========================================================================
+// Cada senal es un canvas de 160 px con fondo transparente: el rombo o el
+// triangulo se pintan dentro y las esquinas quedan vacias, de modo que basta
+// un plano cuadrado con alpha y no hace falta geometria recortada.
+//
+// Las texturas se generan UNA vez al arrancar y se comparten. Rehacerlas en
+// cada aparicion seria pintar el mismo rombo cientos de veces por partida.
+function signCanvas(marco, dibujo) {
+    const c = document.createElement('canvas');
+    c.width = c.height = 160;
+    const x = c.getContext('2d');
+
+    if (marco === 'triangulo') {
+        // Ceda el paso: triangulo invertido, blanco con filo rojo.
+        x.setTransform(1, 0, 0, 1, 80, 80);
+        x.beginPath();
+        x.moveTo(-66, -46);
+        x.lineTo(66, -46);
+        x.lineTo(0, 64);
+        x.closePath();
+        x.fillStyle = '#ffffff';
+        x.fill();
+        x.strokeStyle = '#d62828';
+        x.lineWidth = 14;
+        x.lineJoin = 'round';
+        x.stroke();
+        x.setTransform(1, 0, 0, 1, 0, 0);
+    } else {
+        x.save();
+        x.translate(80, 80);
+        x.rotate(Math.PI / 4);
+        x.fillStyle = '#f5c518';
+        x.strokeStyle = '#141414';
+        x.lineWidth = 8;
+        x.lineJoin = 'round';
+        x.beginPath();
+        x.rect(-52, -52, 104, 104);
+        x.fill();
+        x.stroke();
+        x.restore();
+    }
+
+    if (dibujo) {
+        x.save();
+        x.translate(80, 80);
+        x.scale(0.82, 0.82);
+        x.fillStyle = '#141414';
+        x.strokeStyle = '#141414';
+        x.lineJoin = 'round';
+        dibujo(x);
+        x.restore();
+    }
+
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    t.anisotropy = 4;
+    return t;
+}
+
+// Los pictogramas. Simplificados a proposito: a treinta metros y en
+// movimiento, lo que se lee es la silueta, no el detalle.
+const SIGN_ART = {
+    // Algo se ha caido sobre la calzada: el tronco y la piedra rodante.
+    derrumbe: x => {
+        x.beginPath();
+        x.moveTo(34, 40); x.lineTo(34, -34); x.lineTo(-6, 40);
+        x.closePath(); x.fill();
+        for (const [cx, cy, r] of [[-20, -12, 10], [-2, 6, 8], [-26, 18, 7], [10, -26, 6]]) {
+            x.beginPath(); x.arc(cx, cy, r, 0, 6.283); x.fill();
+        }
+    },
+    // La calzada se estrecha o se interrumpe: el vacio.
+    puente: x => {
+        x.lineWidth = 11; x.lineCap = 'round';
+        for (const sd of [-1, 1]) {
+            x.beginPath();
+            x.moveTo(sd * 28, -40); x.lineTo(sd * 13, -10);
+            x.lineTo(sd * 13, 10); x.lineTo(sd * 28, 40);
+            x.stroke();
+        }
+    },
+    // Algo vivo va a cruzarse: el camazotz.
+    animal: x => {
+        x.beginPath(); x.ellipse(2, -2, 27, 15, 0, 0, 6.283); x.fill();
+        x.beginPath(); x.ellipse(-29, -9, 10, 8, 0, 0, 6.283); x.fill();
+        x.fillRect(-36, -22, 5, 9);
+        x.fillRect(-25, -23, 5, 10);
+        for (const lx of [-17, -6, 9, 19]) x.fillRect(lx, 10, 6, 23);
+        x.fillRect(26, -16, 5, 16);
+    },
+    // Viene desnivel: los tramos elevados y sus rampas.
+    pendiente: x => {
+        x.beginPath();
+        x.moveTo(-38, -8); x.lineTo(38, 36); x.lineTo(-38, 36);
+        x.closePath(); x.fill();
+        x.save();
+        x.translate(2, -2); x.rotate(0.53);
+        x.fillRect(-24, -20, 34, 15);
+        x.fillRect(10, -14, 13, 9);
+        x.restore();
+    },
+    // La calzada gira de verdad mas adelante.
+    curva: x => {
+        x.lineWidth = 15; x.lineCap = 'butt';
+        x.beginPath();
+        x.moveTo(-8, 40);
+        x.quadraticCurveTo(-8, -8, 20, -16);
+        x.stroke();
+        x.beginPath();
+        x.moveTo(38, -18); x.lineTo(12, -34); x.lineTo(14, 0);
+        x.closePath(); x.fill();
+    },
+    // Distribuidor vial: hay que elegir salida.
+    bifurcacion: x => {
+        x.lineWidth = 17; x.lineCap = 'butt';
+        x.beginPath();
+        x.moveTo(0, 40); x.lineTo(0, 2);
+        x.moveTo(0, 4); x.lineTo(-28, -32);
+        x.moveTo(0, 4); x.lineTo(28, -32);
+        x.stroke();
+    },
+    // Zonas habitadas: Flores, Antigua, Chichicastenango, Todos Santos.
+    escolar: x => {
+        const fig = (cx, sc) => {
+            x.beginPath(); x.arc(cx, -26 * sc, 9 * sc, 0, 6.283); x.fill();
+            x.beginPath();
+            x.moveTo(cx - 10 * sc, -15 * sc); x.lineTo(cx + 10 * sc, -15 * sc);
+            x.lineTo(cx + 7 * sc, 13 * sc); x.lineTo(cx - 7 * sc, 13 * sc);
+            x.closePath(); x.fill();
+            x.fillRect(cx - 8 * sc, 13 * sc, 6 * sc, 21 * sc);
+            x.fillRect(cx + 2 * sc, 13 * sc, 6 * sc, 21 * sc);
+        };
+        fig(-15, 1.05);
+        fig(17, 0.76);
+    },
+    peaton: x => {
+        x.beginPath(); x.arc(2, -32, 9, 0, 6.283); x.fill();
+        x.save(); x.translate(2, -7); x.rotate(0.14);
+        x.fillRect(-7, -15, 14, 23);
+        x.restore();
+        x.fillRect(-16, 6, 7, 21);
+        x.fillRect(9, 6, 7, 23);
+        for (let i = 0; i < 4; i++) x.fillRect(-32 + i * 17, 32, 11, 7);
+    },
+    // Zonas de agua: Semuc, Rio Dulce, Monterrico.
+    resbaladiza: x => {
+        x.fillRect(-26, -38, 48, 17);
+        x.fillRect(-15, -49, 28, 13);
+        x.lineWidth = 8; x.lineCap = 'round';
+        for (const sd of [-1, 1]) {
+            x.beginPath();
+            x.moveTo(sd * 17, -12);
+            x.bezierCurveTo(sd * 2, 2, sd * 32, 16, sd * 13, 38);
+            x.stroke();
+        }
+    },
+    ceda: null      // el triangulo ya lo dice todo
+};
+
+const SIGN_TEX = {};
+const SIGN_GEO_W = new THREE.PlaneGeometry(2.5, 2.5);
+
+function buildSignTextures() {
+    for (const k in SIGN_ART) {
+        SIGN_TEX[k] = signCanvas(k === 'ceda' ? 'triangulo' : 'rombo', SIGN_ART[k]);
+    }
+}
+
+function makeWarn() {
+    const group = new THREE.Group();
+
+    const post = new THREE.Mesh(BOX, mat.signPost);
+    post.scale.set(0.16, 2.6, 0.16);
+    post.position.y = 1.3;
+    group.add(post);
+
+    const face = new THREE.Mesh(SIGN_GEO_W, new THREE.MeshBasicMaterial({
+        transparent: true, fog: true, depthWrite: false
+    }));
+    face.position.y = 3.1;
+    group.add(face);
+
+    group.visible = false;
+    scene.add(group);
+    return { group, face, z: 0, curve: 0, rise: 0, active: false };
+}
+
+function freeWarn() {
+    let best = null;
+    for (const w of warns) {
+        if (!w.active) return w;
+        if (!best || w.z > best.z) best = w;
+    }
+    return best;
+}
+
+// Planta un aviso por delante de lo que anuncia. side null = lado al azar.
+function spawnWarn(kind, z, side) {
+    const tex = SIGN_TEX[kind];
+    if (!tex) return;
+    const w = freeWarn();
+    if (!w) return;
+
+    w.face.material.map = tex;
+    w.face.material.needsUpdate = true;
+    w.side = side === undefined || side === null
+        ? (Math.random() < 0.5 ? -1 : 1)
+        : side;
+    w.z = z;
+    w.curve = trackCurve(z);
+    w.rise = trackRise(z);
+    w.active = true;
+    w.group.visible = true;
+    w.group.position.set(w.side * (ROAD_WIDTH / 2 + 1.7) + curveOf(w), riseOf(w), z);
+}
+
 // --- Rotulo de destino ---
 // Texto blanco sobre verde en un canvas, como los de la CA-9. Es la unica
 // forma de tener texto de verdad en la escena sin cargar una fuente 3D, y
@@ -2447,6 +2678,8 @@ function buildPools() {
     for (let i = 0; i < PLATFORM_POOL; i++) platforms.push(makePlatform());
     for (let i = 0; i < HAZARD_POOL; i++) hazards.push(makeHazard());
     for (let i = 0; i < BOOST_POOL; i++) boosts.push(makeBoost());
+    buildSignTextures();
+    for (let i = 0; i < WARN_POOL; i++) warns.push(makeWarn());
     // Dos cruces a la vez como mucho: el que se acerca y el que acaba de pasar
     for (let i = 0; i < 2; i++) {
         crossings.push({ sign: makeCrossing(), island: makeIsland(),
@@ -2799,6 +3032,7 @@ function resetWorld() {
     platforms.forEach(p => { p.active = false; p.group.visible = false; });
     hazards.forEach(h => { h.active = false; h.group.visible = false; });
     boosts.forEach(b => { b.active = false; b.group.visible = false; });
+    warns.forEach(w => { w.active = false; w.group.visible = false; });
     crossings.forEach(c => {
         c.active = false;
         c.done = false;
@@ -2996,6 +3230,7 @@ function generateChunk(z) {
     // curiosidad.
     if (game.distance > 120 && !platformNear(z) && Math.random() < 0.4) {
         generateTerrain(z - 10);
+        spawnWarn('pendiente', z + WARN_AHEAD);
     }
 
     // --- Amenazas que vienen a por ti ---
@@ -3005,6 +3240,19 @@ function generateChunk(z) {
     if (game.distance > 220 && Math.random() < 0.16 + hard * 0.2) {
         const type = Math.random() < 0.55 ? CAMAZOTZ : RODANTE;
         spawnHazard(type, (Math.random() * 3) | 0, z - 20);
+        // El murcielago es un animal que se cruza; la piedra, algo que ha
+        // caido. Cada uno con la senal que de verdad le corresponde.
+        spawnWarn(type === CAMAZOTZ ? 'animal' : 'derrumbe', z + WARN_AHEAD);
+    }
+
+    // --- Aviso de curva ---
+    // Se mide el desplazamiento REAL del trazado entre el punto de aparicion y
+    // treinta unidades mas alla. Si la calzada no se va a mover, no se planta
+    // nada: una senal de curva en una recta es exactamente el tipo de adorno
+    // que hace que se dejen de mirar todas las demas.
+    const giro = Math.abs(curveAtZ(z) - curveAtZ(z + 30));
+    if (giro > 1.5 && Math.random() < 0.5) {
+        spawnWarn('curva', z + WARN_AHEAD);
     }
 
     const at = l => terrainAt(l, z);
@@ -3021,6 +3269,22 @@ function generateChunk(z) {
     // Carriles donde es seguro estorbar: si el terreno es plano, cualquiera.
     const safeLanes = [0, 1, 2].filter(l => !mixed || lv[l] === major);
     const pick = arr => arr[(Math.random() * arr.length) | 0];
+
+    // --- Senales de sitio ---
+    // Las unicas que no anuncian un peligro concreto, y por eso son las unicas
+    // que salen con cuentagotas: zona escolar y paso de peatones donde hay
+    // pueblo, calzada resbaladiza donde hay agua. Si salieran a menudo
+    // devaluarian a las que si avisan de algo.
+    if (Math.random() < 0.07) {
+        const R = REGIONS[Math.floor(routePos()) % REGION_N];
+        const pueblo = ['flores', 'antigua', 'chichi', 'todossantos', 'esquipulas'];
+        const agua = ['semuc', 'riodulce', 'monterrico', 'atitlan'];
+        if (pueblo.includes(R.id)) {
+            spawnWarn(Math.random() < 0.5 ? 'escolar' : 'peaton', z + WARN_AHEAD);
+        } else if (agua.includes(R.id)) {
+            spawnWarn('resbaladiza', z + WARN_AHEAD);
+        }
+    }
 
     // Un compas que caiga sobre la isleta no genera nada: los obstaculos se
     // amontonarian justo donde el jugador tiene que estar leyendo el rotulo y
@@ -3056,6 +3320,12 @@ function generateChunk(z) {
         Math.random() < 0.5 + hard * 0.12) {
         const tipo = Math.random() < 0.55 ? TRONCO : VACIO;
         spawnObstacle(tipo, 1, z, 0);
+        // Los dos avisos van a los DOS lados. Lo que viene cruza la calzada
+        // entera, y una senal en un solo margen se lee como algo que solo
+        // afecta a ese carril.
+        const av = tipo === TRONCO ? 'derrumbe' : 'puente';
+        spawnWarn(av, z + WARN_AHEAD, -1);
+        spawnWarn(av, z + WARN_AHEAD, 1);
         // Jade justo detras: premia el salto y, de paso, ensena donde cae.
         for (let k = 0; k < 3; k++) {
             spawnPickup(1, z - 9 - k * 3, 1.4);
@@ -3723,6 +3993,16 @@ function scrollWorld(dt) {
         if (o.z > DESPAWN_Z) { o.active = false; o.group.visible = false; }
     }
 
+    // --- Senales ---
+    for (const w of warns) {
+        if (!w.active) continue;
+        w.z += dz;
+        w.group.position.set(
+            w.side * (ROAD_WIDTH / 2 + 1.7) + curveOf(w), riseOf(w), w.z
+        );
+        if (w.z > DESPAWN_Z) { w.active = false; w.group.visible = false; }
+    }
+
     // --- Placas de impulso ---
     for (const b of boosts) {
         if (!b.active) continue;
@@ -3804,6 +4084,12 @@ function scrollWorld(dt) {
     if (game.distance > game.nextCross) {
         game.nextCross += CROSS_EVERY;
         spawnCrossing(SPAWN_Z);
+        // La bifurcacion primero y el ceda el paso despues, en ese orden:
+        // primero se avisa de que hay que elegir, luego de que hay que
+        // colocarse. Uno a cada lado, porque la decision es de lado.
+        spawnWarn('bifurcacion', SPAWN_Z + WARN_AHEAD + 26, -1);
+        spawnWarn('bifurcacion', SPAWN_Z + WARN_AHEAD + 26, 1);
+        spawnWarn('ceda', SPAWN_Z + WARN_AHEAD - 14);
     }
 
     game.nextSpawnZ += dz;

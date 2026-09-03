@@ -160,6 +160,15 @@ moviendo el marcador.
 golpe, multiplicador por racha de jade, hitos cada 250 m, jaguar que se acerca
 conforme pierdes vidas y quetzal de acompañante.
 
+**Las señales.** Rombos amarillos y un ceda el paso al borde de la calzada,
+dibujados en canvas. **No son decorado**: cada uno se planta porque viene lo
+que anuncia, treinta y cuatro unidades por delante. Derrumbe antes de un
+tronco o de una piedra rodante, puente angosto antes de un vacío, paso de
+ganado antes del camazotz, pendiente antes de una rampa, curva antes de un
+giro real del trazado y bifurcación en Y antes de un cruce. Zona escolar,
+paso de peatones y calzada resbaladiza son las únicas de ambiente, atadas al
+tipo de departamento y con cuentagotas.
+
 **Los distribuidores viales.** Cada 620 m la calzada llega a un cruce. Un
 pórtico con dos rótulos verdes anuncia las salidas —una lleva a otro
 departamento, la otra es el **retorno** al actual— y sesenta unidades después
@@ -251,6 +260,22 @@ Lo que importa mantener si se toca:
   1,5 dentro de un cubo de 1,45: sobresalían dos centímetros y quedaban
   enterradas, y la amenaza se veía como un cubo negro sin más. El filo rojo es
   además emisivo, o en las zonas de noche no se ve venir.
+- **Una señal que no anuncia nada envenena a las demás.** Si la de curva
+  saliera en las rectas, el jugador dejaría de mirar todas: por eso se mide el
+  desplazamiento REAL del trazado treinta unidades más allá y solo se planta
+  si la calzada se va a mover de verdad. Las de ambiente salen al 7 % por
+  compás justamente para no devaluar a las que sí avisan.
+- **Treinta y cuatro unidades de adelanto, ni una más.** La señal nace a 136
+  del jugador y la bruma, que cierra a 185, se come su entrada. Con más
+  adelanto aparecería de golpe en mitad del campo visible. Lo que gana no es
+  tiempo de reacción —el obstáculo ya se ve venir— sino saber **de qué** se
+  trata mientras aún es una silueta en la niebla.
+- **Lo que cruza la calzada entera lleva señal a los DOS lados.** Una en un
+  solo margen se lee como algo que afecta solo a ese carril, que es
+  exactamente lo contrario de lo que hay que entender.
+- **Las texturas de las señales se generan una vez y se comparten.** Rehacer
+  el rombo en cada aparición sería pintar el mismo dibujo cientos de veces por
+  partida; el pool solo intercambia el `map`.
 - **La velocidad sube con la DISTANCIA, no con el reloj.** Con el reloj,
   quedarse en el menú de pausa aceleraba igual, y sobre todo el que juega bien
   no notaba recompensa: llegaba al techo a los 32 s y de ahí no se movía. La
