@@ -224,19 +224,19 @@ Lo que importa mantener si se toca:
   una calzada que se doblaba bajo ella. Con la máscara de distancia, la zona
   donde se juega es recta —y por tanto todo casa— y el giro vive en el fondo,
   que es donde se lee. La ondulación vertical va por la misma máscara.
-- **Toda instancia de un  hay que apagarla al crearla.** Una
+- **Toda instancia de un `InstancedMesh` hay que apagarla al crearla.** Una
   instancia recién creada lleva la matriz identidad: un cubo de 1×1×1 en el
-  origen —que es exactamente donde vive el jugador—. Como 
-  solo apaga las celdas que alguna vez estuvieron encendidas, las que una zona
+  origen —que es exactamente donde vive el jugador—. Como
+  `updateRoadCurve` solo apaga las celdas que alguna vez estuvieron encendidas, las que una zona
   no llega a usar (diecisiete de dieciocho en Tikal) se quedaban ahí, con el
   color en cero del buffer recién reservado: un cubo negro pegado a los pies
   del corredor. Antigua era la única zona que se libraba, porque su adoquín de
   seis por tres gasta las dieciocho.
 - **Nunca dos caras en el mismo plano.** Tres bugs distintos eran el mismo
-  error: el hueco y el agua del cenote acababan los dos en  (y ganaba
+  error: el hueco y el agua del cenote acababan los dos en `y = 0.09` (y ganaba
   el material casi negro, así que el cenote era una plancha sin agua ni borde);
   la tapa y el costado de los tramos elevados terminaban los dos en
-  , y el z-fighting resultante se arrastraba al avanzar, que se
+  `LEVEL_HIGH`, y el z-fighting resultante se arrastraba al avanzar, que se
   veía como una textura moviéndose. Las capas van a alturas separadas.
 - **Las vetas rojas de la piedra rodante van por FUERA del núcleo.** Medían
   1,5 dentro de un cubo de 1,45: sobresalían dos centímetros y quedaban
