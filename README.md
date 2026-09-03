@@ -172,9 +172,10 @@ tipo de departamento y con cuentagotas.
 **Los distribuidores viales.** Cada 620 m la calzada llega a un cruce. Un
 pórtico con dos rótulos verdes anuncia las salidas —una lleva a otro
 departamento, la otra es el **retorno** al actual— y sesenta unidades después
-una isleta central obliga a tomar una o la otra. **Qué lado es cuál se sortea
-cada vez**: si fuera siempre el mismo dejaría de ser una decisión a los dos
-minutos. El retorno paga en jade; el cambio, en paisaje nuevo.
+**la calzada se parte de verdad**: desde la X salen dos vías de tres carriles
+que se separan hacia los lados, y el mundo se recoloca sobre la que llevas
+puesta mientras la otra se abre hacia fuera hasta perderse. **Qué lado es cuál
+se sortea cada vez.** El retorno paga en jade; el cambio, en paisaje nuevo.
 
 **La calzada no es recta ni plana.** Gira, ondula y a partir de los 120 m
 aparecen tramos elevados: uno de los cinco repartos alto/bajo entre los tres
@@ -260,6 +261,35 @@ Lo que importa mantener si se toca:
   1,5 dentro de un cubo de 1,45: sobresalían dos centímetros y quedaban
   enterradas, y la amenaza se veía como un cubo negro sin más. El filo rojo es
   además emisivo, o en las zonas de noche no se ve venir.
+- **La bifurcación se recoloca sobre el jugador, no al revés.** A la
+  separación de cada ramal se le resta la del ramal que él lleva en su propia
+  posición: así su calzada queda siempre centrada, la otra se abre al doble de
+  velocidad, y en cuanto la X queda atrás los dos términos se cancelan solos
+  sin tener que desactivar nada. La versión anterior resolvía el cruce con una
+  isleta y ya: no había forma de saber qué camino habías tomado, porque los dos
+  eran el mismo camino.
+- **El ramal se fija incluso si se salta el divisor por arriba.** Sin fijarlo,
+   pierde el término que recoloca el mundo y la calzada se le desliza
+  al jugador de debajo de los pies hasta ocho unidades.
+- **Toda la bifurcación va limpia de objetos.** Un obstáculo ahí dentro caería
+  sobre un ramal que se está abriendo, o sobre el que no se ha tomado, o justo
+  donde hay que estar leyendo y colocándose.
+- **El cambio de departamento se cruza en segundo y medio.** Antes saltaba en
+  un frame y se leía como un fallo de carga.
+- **Las señales entran desde transparente y van racionadas.** Nacían ya
+  visibles a 136 del jugador y se materializaban de la nada; y salía más de una
+  por compás, que es un pasillo de rombos y no señalización. Ahora hay 95
+  unidades mínimas entre dos, salvo las del cruce y las de lo que cruza la
+  calzada entera, que no se pueden dejar sin avisar.
+- **La señal manda sobre el peligro, no al revés.** Se planta primero, se mira
+  por qué lado quedó, y la piedra o el murciélago entran justo por ahí —desde
+  fuera de la calzada, meténdose hacia su carril—. Una señal de derrumbe a la
+  derecha con la piedra cayendo por la izquierda es peor que no ponerla, porque
+  enseña a no fiarse.
+- **La pendiente anuncia una bajada de verdad**: la calzada se hunde por
+  delante, la cámara cabecea y se corre un 22 % más durante 150 unidades. Es el
+  único sitio donde la velocidad sube sin que el jugador haya hecho nada, y por
+  eso se avisa siempre.
 - **Una señal que no anuncia nada envenena a las demás.** Si la de curva
   saliera en las rectas, el jugador dejaría de mirar todas: por eso se mide el
   desplazamiento REAL del trazado treinta unidades más allá y solo se planta
