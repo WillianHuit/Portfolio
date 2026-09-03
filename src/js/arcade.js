@@ -863,68 +863,98 @@ const sfx = {
 // ===========================================================================
 // Musica de fondo: vals de marimba
 // ===========================================================================
-// NOTA SOBRE LA PIEZA. El encargo era "Luna de Xelaju", el vals de Paco Perez
-// de 1944. No se ha usado, por dos razones concretas:
+// NOTA SOBRE LA PIEZA. La melodia y el cifrado de VALS.bars los aporto el
+// dueno del sitio. No he podido verificarla contra el original —no hay
+// transcripcion libre y fiable de "Luna de Xelaju" en la red, que es por lo
+// que en su dia se escribio una pieza propia—, asi que lo que suena es
+// exactamente lo que se entrego, ni mas ni menos. Si algo desafina, el sitio
+// donde mirar es ese array.
 //
-//   1. No hay transcripcion fiable y libre de esa melodia: lo que circula son
-//      videos y partituras de pago, y escribirla de oido habria sido inventar
-//      una melodia y ponerle el nombre de otra.
-//   2. Paco Perez murio en 1951 y la obra sigue protegida en buena parte del
-//      mundo (en Estados Unidos, por plazo de publicacion, hasta los anos
-//      treinta del siglo que viene). Esto es una web publica.
-//
-// Lo que suena es un vals ORIGINAL escrito para el juego, en el molde del
-// vals guatemalteco: compas de 3/4, bajo en el primer tiempo y acordes en el
-// segundo y el tercero, melodia en terceras encima —como se toca la marimba,
-// con dos baquetas— y giro de la menor a do mayor en la segunda mitad.
-//
-// NO ES, NI PRETENDE SER, "LUNA DE XELAJU". Si suena distinto es porque es
-// otra pieza. Para poner la de verdad basta con reescribir VALS.bars con sus
-// notas y sus duraciones; el resto del sistema no se entera de que suena.
+// La pieza empieza en SOL MENOR (con si bemol y mi bemol) y pasa a SOL MAYOR
+// en el compas trece. Eso obligo a dos cambios en el motor:
+//   - La tabla de notas ahora conoce los bemoles. Antes solo tenia sostenidos
+//     y un "Eb5" se convertia en NaN, es decir en silencio.
+//   - La segunda voz ya no se saca de una escala fija. Se saca del ACORDE que
+//     suena, que es lo unico que sigue siendo correcto cuando la pieza cambia
+//     de tonalidad a mitad de camino.
 //
 // La marimba se sintetiza como lo que es: una barra golpeada. Un seno para el
 // fundamental, otro cuatro veces mas agudo y muy corto para el golpe de la
 // baqueta, y caida exponencial en los dos.
 
+// Semitonos respecto al la. Los bemoles son alias de su sostenido: sin ellos
+// un "Eb5" daba undefined, la frecuencia salia NaN y la nota no sonaba.
 const NOTE_STEP = {
-    C: -9, 'C#': -8, D: -7, 'D#': -6, E: -5, F: -4,
-    'F#': -3, G: -2, 'G#': -1, A: 0, 'A#': 1, B: 2
+    C: -9, 'C#': -8, 'Db': -8, D: -7, 'D#': -6, 'Eb': -6, E: -5, F: -4,
+    'F#': -3, 'Gb': -3, G: -2, 'G#': -1, 'Ab': -1, A: 0, 'A#': 1, 'Bb': 1, B: 2
 };
 
-function hz(n) {
-    const oct = parseInt(n.slice(-1), 10);
-    return 440 * Math.pow(2, (NOTE_STEP[n.slice(0, -1)] + (oct - 4) * 12) / 12);
+// Distancia en semitonos desde el la central. Se trabaja con este numero y no
+// con el nombre de la nota: asi la segunda voz se puede calcular por
+// intervalos sin tener que inventarle un nombre al resultado.
+function semis(n) {
+    const step = NOTE_STEP[n.slice(0, -1)];
+    return step + (parseInt(n.slice(-1), 10) - 4) * 12;
 }
 
+const hz = n => 440 * Math.pow(2, semis(n) / 12);
+const hzOf = sm => 440 * Math.pow(2, sm / 12);
+
+// bass y notes son lo que se toca (bajo y acompanamiento). tones son las
+// notas del acorde SIN octava, y existen solo para armonizar la melodia: la
+// segunda voz se busca entre ellas, de modo que nunca puede caer fuera de la
+// armonia por mucho que la pieza cambie de tonalidad.
 const CHORDS = {
-    Am: { bass: 'A2', notes: ['A3', 'C4', 'E4'] },
-    Dm: { bass: 'D3', notes: ['D4', 'F4', 'A4'] },
-    E:  { bass: 'E3', notes: ['B3', 'E4', 'G#4'] },
-    C:  { bass: 'C3', notes: ['C4', 'E4', 'G4'] },
-    G:  { bass: 'G2', notes: ['G3', 'B3', 'D4'] },
-    F:  { bass: 'F2', notes: ['F3', 'A3', 'C4'] }
+    Gm: { bass: 'G2',  notes: ['G3', 'Bb3', 'D4'],  tones: ['G', 'Bb', 'D'] },
+    Cm: { bass: 'C3',  notes: ['C4', 'Eb4', 'G4'],  tones: ['C', 'Eb', 'G'] },
+    D7: { bass: 'D3',  notes: ['F#3', 'A3', 'C4'],  tones: ['D', 'F#', 'A', 'C'] },
+    G:  { bass: 'G2',  notes: ['G3', 'B3', 'D4'],   tones: ['G', 'B', 'D'] },
+    Em: { bass: 'E3',  notes: ['G3', 'B3', 'E4'],   tones: ['E', 'G', 'B'] },
+    C:  { bass: 'C3',  notes: ['C4', 'E4', 'G4'],   tones: ['C', 'E', 'G'] },
+    Am: { bass: 'A2',  notes: ['A3', 'C4', 'E4'],   tones: ['A', 'C', 'E'] },
+    G7: { bass: 'G2',  notes: ['B3', 'D4', 'F4'],   tones: ['G', 'B', 'D', 'F'] },
+    Eb: { bass: 'Eb3', notes: ['Eb4', 'G4', 'Bb4'], tones: ['Eb', 'G', 'Bb'] },
+    E7: { bass: 'E3',  notes: ['G#3', 'B3', 'D4'],  tones: ['E', 'G#', 'B', 'D'] },
+    Dm: { bass: 'D3',  notes: ['D4', 'F4', 'A4'],   tones: ['D', 'F', 'A'] },
+    F:  { bass: 'F2',  notes: ['F3', 'A3', 'C4'],   tones: ['F', 'A', 'C'] }
 };
 
 // Dieciseis compases. La melodia va como [nota, tiempos]; null es silencio.
 const VALS = {
-    bpm: 172,
+    bpm: 168,
     bars: [
+        { ch: 'Gm', mel: [['D5', 1], ['G5', 1.5], ['F5', 0.5]] },
+        { ch: 'Cm', mel: [['Eb5', 2], ['D5', 1]] },
+        { ch: 'D7', mel: [['C5', 1], ['A4', 1], ['F#4', 1]] },
+        { ch: 'Gm', mel: [['G4', 2], ['D5', 1]] },
+        { ch: 'Gm', mel: [['G5', 1], ['F5', 1], ['D5', 1]] },
+        { ch: 'Cm', mel: [['Eb5', 1.5], ['G5', 0.5], ['F5', 1]] },
+        { ch: 'D7', mel: [['A4', 1], ['C5', 1.5], ['A4', 0.5]] },
+        { ch: 'Gm', mel: [['Bb4', 2], ['G4', 1]] },
+        { ch: 'Cm', mel: [['C5', 1], ['Eb5', 1], ['G5', 1]] },
+        { ch: 'Gm', mel: [['F5', 1.5], ['D5', 0.5], ['Bb4', 1]] },
+        { ch: 'D7', mel: [['A4', 1], ['C5', 1], ['D5', 1]] },
+        { ch: 'Gm', mel: [['G4', 3]] },
+        { ch: 'G',  mel: [['B4', 1], ['D5', 1], ['G5', 1]] },
+        { ch: 'Em', mel: [['G5', 2], ['F#5', 1]] },
+        { ch: 'D7', mel: [['E5', 1.5], ['D5', 0.5], ['C5', 1]] },
+        { ch: 'G',  mel: [['B4', 2], ['D5', 1]] },
+        { ch: 'C',  mel: [['E5', 1], ['G5', 1], ['E5', 1]] },
         { ch: 'Am', mel: [['A4', 1], ['C5', 1], ['E5', 1]] },
-        { ch: 'Am', mel: [['D5', 2], ['C5', 1]] },
-        { ch: 'Dm', mel: [['B4', 1], ['D5', 1], ['F5', 1]] },
-        { ch: 'E',  mel: [['E5', 2], [null, 1]] },
-        { ch: 'Am', mel: [['A4', 1], ['C5', 1], ['E5', 1]] },
-        { ch: 'Am', mel: [['F5', 2], ['E5', 1]] },
-        { ch: 'Dm', mel: [['D5', 1], ['C5', 1], ['B4', 1]] },
-        { ch: 'Am', mel: [['A4', 3]] },
-        { ch: 'C',  mel: [['C5', 1], ['E5', 1], ['G5', 1]] },
-        { ch: 'G',  mel: [['F5', 2], ['D5', 1]] },
-        { ch: 'Am', mel: [['E5', 1], ['C5', 1], ['A4', 1]] },
-        { ch: 'E',  mel: [['B4', 2], [null, 1]] },
-        { ch: 'F',  mel: [['F4', 1], ['A4', 1], ['C5', 1]] },
-        { ch: 'E',  mel: [['B4', 1], ['G#4', 1], ['B4', 1]] },
-        { ch: 'Am', mel: [['A4', 2], ['E4', 1]] },
-        { ch: 'Am', mel: [['A4', 3]] }
+        { ch: 'D7', mel: [['F#5', 1.5], ['E5', 0.5], ['D5', 1]] },
+        { ch: 'G',  mel: [['G4', 2], ['B4', 1]] },
+        { ch: 'G',  mel: [['D5', 1], ['G5', 1.5], ['F#5', 0.5]] },
+        { ch: 'Em', mel: [['E5', 2], ['G5', 1]] },
+        { ch: 'G7', mel: [['F5', 1.5], ['D5', 0.5], ['B4', 1]] },
+        { ch: 'C',  mel: [['C5', 2], ['E5', 1]] },
+        { ch: 'Eb', mel: [['G5', 1], ['Eb5', 1.5], ['Bb4', 0.5]] },
+        { ch: 'G',  mel: [['D5', 2], ['B4', 1]] },
+        { ch: 'E7', mel: [['G#4', 1], ['B4', 1], ['E5', 1]] },
+        { ch: 'Am', mel: [['C5', 1.5], ['A4', 0.5], ['E5', 1]] },
+        { ch: 'D7', mel: [['F#5', 2], ['E5', 1]] },
+        { ch: 'G',  mel: [['D5', 1], ['G5', 2]] },
+        { ch: 'Cm', mel: [['Eb5', 1.5], ['D5', 0.5], ['B4', 1]] },
+        { ch: 'G',  mel: [['G4', 3]] }
     ]
 };
 
@@ -963,16 +993,36 @@ function marimba(freq, t, dur, vol) {
 
 // La marimba guatemalteca casi nunca toca la melodia sola: va en terceras,
 // dos baquetas a la vez. Es lo que mas distingue su sonido, y sin ello el
-// vals sonaba a piano de juguete por muy bien que estuvieran las notas.
-const SCALE_ORDER = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
-
-function thirdBelow(n) {
-    const name = n.slice(0, -1);
-    const i = SCALE_ORDER.indexOf(name);
-    if (i < 0) return null;              // alterada (el sol sostenido): sin tercera
-    let j = i - 2, o = parseInt(n.slice(-1), 10);
-    if (j < 0) { j += 7; o -= 1; }
-    return SCALE_ORDER[j] + o;
+// vals suena a piano de juguete por muy bien que esten las notas.
+//
+// La segunda voz se busca entre las notas del ACORDE que suena, no en una
+// escala fija. La primera version bajaba dos grados de la menor y punto, lo
+// cual funcionaba mientras la pieza estuvo en la menor; con una que empieza
+// en sol menor y se muda a sol mayor a mitad, esa cuenta devuelve notas de
+// otra tonalidad. Buscando en el acorde, la segunda voz no puede desafinar
+// aunque la pieza module donde quiera.
+//
+// De entre las candidatas se prefiere la que cae a una tercera mayor (cuatro
+// semitonos); si no hay, la mas cercana a esa distancia. El margen va de la
+// tercera menor a la sexta menor: mas cerca suena a golpe sucio y mas lejos
+// deja de leerse como una sola linea.
+function harmonyBelow(n, ch) {
+    const top = semis(n);
+    let best = null, bestScore = 99;
+    for (const t of ch.tones) {
+        const base = NOTE_STEP[t];
+        for (let oct = 2; oct <= 6; oct++) {
+            const cand = base + (oct - 4) * 12;
+            const gap = top - cand;
+            if (gap < 3 || gap > 8) continue;
+            const score = Math.abs(gap - 4);
+            if (score < bestScore || (score === bestScore && cand > best)) {
+                best = cand;
+                bestScore = score;
+            }
+        }
+    }
+    return best;
 }
 
 function scheduleBar(bar, t0, beat) {
@@ -992,18 +1042,19 @@ function scheduleBar(bar, t0, beat) {
     for (const [n, len] of bar.mel) {
         if (n) {
             const dur = beat * len;
-            const low = thirdBelow(n);
+            const low = harmonyBelow(n, ch);
             // Una barra de madera no sostiene: lo que en un violin es una nota
-            // larga, en marimba es un redoble de baqueta. Las notas de mas de
-            // un tiempo se repican en vez de dejarse morir.
-            const hits = len > 1 ? Math.round(len * 2.5) : 1;
+            // larga, en marimba es un redoble de baqueta. Solo a partir de dos
+            // tiempos: repicar tambien las de tiempo y medio emborronaba el
+            // ritmo punteado del vals, que es la mitad de su caracter.
+            const hits = len >= 2 ? Math.round(len * 2.5) : 1;
             const step = dur / hits;
             for (let k = 0; k < hits; k++) {
                 const at = t + k * step;
                 const d = (hits > 1 ? step * 1.6 : dur * 0.92);
                 const v = k === 0 ? 0.34 : 0.2;      // el primer golpe marca
                 marimba(hz(n), at, d, v);
-                if (low) marimba(hz(low), at, d, v * 0.62);
+                if (low !== null) marimba(hzOf(low), at, d, v * 0.62);
             }
         }
         t += beat * len;

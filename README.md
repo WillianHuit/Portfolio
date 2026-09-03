@@ -181,8 +181,9 @@ guarda al morir. Los tramos se abren corriendo y luego se puede salir desde
 cualquiera de ellos.
 
 **Música.** Un vals de marimba sintetizado con osciladores, como el resto del
-sonido: cero archivos. Se enciende y apaga por separado de los efectos (tecla
-`N`).
+sonido: cero archivos. Treinta y dos compases en 3/4 que empiezan en sol menor
+y pasan a sol mayor a mitad; el bucle dura 34 s. Se enciende y apaga por
+separado de los efectos (tecla `N`).
 
 **Patrocinio (Cefas Panadería).** Todo sale del objeto `CEFAS` en `arcade.js`:
 cambiar de anunciante, de enlaces o de vídeos es tocar ese objeto y nada más.
@@ -309,13 +310,26 @@ Lo que importa mantener si se toca:
   mundo seguía avanzando con la partida ya cerrada.
 - **La música se baja a cero mientras suena el anuncio.** Dos músicas a la vez
   no es un anuncio, es ruido.
-- **La música no es «Luna de Xelajú».** El encargo era esa pieza, pero no hay
-  transcripción fiable y libre de la melodía (lo que circula son vídeos y
-  partituras de pago) y además Paco Pérez murió en 1951, así que la obra sigue
-  protegida en buena parte del mundo. Lo que suena es un vals **original** en
-  el molde del vals guatemalteco: 3/4, bajo en el primer tiempo y acordes en
-  el segundo y el tercero, marimba encima. Si algún día se quiere la pieza
-  real, basta con cambiar `VALS.bars`.
+- **La melodía la aporta `VALS.bars`, y no la he verificado.** No existe
+  transcripción libre y fiable de la pieza en la red —lo que circula son vídeos
+  y partituras de pago, y las dos páginas con las notas en texto devuelven
+  403—, que es por lo que en su día se escribió un vals propio. Lo que suena
+  ahora es exactamente lo que se entregó: si algo desafina, el sitio donde
+  mirar es ese array y ningún otro.
+- **La tabla de notas conoce los bemoles.** Tenía solo sostenidos, y un `Eb5`
+  daba `undefined` → frecuencia `NaN` → nota muda. Los bemoles son alias de su
+  sostenido.
+- **La segunda voz sale del ACORDE, no de una escala fija.** La primera
+  versión bajaba dos grados de la menor y punto, lo cual servía mientras la
+  pieza estuvo en la menor; con una que empieza en sol menor y se muda a sol
+  mayor a mitad, esa cuenta devuelve notas de otra tonalidad. Buscándola entre
+  las notas del acorde no puede desafinar, module la pieza donde module. Se
+  prefiere la que cae a una tercera mayor, con margen de tercera menor a sexta
+  menor: más cerca suena a golpe sucio y más lejos deja de leerse como una
+  sola línea.
+- **Solo repican las notas de dos tiempos o más.** Repicar también las de
+  tiempo y medio emborronaba el ritmo punteado del vals, que es la mitad de su
+  carácter.
 - **La marimba se sintetiza como lo que es**: una barra golpeada. Un seno para
   el fundamental y otro cuatro veces más agudo y muy corto para el golpe de la
   baqueta. Sin el segundo suena a flauta.
