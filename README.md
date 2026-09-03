@@ -174,7 +174,7 @@ está plantada.**
 | Derrumbe | Caen piedras del cerro **sobre ese carril**. En los dos márgenes, un tronco de lado a lado. |
 | Ganado | Una **vaca** entra por ese margen y cruza la calzada al paso hasta el otro. |
 | Parada de camioneta | Por ese carril viene un **bus** de frente, que no se aparta ni se salta. |
-| Curva | La calzada **cierra de verdad hacia ese lado**, se corre un 16 % más y el tramo va limpio de obstáculos: solo entran enemigos. Quedarse ~2 s por el carril de fuera te saca de la carretera. |
+| Curva | La calzada **cierra de verdad hacia ese lado**, se corre un 16 % más y el tramo va limpio de obstáculos: solo entran enemigos. **El carril que te va a sacar se pinta de rojo**, y quedarse ~2 s en él te saca de la carretera. |
 | Pendiente | Bajada real de 150 unidades: la calzada se hunde por delante, la cámara cabecea y se corre un 20 % más. Sin obstáculos ni tramos elevados. |
 | `] [` Carril estrecho | Los tres carriles **se vuelven uno**. Por los lados ya no hay calzada: quien siga ahí se cae. |
 | Bifurcación en Y | Viene una bifurcación. |
@@ -310,6 +310,29 @@ Lo que importa mantener si se toca:
   sin tener que desactivar nada. La versión anterior resolvía el cruce con una
   isleta y ya: no había forma de saber qué camino habías tomado, porque los dos
   eran el mismo camino.
+- **El carril que mata se pinta, no se tiñe.** El primer intento fue teñir de
+  rojo las piedras del firme que cayeran en ese carril, y no vale: el despiece
+  cambia por zona y en Tikal la losa es **una sola pieza de lado a lado**
+  —medido, `cuts = 1`—, así que no hay ninguna celda que coincida con un carril
+  y la marca no salía en la mitad del recorrido. Es una franja propia por
+  encima del firme, como una pintura de carretera, que mide lo mismo en las
+  doce zonas. Va tres centímetros por encima de la cara de la losa y nunca al
+  ras: dos caras en el mismo plano pelean por el píxel y la franja parpadea.
+  El bordillo de ese lado se tiñe también, porque a cien unidades la calzada
+  mide cuatro píxeles de ancho y lo único que se distingue es su borde.
+- **Y late.** Un rojo fijo se lee como parte del decorado de la zona; latiendo
+  se lee como un aviso, que es lo que es.
+
+- **El golpe se ve y se siente.** Viñeta roja a pantalla completa que entra
+  llena y se despeja al cuadrado en cuatro décimas —una pantalla teñida durante
+  todo el margen de invulnerabilidad taparía la calzada justo cuando hay que
+  reaccionar al siguiente obstáculo— más una sacudida de cámara con alabeo. La
+  sacudida mezcla una vertical a frecuencia fija con una horizontal al azar:
+  el azar puro se lee como ruido, la mezcla se lee como un impacto. Perder una
+  vida y perder el escudo se acusan **distinto** —rojo fuerte contra ámbar
+  suave— para poder distinguirlos sin mirar el HUD, que es justo lo que no hay
+  tiempo de hacer.
+
 - **La explanada tapaba la bajada, y ese era todo el misterio.** El suelo es un
   único plano liso clavado a y = −1,02, y la calzada se hunde quince unidades:
   a sesenta por delante el firme ya iba ocho por DEBAJO del plano, así que lo

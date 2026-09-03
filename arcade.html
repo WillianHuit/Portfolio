@@ -453,6 +453,20 @@
             transition: opacity 400ms linear;
         }
 
+        /* Golpe: vineta roja que entra de golpe y se va sola. Va por encima
+           de la de velocidad y sin transicion propia, porque la maneja el
+           bucle del juego frame a frame: una transicion de CSS encima haria
+           que el destello se arrastrase y llegase tarde. */
+        .hit-veil {
+            position: fixed;
+            inset: 0;
+            z-index: 5;
+            pointer-events: none;
+            opacity: 0;
+            background: radial-gradient(ellipse at 50% 52%,
+                        rgba(239, 68, 68, 0.12) 18%, rgba(180, 22, 22, 0.92) 100%);
+        }
+
         /* ===== Boton de pausa (tactil) ===== */
         .pause-btn {
             position: fixed;
@@ -1131,6 +1145,9 @@
 
     <!-- Vineta que se cierra con la velocidad: el aviso de que aceleras -->
     <div class="speed-veil" id="speedVeil" aria-hidden="true"></div>
+
+    <!-- Destello al recibir un golpe -->
+    <div class="hit-veil" id="hitVeil" aria-hidden="true"></div>
 
     <!-- Pausa para tactil: por teclado ya existe P/Esc -->
     <button class="pause-btn" id="pauseBtn" type="button" hidden aria-label="Pausar">II</button>

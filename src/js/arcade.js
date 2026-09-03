@@ -99,6 +99,12 @@ const LANE_HALF = 1.02;
 const JADE_REACH = 1.5;             // el jade se recoge con mas margen
 
 const INVULN_TIME = 1.4;            // margen tras recibir un golpe
+// Lo que dura el destello del golpe. Corto a proposito: un golpe tiene que
+// interrumpir, no estorbar, y media pantalla roja tapando la calzada justo
+// cuando hay que reaccionar al siguiente obstaculo seria lo segundo.
+const HURT_TIME = 0.42;
+const HURT_RED = '180, 22, 22';         // una vida menos
+const HURT_AMBER = '176, 104, 22';      // el escudo, que se puede recuperar
 const LANDING_GRACE = 0.8;          // margen al terminar el vuelo
 const START_LIVES = 3;
 
@@ -830,6 +836,8 @@ const game = {
     crossKind: 1,        // 0 = cruce de destino, 1 = bifurcacion cortada
     boostTaken: 0,       // aceleradores pisados, para la vida extra
     boostPerm: 0,        // velocidad que se queda para siempre
+    hurt: 0,             // segundos que queda del destello de golpe
+    hurtMax: 0.85,       // lo fuerte que entra: distingue vida de escudo
     wrongC: null,        // cruce en el que se metio por el ramal cortado
     wrongLane: 1,        // ...y el carril por el que tendria que haber ido
     nextCross: CROSS_EVERY,
@@ -884,7 +892,7 @@ const dom = {
     bestScore: $('bestScore'), hudBest: $('hudBest'),
     combo: $('combo'), shield: $('shield'),
     milestone: $('milestone'), banner: $('banner'),
-    speedVeil: $('speedVeil'), pauseBtn: $('pauseBtn'),
+    speedVeil: $('speedVeil'), hitVeil: $('hitVeil'), pauseBtn: $('pauseBtn'),
     menuRoute: $('menuRoute'), menuBank: $('menuBank'), menuBest: $('menuBest'),
     shopBank: $('shopBank'), tabSkins: $('tabSkins'), tabUpg: $('tabUpg'), tabRoute: $('tabRoute'),
     minimap: $('minimap'), mmDots: $('mmDots'), mmYou: $('mmYou'),
@@ -1444,6 +1452,7 @@ function webglAvailable() {
     } catch (e) { return false; }
 }
 
+let warnMesh;
 let skyTexture, skyCanvas, skyCtx;
 
 function buildScene() {
@@ -1701,6 +1710,20 @@ function buildRoad() {
     );
     kerbMesh.frustumCulled = false;
     roadGroup.add(kerbMesh);
+
+    // Pintura del carril que la curva se lleva por delante. Va justo por
+    // encima de la cara de la losa, nunca al ras: dos caras en el mismo plano
+    // pelean por el pixel y el resultado es una franja que parpadea.
+    warnMesh = new THREE.InstancedMesh(
+        BOX,
+        new THREE.MeshBasicMaterial({
+            color: WARN_LANE_RGB, transparent: true, opacity: 0, depthWrite: false
+        }),
+        TILE_COUNT
+    );
+    warnMesh.frustumCulled = false;
+    warnMesh.renderOrder = 1;
+    roadGroup.add(warnMesh);
 }
 
 // ===========================================================================
@@ -1907,6 +1930,33 @@ const roadCellOn = new Uint8Array(TILE_COUNT * ROAD_CELLS);
 // punado de veces por minuto; subir el buffer de color entero en cada frame
 // era medio megabyte por segundo a la GPU para reescribir los mismos valores.
 const roadTileRegion = new Int8Array(TILE_COUNT).fill(-1);
+// Carril marcado en rojo en cada losa: 0 ninguno, 1 el izquierdo, 3 el
+// derecho. Va aparte de la region porque cambia por otro motivo, y como el
+// repintado solo ocurre cuando alguno de los dos se mueve, marcar la curva no
+// cuesta un solo color de mas por frame.
+const roadTileWarn = new Int8Array(TILE_COUNT);
+const _rw = new THREE.Color();
+let warnAny = false;
+// El carril se marca con una franja PROPIA por encima del firme, como una
+// pintura de carretera, y no tinendo las piedras de la calzada.
+//
+// Tenirlas fue el primer intento y no vale: el despiece cambia por zona y en
+// Tikal la losa es UNA sola pieza de lado a lado —medido, cuts = 1—, asi que
+// no hay ninguna celda que coincida con un carril y la marca no salia. Una
+// franja propia mide lo que tiene que medir en las doce zonas.
+const WARN_LANE_RGB = 0xd42a2a;
+const WARN_LANE_W = 2.5;            // algo menos que el carril, para que se vea el borde
+// A partir de que agarre de la curva se pinta. Va por debajo del 0,25 que
+// dispara la fuerza centrifuga, para que la marca este PUESTA cuando el carril
+// empieza a matar y no aparezca a la vez.
+const WARN_LANE_GRIP = 0.16;
+
+// Que carril hay que marcar en un punto del trazado, o -1 si ninguno.
+function warnLaneAt(sc) {
+    if (!game.turn.active) return -1;
+    if (turnGrip(sc) < WARN_LANE_GRIP) return -1;
+    return game.turn.dir < 0 ? 0 : 2;
+}
 const _rc = new THREE.Color();
 
 // La calzada si hay que recomponerla entera cada frame: sus losas van dentro
@@ -1992,10 +2042,21 @@ function updateRoadCurve() {
             continue;
         }
 
-        const ri = roadRegionOf(game.distance - zWorld);
+        const sWorld = game.distance - zWorld;
+        const ri = roadRegionOf(sWorld);
         const R = REGIONS[ri];
-        const recolor = roadTileRegion[i] !== ri;
-        if (recolor) { roadTileRegion[i] = ri; colorDirty = true; }
+        // El carril que la curva se va a llevar por delante, pintado de rojo.
+        // Es la unica marca del juego que dice "no estes AQUI" en vez de
+        // "cuidado con eso": la senal avisa de que viene una curva, pero solo
+        // el suelo puede decir cual de los tres carriles es el que te tira.
+        const wl = warnLaneAt(sWorld);
+        const warn = wl < 0 ? 0 : wl + 1;
+        const recolor = roadTileRegion[i] !== ri || roadTileWarn[i] !== warn;
+        if (recolor) {
+            roadTileRegion[i] = ri;
+            roadTileWarn[i] = warn;
+            colorDirty = true;
+        }
         const cuts = R.road[0], rows = R.road[1], gap = R.road[2], jit = R.road[3];
         const cw = ROAD_WIDTH / cuts;
         const cd = TILE_DEPTH / rows;
@@ -2054,6 +2115,18 @@ function updateRoadCurve() {
             roadMesh.setMatrixAt(id, dummy.matrix);
         }
 
+        // Pintura del carril peligroso, si esta losa cae dentro de la curva.
+        if (wl >= 0) {
+            warnAny = true;
+            dummy.position.set(dx + LANE_X[wl], 0.03 + dy, zLocal);
+            dummy.scale.set(WARN_LANE_W, 0.05, TILE_DEPTH * 0.96);
+            dummy.rotation.set(0, 0, 0);
+            dummy.updateMatrix();
+            warnMesh.setMatrixAt(i, dummy.matrix);
+        } else {
+            hideAt(warnMesh, i);
+        }
+
         // Sub-base, con el tono de la losa oscura bajado a la mitad: lo que
         // se ve por las juntas es sombra de junta, no jungla.
         dummy.position.set(dx, -0.62 + dy, zLocal);
@@ -2071,10 +2144,27 @@ function updateRoadCurve() {
             dummy.rotation.set(0, 0, 0);
             dummy.updateMatrix();
             kerbMesh.setMatrixAt(i * 2 + sd, dummy.matrix);
-            if (recolor) kerbMesh.setColorAt(i * 2 + sd, _rc.setHex(R.kerb));
+            if (recolor) {
+                _rc.setHex(R.kerb);
+                // El bordillo de ese lado tambien: a cien unidades la calzada
+                // mide cuatro pixeles de ancho y lo unico que se distingue del
+                // carril es su borde.
+                if (warn && (sd === 1) === (wl === 2)) {
+                    _rc.lerp(_rw.setHex(WARN_LANE_RGB), 0.75);
+                }
+                kerbMesh.setColorAt(i * 2 + sd, _rc);
+            }
         }
     }
     updateForkBand(off);
+
+    // La pintura late despacio. Un rojo fijo se lee como parte del decorado de
+    // la zona; latiendo se lee como un aviso, que es lo que es.
+    warnMesh.instanceMatrix.needsUpdate = true;
+    warnMesh.material.opacity = warnAny
+        ? 0.5 + Math.sin(game.elapsed * 5.5) * 0.16
+        : 0;
+    warnAny = false;
 
     roadMesh.instanceMatrix.needsUpdate = true;
     baseMesh.instanceMatrix.needsUpdate = true;
@@ -2091,6 +2181,7 @@ function updateRoadCurve() {
 // repintado invalidando la cache.
 function resetRoadColors() {
     roadTileRegion.fill(-1);
+    roadTileWarn.fill(0);
 }
 
 // El ramal que no se ha tomado. Solo existe pasada la X: antes de ella los dos
@@ -4761,7 +4852,8 @@ function fallOut(vx) {
     player.wantSlide = false;
     player.grounded = false;
     game.powers.flight = 0;
-    shake = 0.6;
+    shake = 1.3;
+    flashHurt(HURT_RED, 0.95);
     sfx.hit();
 }
 
@@ -5400,15 +5492,37 @@ function comboMultiplier() {
     return Math.min(COMBO_MAX, 1 + Math.floor(game.combo / COMBO_STEP));
 }
 
+// El destello se arma con su color; la opacidad la baja el bucle de frames.
+function flashHurt(rgb, fuerza) {
+    game.hurt = HURT_TIME;
+    game.hurtMax = fuerza;
+    dom.hitVeil.style.background =
+        'radial-gradient(ellipse at 50% 52%, rgba(' + rgb +
+        ', 0.10) 18%, rgba(' + rgb + ', 0.94) 100%)';
+}
+
+// Destello del golpe: entra lleno y se despeja al cuadrado, en vez de dejar
+// media pantalla tenida durante todo el margen de invulnerabilidad.
+function updateHurt(dt) {
+    if (game.hurt <= 0) return;
+    game.hurt = Math.max(0, game.hurt - dt);
+    const k = game.hurt / HURT_TIME;
+    dom.hitVeil.style.opacity = (k * k * game.hurtMax).toFixed(3);
+}
+
 function takeHit() {
     game.invuln = INVULN_TIME;
     game.combo = 0;
     jadeStreak = 0;
-    shake = 0.5;
 
-    // El escudo absorbe el golpe antes que las vidas
+    // El escudo absorbe el golpe antes que las vidas. Se acusa distinto: el
+    // escudo cuesta algo que se puede volver a encontrar, perder una vida no.
+    // Mismo lenguaje, distinta intensidad y distinto color, para que se
+    // distingan sin mirar el HUD justo cuando no hay tiempo de mirarlo.
     if (game.shield) {
         game.shield = false;
+        shake = 0.55;
+        flashHurt(HURT_AMBER, 0.5);
         sfx.shieldBreak();
         burstParticles(player.x, player.y + 1.2, PLAYER_Z, 18, 1.2, C.ochre);
         hudDirty = true;
@@ -5416,8 +5530,10 @@ function takeHit() {
     }
 
     game.lives--;
+    shake = 1.05;
+    flashHurt(HURT_RED, 0.88);
     sfx.hit();
-    burstParticles(player.x, player.y + 1.2, PLAYER_Z, 10, 1, 0xef4444);
+    burstParticles(player.x, player.y + 1.2, PLAYER_Z, 22, 1.5, 0xef4444);
     hudDirty = true;
 
     if (game.lives <= 0) endGame();
@@ -5809,6 +5925,8 @@ function startGame() {
     game.boost = 0;
     game.boostTaken = 0;
     game.boostPerm = 0;
+    game.hurt = 0;
+    dom.hitVeil.style.opacity = '0';
     game.nextTramo = 0;
     game.lastTramo = -1;
     game.crossKind = 1;
@@ -6283,6 +6401,7 @@ const MAX_STEPS = 6;
 let accumulator = 0;
 let lastTime = 0;
 let shake = 0;
+let camRoll = 0;      // alabeo momentaneo al recibir un golpe
 
 function frame(now) {
     requestAnimationFrame(frame);
@@ -6390,6 +6509,10 @@ function frame(now) {
         updateScenery(mb.A, mb.B, mb.e);
     }
 
+    // Va fuera del bloque de PLAYING para que tambien se apague al morir: si
+    // no, la ultima vineta se quedaba encendida sobre la pantalla de fin.
+    updateHurt(delta);
+
     // Reencuadre al volar. Si la camara siguiera al jugador con el factor de a
     // pie, a casi siete unidades de altura se saldria del encuadre por arriba;
     // subiendo camara y punto de mira EN LA MISMA proporcion, el jugador se
@@ -6412,9 +6535,17 @@ function frame(now) {
     camera.position.y = cam.y + player.y * (0.12 + 0.85 * f);
 
     if (shake > 0) {
-        shake = Math.max(0, shake - delta * 2.2);
-        camera.position.x += (Math.random() - 0.5) * shake * 0.9;
-        camera.position.y += (Math.random() - 0.5) * shake * 0.9;
+        shake = Math.max(0, shake - delta * 2.6);
+        // Una sacudida al azar puro se lee como ruido. La vertical va a una
+        // frecuencia fija y la horizontal al azar: la mezcla se lee como un
+        // impacto —algo golpeo, y ademas todo tiembla— y no como una averia.
+        // Y al cuadrado, para que el primer instante sea el que se nota.
+        const g = shake * shake;
+        camera.position.x += (Math.random() - 0.5) * g * 1.2;
+        camera.position.y += (Math.sin(t * 62) + (Math.random() - 0.5) * 0.7) * g * 0.9;
+        camRoll = Math.sin(t * 47) * g * 0.05;
+    } else if (camRoll !== 0) {
+        camRoll = 0;
     }
 
     // La camara cabecea hacia abajo en la bajada. Sin esto la calzada se hunde
@@ -6431,7 +6562,9 @@ function frame(now) {
     // Alabeo: la camara se tumba un poco hacia dentro de la curva. Va DESPUES
     // de lookAt, que reescribe la rotacion entera. Un grado escaso: lo justo
     // para que el giro se sienta en el cuerpo sin marear.
-    camera.rotation.z += curveAtZ(cam.aimZ) * 0.022;
+    // El alabeo del golpe se suma al de la curva. Va aqui y no antes porque
+    // lookAt reescribe la rotacion entera.
+    camera.rotation.z += curveAtZ(cam.aimZ) * 0.022 + camRoll;
 
     renderer.render(scene, camera);
 }
