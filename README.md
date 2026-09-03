@@ -267,6 +267,14 @@ Lo que importa mantener si se toca:
 - **La cuenta atrás del anuncio corre por reloj propio**, no por el estado del
   reproductor: si un bloqueador tumba el iframe, el jugador revive igual.
   Cobrarle el fallo de otro sería injusto, y además le dejaría sin salida.
+- **El vídeo arranca silenciado, y `mute=1` no es un descuido.** Chrome bloquea
+  el arranque automático con sonido en un iframe de otro dominio salvo que el
+  usuario tenga historial con YouTube, así que sin silenciar se quedaba parado
+  en el fotograma de portada para buena parte de la gente. Ya que va a
+  arrancar solo, mejor que se vea moviéndose; el aviso bajo el título dice
+  dónde está el altavoz.
+- **Se rota entre los Shorts al azar**, para que quien muera dos partidas
+  seguidas no vea el mismo anuncio.
 - **El iframe no existe hasta que se abre el panel.** `arcade.html` no hace ni
   una petición a terceros mientras nadie muera y acepte el anuncio, y se usa
   el dominio `youtube-nocookie.com`. Al cerrar el panel el iframe se

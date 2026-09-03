@@ -416,10 +416,11 @@ const CEFAS = {
         { id: 'fb', name: 'Facebook',  url: 'https://facebook.com/cefas.pan' },
         { id: 'tt', name: 'TikTok',    url: 'https://www.tiktok.com/@cefas.pan' }
     ],
-    // Identificadores de los Shorts que se rotan al revivir. Con la lista
-    // vacia el panel sigue funcionando: ensena el cartel del patrocinador y
-    // concede el revivir igual, solo que sin video.
-    shorts: [],
+    // Identificadores de los Shorts que se rotan al revivir: se elige uno al
+    // azar cada vez, para que quien muera dos partidas seguidas no vea el
+    // mismo anuncio. Vaciar la lista no rompe nada: el panel cae al cartel
+    // del patrocinador y concede el revivir igual.
+    shorts: ['wQpgQAirBr0', 'MEt51UHtAkM', '50d_PAI9jc4'],
     // Segundos antes de habilitar "Continuar". Corre por reloj propio y no
     // depende de que el reproductor llegue a cargar: si un bloqueador tumba
     // el iframe, el jugador revive igual. Castigarle por tener un bloqueador
@@ -3637,15 +3638,24 @@ function offerRevive() {
     const list = CEFAS.shorts;
     if (list.length) {
         const id = list[(Math.random() * list.length) | 0];
-        dom.reviveSub.textContent =
+        dom.reviveSub.innerHTML =
             'Mira el anuncio de nuestro patrocinador y vuelves a la calzada con ' +
-            'una vida y el escudo puesto. Solo una vez por carrera.';
+            'una vida y el escudo puesto. Solo una vez por carrera.' +
+            '<br><small style="opacity:.7">Empieza sin sonido: toca el altavoz ' +
+            'del vídeo para oírlo.</small>';
         const f = document.createElement('iframe');
         // nocookie: el dominio sin seguimiento de YouTube. Y el iframe no se
         // crea hasta este momento, asi que quien no llega a morir —o rechaza
         // el anuncio— no hace ni una peticion a terceros.
+        //
+        // mute=1 no es un descuido. Chrome bloquea el arranque automatico con
+        // sonido en un iframe de otro dominio salvo que el usuario tenga
+        // historial con YouTube, asi que sin silenciar el video se quedaba
+        // parado en el fotograma de portada para buena parte de la gente. Ya
+        // que va a arrancar solo, mejor que se vea moviendose y que quien
+        // quiera oirlo le de al altavoz.
         f.src = 'https://www.youtube-nocookie.com/embed/' + id +
-                '?autoplay=1&rel=0&playsinline=1&modestbranding=1';
+                '?autoplay=1&mute=1&rel=0&playsinline=1&modestbranding=1';
         f.title = 'Anuncio de ' + CEFAS.name;
         f.allow = 'autoplay; encrypted-media; picture-in-picture';
         f.referrerPolicy = 'strict-origin-when-cross-origin';
