@@ -249,8 +249,9 @@ de los efectos (tecla `N`).
 cambiar de anunciante, de enlaces o de vídeos es tocar ese objeto y nada más.
 Dos formatos, y ninguno interrumpe la partida:
 
-- **La franja**, en el menú y en la pantalla de fin: PedidosYa, Instagram,
-  Facebook, TikTok y el canal de Shorts. Son momentos en los que el jugador ya
+- **La franja**, en el menú y en la pantalla de fin: la carta, Instagram,
+  Facebook, TikTok y el canal de Shorts, más una **tira apaisada** que rota
+  entre seis. Son momentos en los que el jugador ya
   está parado leyendo.
 - **El panel de revivir**, que solo se ofrece *después* de perder —cuando la
   alternativa es cerrar la pestaña— y una sola vez por carrera. Se ve un Short
@@ -648,6 +649,45 @@ Lo que importa mantener si se toca:
   en el fotograma de portada para buena parte de la gente. Ya que va a
   arrancar solo, mejor que se vea moviéndose; el aviso bajo el título dice
   dónde está el altavoz.
+- **Uno de cada veinte anuncios lleva vídeo; los otros diecinueve son un
+  cartel.** El vídeo pide un iframe a un tercero, arranca solo y tarda en
+  cargar; el cartel es una imagen del propio origen y está puesta antes de que
+  el jugador levante la vista. Un 5 % es bastante para que el canal siga
+  apareciendo sin que revivir se convierta en un trámite. Medido sobre 600
+  tiradas: 4,2 %.
+
+- **El cartel va con `contain`, no con `cover`.** Los seis carteles son 9/16
+  clavados y el hueco del panel también… salvo cuando `max-height: 46vh` lo
+  achata, que es justo lo que pasa en un móvil apaisado. Con `cover` ahí se
+  recortaban el logotipo de arriba y la dirección web de abajo, que son las dos
+  cosas que un cartel tiene que decir. Prefiero dos franjas oscuras a los lados.
+
+- **Y hubo que apagar a mano el texto de repuesto.** `.short-fallback` lleva
+  `display: grid`, que gana al `display: none` del atributo `hidden`. Con el
+  vídeo no se notaba —el iframe es opaco y lo tapaba entero—; con el cartel, el
+  texto se colaba por las franjas de los lados.
+
+- **Los banners solo en el menú y en el fin de partida**, nunca sobre el juego
+  y nunca durante una partida. Y no en el panel de revivir: ahí ya hay un
+  cartel a pantalla completa, y dos anuncios en la misma tarjeta es
+  exactamente lo que hace que se cierre.
+
+- **Se repintan en `refreshMenu`, no al arrancar.** Es el único sitio por el
+  que se pasa siempre al volver al menú o al acabar una partida. Pintándolos
+  una sola vez, el banner elegido era el mismo durante toda la sesión y la
+  rotación no servía de nada. Verificado: los seis salen en 40 repintados.
+
+- **Catorce megas de PNG no se sirven.** Los originales de los anuncios son
+  941×1672 a dos megas cada uno. Reescalados a 720 de ancho (carteles) y 840
+  (banners) y guardados en WebP quedan en **753 KB los doce**. Los originales
+  se quedan en disco, ignorados por git, por si hay que volver a exportarlos.
+
+- **La hoja de banners venía en una sola imagen** y se cortó midiendo los
+  separadores, no a ojo: filas de color uniforme de lado a lado en
+  310, 604, 897, 1190 y 1403. Cada tira conserva su propio alto —no todas
+  miden lo mismo— y por eso el CSS no les impone `aspect-ratio`: forzarles una
+  proporción común recortaría o estiraría la mitad.
+
 - **Se rota entre los Shorts al azar**, para que quien muera dos partidas
   seguidas no vea el mismo anuncio.
 - **El iframe no existe hasta que se abre el panel.** `arcade.html` no hace ni

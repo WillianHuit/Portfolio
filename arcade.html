@@ -807,6 +807,36 @@
             opacity: 0.6;
         }
 
+        /* La tira apaisada del patrocinador. Va DEBAJO de la franja de
+           enlaces y solo en el menú y en el fin de partida: nunca sobre el
+           juego y nunca durante una partida.
+
+           `aspect-ratio` no se declara: las seis tiras no miden lo mismo de
+           alto, y forzarles una proporción común recortaría o estiraría la
+           mitad. Con `height: auto` cada una ocupa lo suyo. */
+        .sponsor-banner {
+            display: block;
+            margin-top: 0.7rem;
+            border-radius: 0.6rem;
+            overflow: hidden;
+            border: 1px solid rgba(239, 230, 210, 0.16);
+            line-height: 0;
+            transition: transform 0.16s ease, border-color 0.16s ease;
+        }
+
+        .sponsor-banner img { width: 100%; height: auto; display: block; }
+
+        .sponsor-banner:hover,
+        .sponsor-banner:focus-visible {
+            transform: translateY(-1px);
+            border-color: rgba(200, 134, 47, 0.6);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .sponsor-banner { transition: none; }
+            .sponsor-banner:hover, .sponsor-banner:focus-visible { transform: none; }
+        }
+
         .sponsor-links {
             display: flex;
             flex-wrap: wrap;
@@ -882,6 +912,21 @@
         .short-host[hidden] { display: none !important; }
         .short-host iframe { width: 100%; height: 100%; border: 0; display: block; }
 
+        /* El cartel ocupa el mismo hueco que el reproductor, así que el panel
+           mide lo mismo caiga uno u otro y no da ningún salto.
+
+           `contain`, no `cover`. Los carteles son 9/16 clavados y el hueco
+           también… salvo cuando `max-height: 46vh` lo achata en una ventana
+           baja, que es justo lo que pasa en un móvil apaisado. Con `cover` ahí
+           se recortaba el logo de arriba y la dirección web de abajo: los dos
+           extremos de un cartel son lo que un cartel tiene que decir. */
+        .ad-poster { position: absolute; inset: 0; display: block; }
+        .ad-poster img {
+            width: 100%; height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
         .short-fallback {
             position: absolute;
             inset: 0;
@@ -894,6 +939,12 @@
             line-height: 1.5;
             opacity: 0.75;
         }
+
+        /* `display: grid` gana al `display: none` que trae el atributo hidden,
+           así que hay que decirlo a mano. Con el vídeo no se notaba —el iframe
+           es opaco y lo tapaba entero—, pero el cartel se ve entero y deja dos
+           franjas a los lados por las que se colaba el texto de repuesto. */
+        .short-fallback[hidden] { display: none !important; }
 
         .revive-timer {
             font-size: 0.78rem;

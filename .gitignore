@@ -1,0 +1,5 @@
+# Los originales de los anuncios: PNG de 941x1672 a dos megas cada uno, catorce
+# en total. Lo que sirve la pagina son los .webp que salen de ellos —753 KB
+# entre los doce—, y esos si van al repositorio. Los originales se quedan en
+# disco por si hay que volver a exportarlos con otro recorte o otra calidad.
+src/img/ads/*.png

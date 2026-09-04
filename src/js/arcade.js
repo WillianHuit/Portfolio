@@ -626,7 +626,7 @@ const CEFAS = {
     // mismo tamano y no se rompe nada.
     logo: 'src/img/logo-cefas.png',
     initials: 'CP',
-    order: 'https://www.pedidosya.com.gt/restaurantes/ciudad-de-guatemala/cefas-panaderia-6374a132-54b4-4157-8e55-ebbc0e6cf786-menu',
+    order: 'https://cefaspan.github.io/web/menu/',
     channel: 'https://www.youtube.com/@cefas.panaderia/shorts',
     social: [
         { id: 'ig', name: 'Instagram', url: 'https://www.instagram.com/cefas.pan/' },
@@ -638,6 +638,26 @@ const CEFAS = {
     // mismo anuncio. Vaciar la lista no rompe nada: el panel cae al cartel
     // del patrocinador y concede el revivir igual.
     shorts: ['wQpgQAirBr0', 'MEt51UHtAkM', '50d_PAI9jc4'],
+    // Cada cuanto toca video en vez de cartel. El video pide un iframe a
+    // YouTube, arranca solo y tarda en cargar; el cartel es una imagen del
+    // propio origen que aparece al instante. Uno de cada veinte es bastante
+    // para que el canal siga apareciendo sin que revivir se vuelva un tramite.
+    videoOdds: 0.05,
+    // Carteles verticales, del mismo formato 9/16 que el hueco del panel: no
+    // hace falta reservar sitio distinto ni el panel da un salto al entrar.
+    posters: [
+        'src/img/ads/ad-game.webp', 'src/img/ads/ad-game-2.webp',
+        'src/img/ads/ad-food.webp', 'src/img/ads/ad-bagget.webp',
+        'src/img/ads/ad-love.webp', 'src/img/ads/ad-more.webp'
+    ],
+    // Y las tiras apaisadas, para el menu y el fin de partida. Ahi no
+    // interrumpen nada: son las dos pantallas en las que el jugador ya ha
+    // dejado de jugar.
+    banners: [
+        'src/img/ads/banner-pan-fresco.webp', 'src/img/ads/banner-antojo.webp',
+        'src/img/ads/banner-pausa.webp', 'src/img/ads/banner-sube-nivel.webp',
+        'src/img/ads/banner-mas-dulce.webp', 'src/img/ads/banner-conecta.webp'
+    ],
     // Segundos antes de habilitar "Continuar". Corre por reloj propio y no
     // depende de que el reproductor llegue a cargar: si un bloqueador tumba
     // el iframe, el jugador revive igual. Castigarle por tener un bloqueador
@@ -655,9 +675,36 @@ const SOCIAL_ICONS = {
     order: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h13l-1.6 8.4a2 2 0 0 1-2 1.6H9.1a2 2 0 0 1-2-1.65L5.6 3.5A1 1 0 0 0 4.6 2.7H2.5v2h1.3zM9.5 17.8a1.85 1.85 0 1 1-1.85 1.85A1.85 1.85 0 0 1 9.5 17.8zm7.4 0a1.85 1.85 0 1 1-1.85 1.85A1.85 1.85 0 0 1 16.9 17.8z"/></svg>'
 };
 
+// Uno al azar de una lista, o cadena vacia si esta vacia. Sale aparte porque
+// se usa para los carteles y para los banners, y en los dos casos lo que
+// importa es que no salga el mismo dos veces seguidas por casualidad de
+// escribirlo dos veces.
+function pickAd(lista) {
+    return lista && lista.length ? lista[(Math.random() * lista.length) | 0] : '';
+}
+
+// La tira apaisada. Va detras de la franja del patrocinador, nunca encima del
+// juego y nunca durante una partida: el trato es que la publicidad ocupe las
+// pantallas en las que ya se ha parado de jugar.
+//
+// Si el archivo no esta, el enlace se quita entero en vez de dejar el hueco
+// roto de una imagen que no carga.
+function sponsorBanner() {
+    const src = pickAd(CEFAS.banners);
+    if (!src) return '';
+    return '<a class="sponsor-banner" href="' + CEFAS.order + '" ' +
+        'target="_blank" rel="noopener noreferrer" ' +
+        'aria-label="' + CEFAS.name + '">' +
+        '<img src="' + src + '" alt="" loading="lazy" decoding="async" ' +
+        'onerror="this.parentElement.remove()">' +
+        '</a>';
+}
+
 // La franja. Se pinta en el menu, en el fin de partida y bajo el panel de
-// revivir; el mismo trozo de HTML en los tres sitios.
-function sponsorStrip() {
+// revivir; el mismo trozo de HTML en los tres sitios. El banner solo en los
+// dos primeros: en el panel de revivir ya hay un cartel a pantalla completa,
+// y dos anuncios en la misma tarjeta es justo lo que hace que se cierre.
+function sponsorStrip(conBanner) {
     const link = (url, icon, label, cls) =>
         '<a class="slink' + (cls ? ' ' + cls : '') + '" href="' + url +
         '" target="_blank" rel="noopener noreferrer">' +
@@ -674,17 +721,20 @@ function sponsorStrip() {
         '<b class="sponsor-name">' + CEFAS.name + '</b></span>' +
         '</div>' +
         '<div class="sponsor-links">' +
-        link(CEFAS.order, 'order', 'Pedir en PedidosYa', 'slink-order') +
+        link(CEFAS.order, 'order', 'Ver la carta', 'slink-order') +
         CEFAS.social.map(x => link(x.url, x.id, x.name)).join('') +
         link(CEFAS.channel, 'yt', 'Shorts') +
-        '</div>';
+        '</div>' +
+        (conBanner ? sponsorBanner() : '');
 }
 
+// Se repinta cada vez que se entra al menu o se acaba una partida, no una vez
+// al arrancar: si se pintara una sola vez, el banner elegido seria el mismo
+// durante toda la sesion y la rotacion no serviria de nada.
 function paintSponsors() {
-    const html = sponsorStrip();
-    for (const el of [dom.sponsorMenu, dom.sponsorOver, dom.sponsorRevive]) {
-        if (el) el.innerHTML = html;
-    }
+    if (dom.sponsorMenu) dom.sponsorMenu.innerHTML = sponsorStrip(true);
+    if (dom.sponsorOver) dom.sponsorOver.innerHTML = sponsorStrip(true);
+    if (dom.sponsorRevive) dom.sponsorRevive.innerHTML = sponsorStrip(false);
 }
 
 // ===========================================================================
@@ -6347,6 +6397,8 @@ function teardownRevive() {
     // mantiene sonando por debajo de la partida.
     const frame = dom.shortHost.querySelector('iframe');
     if (frame) frame.remove();
+    const cartel = dom.shortHost.querySelector('.ad-poster');
+    if (cartel) cartel.remove();
     dom.shortFallback.hidden = false;
     // La musica del juego se habia bajado para no pelearse con el anuncio
     if (music.gain) music.gain.gain.value = music.on ? 0.075 : 0;
@@ -6368,8 +6420,38 @@ function offerRevive() {
     // Silencio: dos musicas a la vez no es un anuncio, es ruido.
     if (music.gain) music.gain.gain.value = 0;
 
+    // Uno de cada veinte lleva video; el resto, cartel. El video pide un
+    // iframe a un tercero, arranca solo y tarda; el cartel es una imagen del
+    // propio origen y esta puesta antes de que el jugador levante la vista.
+    const cartel = pickAd(CEFAS.posters);
     const list = CEFAS.shorts;
-    if (list.length) {
+    const conVideo = list.length && (!cartel || Math.random() < CEFAS.videoOdds);
+
+    if (cartel && !conVideo) {
+        dom.reviveSub.textContent =
+            'Un momento con nuestro patrocinador y vuelves a la calzada con una ' +
+            'vida y el escudo puesto. Solo una vez por carrera.';
+        // El cartel entero es el enlace: a esta altura de la partida el
+        // jugador esta mirando justo ahi, y pedirle que busque un boton
+        // pequeno seria pedirle dos cosas.
+        const a = document.createElement('a');
+        a.className = 'ad-poster';
+        a.href = CEFAS.order;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.setAttribute('aria-label', CEFAS.name);
+        const img = document.createElement('img');
+        img.src = cartel;
+        img.alt = 'Anuncio de ' + CEFAS.name;
+        img.decoding = 'async';
+        // Si la imagen falta, se quita el enlace y queda a la vista el cartel
+        // tipografico de debajo. El revivir se concede igual: corre por reloj
+        // propio y no depende de que llegue a cargar nada.
+        img.onerror = () => a.remove();
+        a.appendChild(img);
+        dom.shortFallback.hidden = true;
+        dom.shortHost.appendChild(a);
+    } else if (conVideo) {
         const id = list[(Math.random() * list.length) | 0];
         dom.reviveSub.innerHTML =
             'Mira el anuncio de nuestro patrocinador y vuelves a la calzada con ' +
@@ -6567,6 +6649,10 @@ function refreshMenu() {
     dom.menuBank.textContent = save.bank;
     dom.menuBest.textContent = save.best;
     dom.menuRoute.textContent = REGIONS[save.start].name + ' · ' + REGIONS[save.start].dept;
+    // Aqui, y no al arrancar: es el unico sitio por el que se pasa siempre al
+    // volver al menu o al acabar una partida, y es lo que hace que el banner
+    // rote en vez de quedarse el mismo toda la sesion.
+    paintSponsors();
 }
 
 function swatch(colors) {
