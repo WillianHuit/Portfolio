@@ -174,12 +174,12 @@ está plantada.**
 | Derrumbe | Caen piedras del cerro **sobre ese carril**. En los dos márgenes, un tronco de lado a lado. |
 | Ganado | Una **vaca** entra por ese margen y cruza la calzada al paso hasta el otro. |
 | Parada de camioneta | Por ese carril viene un **bus** de frente, que no se aparta ni se salta. |
-| Curva | La calzada **cierra de verdad hacia ese lado**, se corre un 16 % más y el tramo va limpio de obstáculos: solo entran enemigos. **El carril que te va a sacar se pinta de rojo**, y quedarse ~2 s en él te saca de la carretera. |
+| Curva | La calzada **cierra de verdad hacia ese lado**, se corre un 16 % más y el tramo va limpio de obstáculos: solo entran enemigos. **El carril de FUERA se pinta de rojo**: es hacia donde tira la inercia, y quedarse ~2 s en él te saca de la carretera. |
 | Pendiente | Bajada real de 150 unidades: la calzada se hunde por delante, la cámara cabecea y se corre un 20 % más. Sin obstáculos ni tramos elevados. |
 | `] [` Carril estrecho | Los tres carriles **se vuelven uno**. Por los lados ya no hay calzada: quien siga ahí se cae. |
 | Bifurcación en Y | Viene una bifurcación. |
 | Prohibido virar (disco rojo) | Ese ramal del cruce está **cortado por un derrumbe**. Meterse por ahí se acabó. |
-| Hueco | Un vacío de lado a lado en la calzada. |
+| Hueco | Uno de dos: un vacío de lado a lado, o **un hundimiento del firme** en uno o dos carriles. En el segundo caso los carriles que se van a caer parpadean en rojo mucho antes, y el que se salva lleva una viga o un sumidero: se pasa agachándose o saltando, nunca cambiándose de carril. |
 
 Zona escolar, paso de peatones y calzada resbaladiza son las únicas de
 ambiente, atadas al tipo de departamento y con cuentagotas. **El murciélago y
@@ -322,6 +322,69 @@ Lo que importa mantener si se toca:
   mide cuatro píxeles de ancho y lo único que se distingue es su borde.
 - **Y late.** Un rojo fijo se lee como parte del decorado de la zona; latiendo
   se lee como un aviso, que es lo que es.
+
+- **El rojo va por FUERA de la curva.** La primera versión pintaba el carril
+  de dentro, que es justo el seguro. Lo que saca al jugador de la carretera no
+  es la curva: es la inercia, y la inercia empuja hacia el lado contrario al
+  que cierra el trazado. Con el rojo por dentro la marca enseñaba a quedarse
+  exactamente donde mata. El cartel sigue en el lado hacia el que gira la
+  calzada, porque un cartel de curva dice para dónde va la carretera —es lo
+  que dice en todas las carreteras—; quien avisa de dónde no hay que estar es
+  el suelo.
+
+- **El firme que se hunde se dibuja en tres tablas, no con el despiece de la
+  zona.** Para tirar un tercio de la calzada hace falta que haya un tercio que
+  tirar, y el despiece no lo garantiza: en Tikal la losa es una pieza única de
+  lado a lado —el mismo `cuts = 1` que tumbó el primer intento del carril
+  rojo—, así que ninguna celda coincide con un carril. Dentro del tramo la
+  calzada se pinta en tres tablas iguales y cada una cae por su cuenta. La
+  sub-base se quita entera: es una pieza de lado a lado y taparía el agujero
+  desde abajo.
+
+- **Se cae al cuadrado y volcando.** Bajar lineal y a plomo se leía como una
+  plataforma de ascensor. Con la aceleración al cuadrado y un vuelco hacia
+  fuera se lee como lo que es: un suelo que se rompe.
+
+- **El desplome empieza a 46 unidades, no al llegar.** Antes de eso solo hay
+  marca roja parpadeando. Ese margen es lo único que separa un obstáculo de una
+  trampa: da tiempo a ver cuál es el carril bueno, a cambiarse, y aun así a ver
+  caer el firme por el rabillo del ojo. A la velocidad de crucero el agujero
+  queda abierto unas treinta unidades antes de llegar a él.
+
+- **La curva late y el hundimiento parpadea.** El mismo material sirve a los
+  dos —no coinciden nunca, `trackBusy` no deja armar un tramo con otro puesto—
+  pero no dicen lo mismo. El latido de la curva es un aviso que dura todo el
+  tramo; el parpadeo cuadrado del hundimiento es una cuenta atrás.
+
+- **En el carril que se salva solo puede haber lo que se libra con el cuerpo.**
+  Una estela ahí sería muerte segura: solo se esquiva cambiándose de carril, y
+  los otros dos son agujero. El tramo se arma con su propio obstáculo —viga o
+  sumidero— y con su propio jade, y `enHundido` cierra la puerta a todo lo
+  demás. También se niega a armarse si hay un tramo elevado cerca: su tablero
+  cruzaría por encima del agujero y el jugador lo pasaría andando por el aire.
+
+- **Los dos ramales se pisaban durante segundo y medio.** La separación de la
+  bifurcación vale cero en la X y crece hacia el fondo, que es lo que hace que
+  se vea abrirse. Pero a la altura del jugador eso significa que, en el momento
+  de elegir, las dos calzadas de 8,4 de ancho estaban a medio metro una de la
+  otra: superpuestas. Se veía —y era— como si se pudiera pasar de un camino al
+  otro andando. Ahora el ramal descartado, además de pivotar, **se aparta en
+  bloque** con una curva rápida al principio: medido, las dos calzadas están
+  despegadas del todo a las tres décimas. Y el divisor pasa de 22 a 30
+  unidades, porque su único trabajo es impedir el cruce mientras siguen juntas.
+
+- **Los poderes se llevan puestos.** El HUD ya dice cuál está activo, pero
+  mirarlo cuesta el medio segundo que no hay. El escudo es una burbuja —es el
+  único poder sin reloj, así que es el único que puede permitirse una forma
+  cerrada y quieta— y los demás son un puñado de chispas del color del poder.
+  Cuelgan de `playerGroup` y no de `playerBody`: el cuerpo se tumba y se estira
+  al deslizarse, y una burbuja aplastada en un óvalo no se lee como escudo.
+
+- **Y cada poder mueve las chispas de otra manera.** El color solo no basta: a
+  esta velocidad dos naranjas parecidos son el mismo naranja. El imán las trae
+  en anillo cerrado y bajo, el jade doble las sube en espiral, el ámbar las
+  deja atrás como un rastro y el vuelo las manda arriba dando vueltas deprisa.
+  La forma se lee de un vistazo; el color, no siempre.
 
 - **El golpe se ve y se siente.** Viñeta roja a pantalla completa que entra
   llena y se despeja al cuadrado en cuatro décimas —una pantalla teñida durante

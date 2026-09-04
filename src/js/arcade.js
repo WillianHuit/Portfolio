@@ -177,7 +177,9 @@ const BOOST_POOL = 8;
 // era que no salia ni una bajada ni una curva en dos mil metros.
 const CROSS_EVERY = 780;
 const CROSS_SIGN_AHEAD = 62;        // el rotulo, adelantado a la isleta
-const CROSS_ISLAND_LEN = 22;
+// El divisor. Es lo unico que impide cruzar de un ramal al otro mientras los
+// dos siguen pegados, asi que mide lo que mide por eso y no por estetica.
+const CROSS_ISLAND_LEN = 30;
 // A que coordenada de trazado cae la isleta cuando el cruce nace en SPAWN_Z.
 // Se necesita ANTES de que el cruce exista para poder ir dejando limpio lo que
 // viene, asi que se calcula en vez de leerse.
@@ -201,6 +203,13 @@ const QUIET_POST = 105;             // ...y despues de que los ramales se abran
 // llevas puesta: el ramal que dejas se va abriendo hacia fuera hasta perderse.
 // Es la separacion lo que dice por donde te fuiste, no un rotulo.
 const FORK_SPREAD = 8.4;            // cuanto se separan los dos ramales
+// Y ademas se aparta en bloque nada mas elegir, deprisa al principio: lo que
+// hay que resolver es el primer palmo, cuando las dos calzadas aun se pisan. Sin esto los dos ramales
+// SE SOLAPAN durante mas de un segundo justo delante de los pies: en la X la
+// separacion vale cero y crece hacia el fondo, asi que a la altura del jugador
+// las dos calzadas de 8,4 de ancho estaban a medio metro una de otra y parecia
+// que se podia pasar de una a la otra andando.
+const FORK_PUSH = 11;
 const FORK_LEN = 105;               // unidades en las que se abren
 const FORK_CLEAR = 70;              // margen sin objetos alrededor de la X
 
@@ -262,6 +271,22 @@ const TURN_HOLD = 1.9;
 // transiciones— pero las transiciones son largas a proposito: medidas, con
 // ocho unidades la calzada se cerraba en un tercio de segundo y no daba tiempo
 // ni a verla estrecharse. Lo que hay que ver venir es el embudo.
+// --- Hundimiento del firme ---
+// Uno o dos carriles se desploman y dejan un agujero de verdad. Se pintan de
+// rojo y parpadean mucho antes de caerse: un suelo que desaparece sin avisar
+// no es un obstaculo, es una trampa.
+//
+// Dentro del tramo la calzada se dibuja en TRES TABLAS iguales, una por
+// carril, en vez de con el despiece de la zona. El despiece no sirve: en
+// Tikal la losa es una sola pieza de lado a lado —medido, cuts = 1— y no
+// habria forma de tirar solo un tercio.
+const SINK_LEN = 34;                // largo del agujero
+const SINK_TRIGGER = 46;            // a que distancia por delante empieza a caerse
+const SINK_DROP_T = 0.5;            // lo que tarda en desplomarse
+const SINK_DEEP = 16;               // cuanto baja la tabla antes de desaparecer
+const SINK_W = ROAD_WIDTH / 3;      // ancho de cada tabla
+const SINK_X = [-SINK_W, 0, SINK_W];
+
 const NARROW_LEN = 62;
 const NARROW_TAPER = 22;            // lo que tarda en cerrarse a cada extremo
 const NARROW_MIN = 1 / 3;           // se queda en un carril de los tres
@@ -786,6 +811,10 @@ const POWERS = {
     amber:  { name: 'Ámbar de Verapaz',    time: 6,    color: 0xe0a02c, weight: 16 },
     flight: { name: 'Vuelo del quetzal',   time: 6.5,  color: 0x7fd4ff, weight: 12 }
 };
+// Cuantas chispas dan la vuelta al personaje. Doce es lo que hace falta para
+// que a la velocidad a la que va esto se lea un anillo y no cuatro puntos.
+const AURA_ORBS = 12;
+
 const POWER_KEYS = Object.keys(POWERS);
 const POWER_CHANCE = 0.17;          // por compas de recorrido
 
@@ -831,6 +860,9 @@ const game = {
     turn: { active: false, s0: 0, dir: 1 },
     turnHold: 0,         // segundos aguantando por el lado que cierra
     narrowS0: -1,        // distancia en la que empieza el estrechamiento
+    // Hundimiento: mask lleva un bit por carril que se cae, t es el reloj del
+    // desplome y free el carril por el que se puede pasar.
+    sink: { active: false, s0: 0, mask: 0, t: 0, free: 1 },
     nextTramo: 0,        // distancia a la que toca armar el proximo tramo
     lastTramo: -1,       // cual salio la vez anterior, para no repetirlo
     crossKind: 1,        // 0 = cruce de destino, 1 = bifurcacion cortada
@@ -1387,6 +1419,7 @@ let renderer, scene, camera;
 let roadMesh, kerbMesh, baseMesh, landMesh, propMesh, ridgeMesh, skyMesh, forkMesh;
 let roadGroup, landGroup;
 let playerGroup, playerBody, playerParts, playerMats, shadowMesh;
+let powerAura, powerOrbs;
 let jaguar, quetzal, groundMesh, sunLight, hemiLight;
 let particleMesh;
 
@@ -1719,7 +1752,7 @@ function buildRoad() {
         new THREE.MeshBasicMaterial({
             color: WARN_LANE_RGB, transparent: true, opacity: 0, depthWrite: false
         }),
-        TILE_COUNT
+        TILE_COUNT * 3
     );
     warnMesh.frustumCulled = false;
     warnMesh.renderOrder = 1;
@@ -1779,7 +1812,8 @@ function forkDX(z, band) {
     // curvarse y marcharse, en vez de deslizarse de lado en bloque.
     const mio = f.chosen !== 0 && band === f.chosen;
     const k = mio ? 1 : 1 + f.away * f.away * 5;
-    return band * forkSpread(game.distance - z) * k -
+    return band * forkSpread(game.distance - z) * k +
+           (mio ? 0 : band * (1 - (1 - f.away) * (1 - f.away)) * FORK_PUSH) -
            f.chosen * forkSpread(game.distance);
 }
 
@@ -1840,6 +1874,24 @@ function turnGrip(sc) {
     if (t <= 0 || t >= 1) return 0;
     return Math.sin(t * Math.PI);
 }
+
+// --- Hundimiento ---
+// Cuanto ha caido ya la tabla de este carril en esta coordenada de trazado:
+// -1 si ahi no hay hundimiento, 0 mientras aguanta, 1 cuando ya no hay suelo.
+function sinkFall(sc, lane) {
+    const S = game.sink;
+    if (!S.active || !(S.mask & (1 << lane))) return -1;
+    if (sc < S.s0 || sc > S.s0 + SINK_LEN) return -1;
+    return Math.min(1, S.t / SINK_DROP_T);
+}
+
+// Ahi ya no hay nada sobre lo que correr.
+function sinkHole(sc, lane) { return sinkFall(sc, lane) >= 1; }
+
+// Que tabla pisa una x dada. No se usa player.lane: a media pasada de carril
+// el cuerpo esta ya sobre la de al lado, y lo que decide es donde estan los
+// pies, no a que carril apunta la ultima tecla.
+function sinkSlabAt(x) { return x < -SINK_W / 2 ? 0 : (x > SINK_W / 2 ? 2 : 1); }
 
 // --- Estrechamiento ---
 // Fraccion del ancho de calzada que queda en pie. Uno fuera del tramo, un
@@ -1930,10 +1982,10 @@ const roadCellOn = new Uint8Array(TILE_COUNT * ROAD_CELLS);
 // punado de veces por minuto; subir el buffer de color entero en cada frame
 // era medio megabyte por segundo a la GPU para reescribir los mismos valores.
 const roadTileRegion = new Int8Array(TILE_COUNT).fill(-1);
-// Carril marcado en rojo en cada losa: 0 ninguno, 1 el izquierdo, 3 el
-// derecho. Va aparte de la region porque cambia por otro motivo, y como el
-// repintado solo ocurre cuando alguno de los dos se mueve, marcar la curva no
-// cuesta un solo color de mas por frame.
+// Carriles marcados en rojo en cada losa, un bit por carril. Va aparte de la
+// region porque cambia por otro motivo, y como el repintado solo ocurre cuando
+// alguno de los dos se mueve, marcar la curva no cuesta un solo color de mas
+// por frame.
 const roadTileWarn = new Int8Array(TILE_COUNT);
 const _rw = new THREE.Color();
 let warnAny = false;
@@ -1952,10 +2004,14 @@ const WARN_LANE_W = 2.5;            // algo menos que el carril, para que se vea
 const WARN_LANE_GRIP = 0.16;
 
 // Que carril hay que marcar en un punto del trazado, o -1 si ninguno.
+//
+// El de FUERA. La calzada cierra hacia game.turn.dir, asi que la inercia
+// empuja hacia el contrario: por ahi es por donde se sale uno. Marcar el de
+// dentro —que es lo que hacia— senalaba justo el carril seguro.
 function warnLaneAt(sc) {
     if (!game.turn.active) return -1;
     if (turnGrip(sc) < WARN_LANE_GRIP) return -1;
-    return game.turn.dir < 0 ? 0 : 2;
+    return game.turn.dir < 0 ? 2 : 0;
 }
 const _rc = new THREE.Color();
 
@@ -2050,7 +2106,14 @@ function updateRoadCurve() {
         // "cuidado con eso": la senal avisa de que viene una curva, pero solo
         // el suelo puede decir cual de los tres carriles es el que te tira.
         const wl = warnLaneAt(sWorld);
-        const warn = wl < 0 ? 0 : wl + 1;
+        const sf0 = sinkFall(sWorld, 0);
+        const sf1 = sinkFall(sWorld, 1);
+        const sf2 = sinkFall(sWorld, 2);
+        const enSink = sf0 >= 0 || sf1 >= 0 || sf2 >= 0;
+        // El despiece cambia dentro del hundimiento, asi que el estado entra
+        // en la cache de color: al entrar y al salir del tramo hay que
+        // repintar, o las tablas saldrian con el color de la losa anterior.
+        const warn = (wl < 0 ? 0 : 1 << wl) | (enSink ? 8 : 0);
         const recolor = roadTileRegion[i] !== ri || roadTileWarn[i] !== warn;
         if (recolor) {
             roadTileRegion[i] = ri;
@@ -2066,82 +2129,141 @@ function updateRoadCurve() {
         // acaba, no que las piedras son mas pequenas.
         const halfW = ROAD_WIDTH * narrowAt(game.distance - zWorld) / 2;
 
-        let c = 0;
-        for (let rr = 0; rr < rows; rr++) {
-            for (let cc = 0; cc < cuts; cc++, c++) {
-                const id = i * ROAD_CELLS + c;
-                let x0 = -ROAD_WIDTH / 2 + cw * cc;
-                let x1 = x0 + cw;
-                if (x0 < -halfW) x0 = -halfW;
-                if (x1 > halfW) x1 = halfW;
-                if (x1 - x0 < 0.03) {
-                    if (roadCellOn[id]) {
-                        roadCellOn[id] = 0;
-                        hideAt(roadMesh, id);
-                        // Se salta el repintado, asi que hay que invalidar la
-                        // cache: si el firme cambia de departamento mientras
-                        // esta escondida, al reaparecer llevaria el color de
-                        // la region anterior para siempre.
-                        roadTileRegion[i] = -1;
-                    }
+        if (enSink) {
+            // Dentro del hundimiento la calzada se dibuja en tres tablas
+            // iguales, una por carril, y cada una cae por su cuenta. Es la
+            // unica forma de tirar un tercio del firme: el despiece de la zona
+            // no se alinea con los carriles —en Tikal es una pieza unica— y
+            // ninguna celda coincidiria con lo que hay que hundir.
+            for (let l = 0; l < 3; l++) {
+                const id = i * ROAD_CELLS + l;
+                const pf = l === 0 ? sf0 : (l === 1 ? sf1 : sf2);
+                if (pf >= 1) {
+                    if (roadCellOn[id]) { roadCellOn[id] = 0; hideAt(roadMesh, id); }
                     continue;
                 }
-                // Desnivel de piedra a piedra, determinista por indice: si
-                // fuera aleatorio por frame la calzada herviria.
-                const bump = jit ? (((i * 7 + c * 13) % 7) - 3) / 3 * jit : 0;
+                // Al cuadrado: la tabla arranca despacio y se desploma. Lineal
+                // parecia una plataforma bajando, no un suelo que se rompe.
+                const cai = pf > 0 ? pf * pf : 0;
                 dummy.position.set(
-                    dx + (x0 + x1) / 2,
-                    -0.5 + dy + bump,
-                    zLocal - TILE_DEPTH / 2 + cd * (rr + 0.5)
+                    dx + SINK_X[l], -0.5 + dy - cai * SINK_DEEP, zLocal
                 );
-                dummy.scale.set((x1 - x0) * gap, 1, cd * gap);
-                dummy.rotation.set(0, 0, 0);
+                dummy.scale.set(SINK_W * 0.97, 1, TILE_DEPTH * 0.97);
+                // Y se vuelca hacia fuera mientras cae: una tabla que baja
+                // recta se lee como un ascensor.
+                dummy.rotation.set(0, 0, cai * 0.5 * (l === 2 ? -1 : 1));
                 dummy.updateMatrix();
                 roadMesh.setMatrixAt(id, dummy.matrix);
                 if (recolor) {
-                    roadMesh.setColorAt(id, _rc.setHex((i + cc + rr) % 2 ? R.roadA : R.roadB));
+                    roadMesh.setColorAt(id, _rc.setHex((i + l) % 2 ? R.roadA : R.roadB));
                 }
                 roadCellOn[id] = 1;
             }
-        }
-        for (; c < ROAD_CELLS; c++) {
-            const id = i * ROAD_CELLS + c;
-            if (!roadCellOn[id]) continue;
-            roadCellOn[id] = 0;
-            dummy.position.set(0, -999, 0);
-            dummy.scale.set(0.0001, 0.0001, 0.0001);
-            dummy.rotation.set(0, 0, 0);
-            dummy.updateMatrix();
-            roadMesh.setMatrixAt(id, dummy.matrix);
-        }
-
-        // Pintura del carril peligroso, si esta losa cae dentro de la curva.
-        if (wl >= 0) {
-            warnAny = true;
-            dummy.position.set(dx + LANE_X[wl], 0.03 + dy, zLocal);
-            dummy.scale.set(WARN_LANE_W, 0.05, TILE_DEPTH * 0.96);
-            dummy.rotation.set(0, 0, 0);
-            dummy.updateMatrix();
-            warnMesh.setMatrixAt(i, dummy.matrix);
+            for (let cc = 3; cc < ROAD_CELLS; cc++) {
+                const id = i * ROAD_CELLS + cc;
+                if (!roadCellOn[id]) continue;
+                roadCellOn[id] = 0;
+                hideAt(roadMesh, id);
+            }
+            // La sub-base es una pieza de lado a lado, asi que aqui taparia el
+            // agujero desde abajo. Se quita entera: lo que queda de calzada son
+            // tablas de una unidad de canto y se leen solas.
+            hideAt(baseMesh, i);
         } else {
-            hideAt(warnMesh, i);
+            let c = 0;
+            for (let rr = 0; rr < rows; rr++) {
+                for (let cc = 0; cc < cuts; cc++, c++) {
+                    const id = i * ROAD_CELLS + c;
+                    let x0 = -ROAD_WIDTH / 2 + cw * cc;
+                    let x1 = x0 + cw;
+                    if (x0 < -halfW) x0 = -halfW;
+                    if (x1 > halfW) x1 = halfW;
+                    if (x1 - x0 < 0.03) {
+                        if (roadCellOn[id]) {
+                            roadCellOn[id] = 0;
+                            hideAt(roadMesh, id);
+                            // Se salta el repintado, asi que hay que invalidar
+                            // la cache: si el firme cambia de departamento
+                            // mientras esta escondida, al reaparecer llevaria
+                            // el color de la region anterior para siempre.
+                            roadTileRegion[i] = -1;
+                        }
+                        continue;
+                    }
+                    // Desnivel de piedra a piedra, determinista por indice: si
+                    // fuera aleatorio por frame la calzada herviria.
+                    const bump = jit ? (((i * 7 + c * 13) % 7) - 3) / 3 * jit : 0;
+                    dummy.position.set(
+                        dx + (x0 + x1) / 2,
+                        -0.5 + dy + bump,
+                        zLocal - TILE_DEPTH / 2 + cd * (rr + 0.5)
+                    );
+                    dummy.scale.set((x1 - x0) * gap, 1, cd * gap);
+                    dummy.rotation.set(0, 0, 0);
+                    dummy.updateMatrix();
+                    roadMesh.setMatrixAt(id, dummy.matrix);
+                    if (recolor) {
+                        roadMesh.setColorAt(id, _rc.setHex((i + cc + rr) % 2 ? R.roadA : R.roadB));
+                    }
+                    roadCellOn[id] = 1;
+                }
+            }
+            for (; c < ROAD_CELLS; c++) {
+                const id = i * ROAD_CELLS + c;
+                if (!roadCellOn[id]) continue;
+                roadCellOn[id] = 0;
+                hideAt(roadMesh, id);
+            }
+
+            // Sub-base, con el tono de la losa oscura bajado a la mitad: lo
+            // que se ve por las juntas es sombra de junta, no jungla.
+            dummy.position.set(dx, -0.62 + dy, zLocal);
+            dummy.scale.set(halfW * 2, 1, TILE_DEPTH);
+            dummy.rotation.set(0, 0, 0);
+            dummy.updateMatrix();
+            baseMesh.setMatrixAt(i, dummy.matrix);
+            if (recolor) baseMesh.setColorAt(i, _rc.setHex(R.roadB).multiplyScalar(0.55));
         }
 
-        // Sub-base, con el tono de la losa oscura bajado a la mitad: lo que
-        // se ve por las juntas es sombra de junta, no jungla.
-        dummy.position.set(dx, -0.62 + dy, zLocal);
-        dummy.scale.set(halfW * 2, 1, TILE_DEPTH);
-        dummy.rotation.set(0, 0, 0);
-        dummy.updateMatrix();
-        baseMesh.setMatrixAt(i, dummy.matrix);
-        if (recolor) baseMesh.setColorAt(i, _rc.setHex(R.roadB).multiplyScalar(0.55));
+        // --- Pintura de aviso ---
+        // El carril que la curva se va a llevar por delante, y los que se
+        // estan a punto de hundir. Es la unica marca del juego que dice "no
+        // estes AQUI" en vez de "cuidado con eso": el cartel avisa de que viene
+        // una curva o un hueco, pero solo el suelo puede decir cual de los tres
+        // carriles es el que te tira.
+        for (let l = 0; l < 3; l++) {
+            const mid = i * 3 + l;
+            const pf = enSink ? (l === 0 ? sf0 : (l === 1 ? sf1 : sf2)) : -1;
+            // La marca vive con la tabla: cuando ya no hay suelo tampoco hay
+            // nada sobre lo que pintar, y el agujero se explica solo.
+            if (l !== wl && !(pf >= 0 && pf < 1)) { hideAt(warnMesh, mid); continue; }
+            warnAny = true;
+            const cai = pf > 0 ? pf * pf : 0;
+            dummy.position.set(
+                dx + (pf >= 0 ? SINK_X[l] : LANE_X[l]),
+                0.03 + dy - cai * SINK_DEEP,
+                zLocal
+            );
+            dummy.scale.set(
+                pf >= 0 ? SINK_W * 0.9 : WARN_LANE_W, 0.05, TILE_DEPTH * 0.96
+            );
+            dummy.rotation.set(0, 0, cai * 0.5 * (l === 2 ? -1 : 1));
+            dummy.updateMatrix();
+            warnMesh.setMatrixAt(mid, dummy.matrix);
+        }
 
         for (let sd = 0; sd < 2; sd++) {
+            // Dentro del hundimiento el bordillo se va con SU carril: dejarlo
+            // en pie al borde del agujero lo convertiria en una cornisa por la
+            // que parece que se puede pasar.
+            const kp = enSink ? (sd ? sf2 : sf0) : -1;
+            if (kp >= 1) { hideAt(kerbMesh, i * 2 + sd); continue; }
+            const kc = kp > 0 ? kp * kp : 0;
             dummy.position.set(
-                dx + (sd ? halfW : -halfW), -0.1 + dy, zLocal
+                dx + (sd ? halfW : -halfW), -0.1 + dy - kc * SINK_DEEP, zLocal
             );
             dummy.scale.set(0.55, 0.8, TILE_DEPTH * 0.94);
-            dummy.rotation.set(0, 0, 0);
+            dummy.rotation.set(0, 0, kc * 0.5 * (sd ? -1 : 1));
             dummy.updateMatrix();
             kerbMesh.setMatrixAt(i * 2 + sd, dummy.matrix);
             if (recolor) {
@@ -2149,7 +2271,7 @@ function updateRoadCurve() {
                 // El bordillo de ese lado tambien: a cien unidades la calzada
                 // mide cuatro pixeles de ancho y lo unico que se distingue del
                 // carril es su borde.
-                if (warn && (sd === 1) === (wl === 2)) {
+                if (wl >= 0 && (sd === 1) === (wl === 2)) {
                     _rc.lerp(_rw.setHex(WARN_LANE_RGB), 0.75);
                 }
                 kerbMesh.setColorAt(i * 2 + sd, _rc);
@@ -2161,9 +2283,14 @@ function updateRoadCurve() {
     // La pintura late despacio. Un rojo fijo se lee como parte del decorado de
     // la zona; latiendo se lee como un aviso, que es lo que es.
     warnMesh.instanceMatrix.needsUpdate = true;
-    warnMesh.material.opacity = warnAny
-        ? 0.5 + Math.sin(game.elapsed * 5.5) * 0.16
-        : 0;
+    // La curva late despacio; el hundimiento PARPADEA, encendido y apagado, que
+    // es lo que se lee como cuenta atras. Los dos tramos no coinciden nunca
+    // —trackBusy no deja armar uno con el otro puesto—, asi que un solo
+    // material puede servir a los dos.
+    warnMesh.material.opacity = !warnAny ? 0
+        : game.sink.active
+            ? (Math.sin(game.elapsed * 11) > 0 ? 0.88 : 0.22)
+            : 0.5 + Math.sin(game.elapsed * 5.5) * 0.16;
     warnAny = false;
 
     roadMesh.instanceMatrix.needsUpdate = true;
@@ -3674,6 +3801,48 @@ function buildPlayer() {
     shadowMesh.position.set(0, 0.03, PLAYER_Z);
     scene.add(shadowMesh);
 
+    // --- Lo que se lleva puesto ---
+    // El HUD ya dice que poder esta activo, pero mirarlo cuesta el medio
+    // segundo que no hay. Lo que se lleva encima se ve sin dejar de mirar la
+    // calzada, que es donde estan los ojos todo el rato.
+    //
+    // Van colgados de playerGroup y no de playerBody a proposito: el cuerpo se
+    // tumba y se estira al deslizarse, y una burbuja aplastada en un ovalo no
+    // se lee como escudo.
+    powerAura = new THREE.Mesh(
+        new THREE.SphereGeometry(1.28, 16, 12),
+        new THREE.MeshBasicMaterial({
+            color: POWERS.shield.color, transparent: true, opacity: 0.2,
+            side: THREE.DoubleSide, depthWrite: false
+        })
+    );
+    powerAura.position.y = 1.3;
+    powerAura.renderOrder = 2;
+    powerAura.visible = false;
+    playerGroup.add(powerAura);
+
+    // El aro del ecuador. La esfera sola, translucida y sin aristas, se pierde
+    // contra un fondo claro; el aro le da un borde que siempre se ve.
+    powerAura.add(new THREE.Mesh(
+        new THREE.TorusGeometry(1.27, 0.05, 6, 20),
+        new THREE.MeshBasicMaterial({
+            color: 0xffe2a8, transparent: true, opacity: 0.75, depthWrite: false
+        })
+    ));
+    powerAura.children[0].rotation.x = Math.PI / 2;
+
+    powerOrbs = new THREE.InstancedMesh(
+        BOX,
+        new THREE.MeshBasicMaterial({
+            color: 0xffffff, transparent: true, opacity: 0.95, depthWrite: false
+        }),
+        AURA_ORBS
+    );
+    powerOrbs.frustumCulled = false;
+    powerOrbs.renderOrder = 2;
+    powerOrbs.visible = false;
+    playerGroup.add(powerOrbs);
+
     applySkin(save.skin);
 }
 
@@ -4044,22 +4213,26 @@ function limpioEntre(a, b) {
 // descartando sitio de sobra: medido, salia un tramo especial cada dos mil
 // metros y una partida normal no veia ninguno.
 function trackBusy(len) {
-    if (game.slopeS0 >= 0 || game.turn.active || game.narrowS0 >= 0) return true;
+    if (game.slopeS0 >= 0 || game.turn.active || game.narrowS0 >= 0 ||
+        game.sink.active) return true;
     // Donde caeria el tramo si se armase ahora mismo, con margen a los lados
     return limpioEntre(game.distance + ARM_AHEAD - 45,
                        game.distance + ARM_AHEAD + len + 45);
 }
 
-// Uno de los tres, evitando repetir el de la vez anterior: con tres cosas y
-// sorteo libre, ver la misma dos veces seguidas pasa una de cada tres.
+// Uno de los cuatro, evitando repetir el de la vez anterior: con sorteo libre,
+// ver el mismo dos veces seguidas pasa una de cada cuatro.
 function armTramo() {
-    let t = (Math.random() * 3) | 0;
-    if (t === game.lastTramo) t = (t + 1 + ((Math.random() * 2) | 0)) % 3;
-    const len = t === 0 ? TURN_LEN : (t === 1 ? SLOPE_LEN : NARROW_LEN);
+    let t = (Math.random() * 4) | 0;
+    if (t === game.lastTramo) t = (t + 1 + ((Math.random() * 3) | 0)) % 4;
+    const len = t === 0 ? TURN_LEN
+              : t === 1 ? SLOPE_LEN
+              : t === 2 ? NARROW_LEN : SINK_LEN;
     if (trackBusy(len)) return false;
     if (t === 0) armTurn();
     else if (t === 1) armSlope();
-    else armNarrow();
+    else if (t === 2) armNarrow();
+    else armSink();
     game.lastTramo = t;
     return true;
 }
@@ -4084,6 +4257,45 @@ function armTurn() {
     game.turnHold = 0;
 }
 
+function armSink() {
+    // Un tramo elevado puesto ANTES de armar esto puede llegar hasta aqui: se
+    // arma doscientas quince unidades por delante, y una plataforma nacida en
+    // el punto de aparicion mide lo bastante para cruzar esa linea. Su tablero
+    // pasaria por encima del agujero y el jugador lo cruzaria andando por el
+    // aire.
+    if (platformNear(-ARM_AHEAD) || platformNear(-ARM_AHEAD - SINK_LEN)) return;
+
+    // Los dos avisos van a los DOS lados: lo que se cae es el firme, y un
+    // cartel en un solo margen se leeria como algo que solo afecta a ese lado.
+    if (spawnWarn('hueco', ARM_SIGN_Z, -1, true) === 0) return;
+    spawnWarn('hueco', ARM_SIGN_Z, 1, true);
+
+    // Se elige primero el carril que SE SALVA y despues cuantos se caen. Al
+    // reves —sortear los que caen— sale la mitad de las veces un tramo con los
+    // tres hundidos, que no es un obstaculo sino un final.
+    const libre = (Math.random() * 3) | 0;
+    let mask = 7 & ~(1 << libre);
+    if (Math.random() < 0.45) {
+        // Solo uno de los dos de al lado: quedan dos carriles buenos.
+        mask = 1 << (Math.random() < 0.5 ? (libre + 1) % 3 : (libre + 2) % 3);
+    }
+
+    game.sink.active = true;
+    game.sink.s0 = game.distance + ARM_AHEAD;
+    game.sink.mask = mask;
+    game.sink.t = 0;
+    game.sink.free = libre;
+
+    // El unico obstaculo del tramo, y en el carril que se salva. Tiene que
+    // poder pasarse SIN cambiarse de carril, asi que solo vale uno de los dos
+    // que se libran con el cuerpo: la viga agachandose o el sumidero saltando.
+    // Una estela ahi, que solo se esquiva de lado, seria muerte segura.
+    const zc = -(ARM_AHEAD + SINK_LEN / 2);
+    spawnObstacle(Math.random() < 0.5 ? DINTEL : CENOTE, libre, zc, 0);
+    // Jade por el carril bueno: ademas de premiar, ensena por donde se pasa.
+    for (let k = 0; k < 5; k++) spawnPickup(libre, zc + 14 - k * 5, 1.3);
+}
+
 function armNarrow() {
     // A los dos lados: lo que se estrecha es la calzada entera, y un cartel en
     // un solo margen se leeria como algo que solo afecta a ese carril.
@@ -4094,8 +4306,19 @@ function armNarrow() {
 
 // Se apagan cuando el jugador los ha dejado atras del todo: pasado ese punto
 // ya no queda nada dibujado dentro y apagarlos no mueve un solo pixel.
-function updateTrackSystems() {
+function updateTrackSystems(dt) {
     const d = game.distance;
+
+    if (game.sink.active) {
+        // El desplome arranca cuando el jugador esta a SINK_TRIGGER: lo
+        // bastante cerca para verlo caerse —que es la mitad del aviso— y lo
+        // bastante lejos para que de tiempo a cambiarse de carril.
+        if (d > game.sink.s0 - SINK_TRIGGER) game.sink.t += dt;
+        if (d > game.sink.s0 + SINK_LEN + 40) {
+            game.sink.active = false;
+            game.sink.t = 0;
+        }
+    }
 
     // La linea del firme se apaga cuando ya no queda calzada por detras de
     // ella: a partir de ahi los dos lados de la comparacion dan lo mismo.
@@ -4143,6 +4366,17 @@ function enTramo(sc) {
     return false;
 }
 
+// El hundimiento se arma con su propio obstaculo y su propio jade, y no cabe
+// nada mas: dos carriles son agujero y el tercero ya lleva algo.
+function enHundido(sc) {
+    if (!game.sink.active) return false;
+    for (let k = -1; k <= 1; k++) {
+        const q = sc + k * TRAMO_MARGEN;
+        if (q > game.sink.s0 - 10 && q < game.sink.s0 + SINK_LEN + 10) return true;
+    }
+    return false;
+}
+
 function enEstrecho(sc) {
     for (let k = -1; k <= 1; k++) {
         if (narrowAt(sc + k * TRAMO_MARGEN) < 1) return true;
@@ -4178,7 +4412,7 @@ function generateChunk(z) {
     // --- Dentro de un tramo especial ---
     // En el estrechamiento no cabe nada: es un carril, y meterle algo dentro
     // seria pedir dos cosas a la vez en el sitio donde menos margen hay.
-    if (enEstrecho(sz)) return;
+    if (enEstrecho(sz) || enHundido(sz)) return;
 
     // En la cuesta y en la curva entran los enemigos y el jade, nada mas. Un
     // obstaculo del suelo ahi no se ve venir —la calzada se va hacia abajo o
@@ -4603,7 +4837,7 @@ function updateCrossings(dt) {
     // segundo. Es lo que hace legible por donde se fue uno: si los dos siguen
     // ahi, abiertos y paralelos, no hay forma de saber cual es el tuyo.
     if (game.fork.active && game.fork.chosen !== 0) {
-        game.fork.away = Math.min(1, game.fork.away + dt / 1.1);
+        game.fork.away = Math.min(1, game.fork.away + dt / 0.55);
     }
 
     for (const c of crossings) {
@@ -4876,6 +5110,72 @@ function updateFall(dt) {
     }
 }
 
+// Cada poder mueve las chispas de otra manera. El color solo no basta: a esta
+// velocidad dos naranjas parecidos son el mismo naranja, y la FORMA si se lee
+// de un vistazo. El iman las trae en anillo cerrado y bajo, el jade doble las
+// sube en espiral, el ambar las deja atras como un rastro y el vuelo las manda
+// arriba dando vueltas deprisa.
+const AURA_SHAPE = {
+    magnet: { r: 1.4,  y: 1.2, sube: 0,   atras: 0,   giro: 3.4, onda: 0.14 },
+    double: { r: 0.95, y: 0.45, sube: 2.0, atras: 0,   giro: 2.6, onda: 0.1 },
+    amber:  { r: 0.8,  y: 1.05, sube: 0,   atras: 2.2, giro: 1.4, onda: 0.45 },
+    flight: { r: 1.2,  y: 1.55, sube: 1.0, atras: 0,   giro: 4.8, onda: 0.22 }
+};
+
+// El poder con cuenta atras que mas dura de los que hay puestos. Si hay dos,
+// manda el que va a seguir ahi: es el que el jugador tiene que tener en la
+// cabeza cuando el otro se apague.
+function activePower() {
+    let mejor = null, t = 0;
+    for (const k in game.powers) {
+        if (game.powers[k] > t) { t = game.powers[k]; mejor = k; }
+    }
+    return mejor;
+}
+
+function updateAuras() {
+    // El escudo es el unico poder sin reloj, asi que es el unico que puede
+    // permitirse una forma cerrada y quieta. Respira despacio para que no se
+    // confunda con una parte del personaje.
+    powerAura.visible = game.shield;
+    if (game.shield) {
+        const b = 1 + Math.sin(game.elapsed * 3.1) * 0.05;
+        powerAura.scale.set(b, b, b);
+        powerAura.material.opacity = 0.17 + Math.sin(game.elapsed * 3.1) * 0.06;
+    }
+
+    const k = activePower();
+    powerOrbs.visible = !!k;
+    if (!k) return;
+    const S = AURA_SHAPE[k];
+    powerOrbs.material.color.setHex(POWERS[k].color);
+    // Los ultimos dos segundos parpadea. Es el mismo aviso que da la barra del
+    // HUD, puesto donde ya se esta mirando.
+    const queda = game.powers[k];
+    powerOrbs.material.opacity =
+        queda < 2 && Math.sin(queda * 18) < 0 ? 0.18 : 0.95;
+
+    for (let i = 0; i < AURA_ORBS; i++) {
+        const f = i / AURA_ORBS;
+        const a = game.elapsed * S.giro + f * Math.PI * 2;
+        // Las que suben o se van hacia atras recorren su camino en bucle, cada
+        // una desfasada: asi el chorro es continuo y no una tanda que aparece
+        // y desaparece de golpe.
+        const t = (game.elapsed * 0.9 + f) % 1;
+        const sc = 0.15 + Math.sin(a * 3) * 0.035;
+        dummy.position.set(
+            Math.cos(a) * S.r,
+            S.y + t * S.sube + Math.sin(a * 2 + game.elapsed * 4) * S.onda,
+            Math.sin(a) * S.r * 0.8 + t * S.atras
+        );
+        dummy.scale.set(sc, sc, sc);
+        dummy.rotation.set(a, a * 0.7, a * 0.4);
+        dummy.updateMatrix();
+        powerOrbs.setMatrixAt(i, dummy.matrix);
+    }
+    powerOrbs.instanceMatrix.needsUpdate = true;
+}
+
 function updatePlayer(dt) {
     if (player.out > 0) { updateFall(dt); return; }
 
@@ -5068,6 +5368,8 @@ function updatePlayer(dt) {
     shadowMesh.scale.set(k, k, 1);
     shadowMesh.material.opacity = Math.max(0.08, 0.4 - h * 0.045);
 
+    updateAuras();
+
     // Invulnerabilidad: se baja la opacidad en vez de ocultar al personaje.
     // Alternar visible lo hacia desaparecer 1,4 s justo cuando mas falta hace
     // saber donde estas.
@@ -5255,7 +5557,7 @@ function scrollWorld(dt) {
     }
 
     updateCrossings(dt);
-    updateTrackSystems();
+    updateTrackSystems(dt);
     runPending();
 
     // --- Nuevos compases ---
@@ -5357,18 +5659,29 @@ function checkCollisions() {
         return;
     }
 
+    // Lo mismo por el firme que se hundio, y por el mismo motivo: no es un
+    // golpe del que protegerse, es que no hay suelo. Cae en vertical, sin
+    // empujon lateral: no le ha dado nada, se ha ido lo que pisaba.
+    if (!flying && player.y < 1.3 &&
+        sinkHole(game.distance, sinkSlabAt(player.x))) {
+        fallOut(0);
+        return;
+    }
+
     // --- Fuerza centrifuga en la curva cerrada ---
-    // Aguantar por el lado hacia el que cierra la curva acaba sacandote de la
-    // carretera. Se cuenta el tiempo y se descuenta al doble en cuanto te
-    // apartas: castiga quedarse, no pasar.
+    // Aguantar por el lado de FUERA de la curva acaba sacandote de la
+    // carretera: es hacia donde tira la inercia, y es el carril pintado de
+    // rojo. Se cuenta el tiempo y se descuenta al doble en cuanto te apartas:
+    // castiga quedarse, no pasar.
     const giro = turnGrip(game.distance);
     if (giro > 0.25 && !flying) {
-        const fuera = game.turn.dir < 0 ? 0 : 2;
+        const fuera = game.turn.dir < 0 ? 2 : 0;
         if (player.lane === fuera) {
             game.turnHold += 1 / 60;
             if (game.turnHold > TURN_HOLD) {
                 game.turnHold = 0;
-                fallOut(game.turn.dir * 16);
+                // Hacia fuera, que es donde tira la inercia.
+                fallOut(-game.turn.dir * 16);
                 return;
             }
         } else {
@@ -5941,6 +6254,8 @@ function startGame() {
     game.turn.active = false;
     game.turnHold = 0;
     game.narrowS0 = -1;
+    game.sink.active = false;
+    game.sink.t = 0;
     game.wrongC = null;
     game.snapT = 1;
     game.crossTaken = 0;
@@ -6208,6 +6523,8 @@ function finishGame() {
     game.fork.mainBand = -1;
     game.snapT = 1;
     game.slopeS0 = -1;
+    game.sink.active = false;
+    game.sink.t = 0;
 
     // Los poderes se apagan al morir. Si el vuelo sobreviviese a la partida,
     // la camara se quedaria encuadrada en el aire durante todo el menu.
