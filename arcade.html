@@ -313,8 +313,29 @@
             stroke-linejoin: round;
         }
 
+        /* El camino entre dos puntos. Discontinuo mientras no se ha recorrido
+           —es ruta prevista, no ruta hecha— y continuo y encendido en cuanto se
+           pasa por él. Es lo que convierte los doce puntos sueltos en un
+           recorrido: sin el trazo no había forma de ver que Tikal lleva a
+           Flores y Flores a Semuc, y el mapa era una constelación. */
+        .mm-leg {
+            stroke: rgba(239, 230, 210, 0.22);
+            stroke-width: 1.1;
+            stroke-dasharray: 2 2.4;
+            stroke-linecap: round;
+            fill: none;
+        }
+
+        .mm-leg.done {
+            stroke: rgba(46, 196, 160, 0.85);
+            stroke-width: 1.6;
+            stroke-dasharray: none;
+        }
+
         .mm-dot { fill: rgba(239, 230, 210, 0.28); }
         .mm-dot.seen { fill: rgba(46, 196, 160, 0.75); }
+        /* La meta se marca sola: es el único punto del que no sale camino. */
+        .mm-dot.goal { stroke: var(--ochre); stroke-width: 1.4; }
 
         .mm-you { fill: var(--ochre); stroke: #2a1a05; stroke-width: 1.2; }
 
@@ -758,6 +779,10 @@
             gap: 0.7rem 0.9rem;
         }
 
+        /* Cuando la franja encabeza el panel en vez de cerrarlo, el aire va
+           debajo: pegada al borde de arriba y separada de lo que sigue. */
+        .sponsor-top { margin-top: 0; margin-bottom: 1.5rem; }
+
         .sponsor-head {
             display: flex;
             align-items: center;
@@ -1015,7 +1040,7 @@
             </div>
 
             <p class="route-note">
-                Salida: <b id="menuRoute">Tikal · Petén</b> ·
+                De Tikal a la capital · ruta vista: <b id="menuRoute">1 de 13</b> ·
                 jade guardado: <b id="menuBank">0</b> ·
                 récord: <b id="menuBest">0</b>
             </p>
@@ -1091,6 +1116,11 @@
     <!-- ===== Fin de partida ===== -->
     <div class="layer" id="over" hidden>
         <div class="panel">
+            <!-- El patrocinio va ARRIBA, antes del marcador. Al pie quedaba
+                 despues de los botones de "otra vez" y "salir": justo detras
+                 de las dos cosas que hacen que nadie siga leyendo. -->
+            <div class="sponsor sponsor-top" id="sponsorOver"></div>
+
             <p class="glyph-mark" aria-hidden="true">◈</p>
             <h1 id="overTitle">FIN</h1>
             <p class="record" id="recordTag"></p>
@@ -1121,8 +1151,6 @@
                 <button class="btn btn-ghost" id="overShopBtn" type="button">Taller</button>
                 <a class="btn btn-ghost" href="index.html">Salir</a>
             </div>
-
-            <div class="sponsor" id="sponsorOver"></div>
         </div>
     </div>
 
@@ -1158,6 +1186,9 @@
                         L104.2 59.4 L94.7 68.6 L80.9 77.9 L75.9 91.9 L66.7 93.0
                         L57.1 104.5 L29.6 104.5 L3.8 89.0 L4.5 74.9 L16.3 50.6
                         L48.4 50.6 L34.6 29.8 Z"/>
+                    <!-- Los caminos entre puntos van DEBAJO de los puntos:
+                         la ruta es el trazo y los puntos son las paradas. -->
+                    <g id="mmRoute"></g>
                     <g id="mmDots"></g>
                     <circle id="mmYou" class="mm-you" cx="69.2" cy="21.8" r="3.6"/>
                 </svg>

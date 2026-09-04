@@ -133,6 +133,11 @@ const REGION_BLEND = 0.62;
 // Celdas por losa de calzada. Dieciocho porque el adoquin de Antigua es de
 // seis por tres; los tramos que usan menos dejan las sobrantes a escala cero.
 const ROAD_CELLS = 18;
+// Y las del ramal descartado de una bifurcacion: el mismo despiece mas la
+// sub-base y los dos bordillos. Lleva adoquin propio porque los dos ramales se
+// intercambian cuando el jugador cambia de carril —el detallado tiene que ser
+// siempre el que pisa— y si uno fuera losa lisa el relevo se veria.
+const FORK_CELLS = ROAD_CELLS + 3;
 // Punto del tramo en el que la calzada cambia de material. Coincide con la
 // mitad de la transicion de cielo y luces, de modo que el cambio de firme cae
 // donde el resto del paisaje ya esta a medio camino.
@@ -180,10 +185,16 @@ const CROSS_SIGN_AHEAD = 62;        // el rotulo, adelantado a la isleta
 // El divisor. Es lo unico que impide cruzar de un ramal al otro mientras los
 // dos siguen pegados, asi que mide lo que mide por eso y no por estetica.
 const CROSS_ISLAND_LEN = 30;
-// A que coordenada de trazado cae la isleta cuando el cruce nace en SPAWN_Z.
-// Se necesita ANTES de que el cruce exista para poder ir dejando limpio lo que
-// viene, asi que se calcula en vez de leerse.
-const CROSS_ISLAND_AT = -SPAWN_Z + CROSS_SIGN_AHEAD;      // 232
+// A que coordenada de trazado empieza a partirse la calzada cuando el cruce
+// nace en SPAWN_Z. Se necesita ANTES de que el cruce exista para poder ir
+// dejando limpio lo que viene, asi que se calcula en vez de leerse.
+//
+// Es la COLA de la isleta, no su centro: mientras el divisor esta ahi la
+// calzada es una sola, y los dos ramales arrancan justo donde el divisor se
+// acaba. Poniendolo en el centro, la mitad trasera de la isleta quedaba ya
+// dentro del reparto y se veia el muro escorado sobre uno de los dos ramales.
+const CROSS_ISLAND_AT =
+    -SPAWN_Z + CROSS_SIGN_AHEAD + CROSS_ISLAND_LEN / 2;   // 247
 
 // Zona sin nada alrededor de la bifurcacion. Antes solo se despejaba el compas
 // que cayera justo encima, y como los enemigos se generaban ANTES de esa
@@ -198,20 +209,48 @@ const QUIET_POST = 105;             // ...y despues de que los ramales se abran
 // lado o por el otro y el paisaje cambiaba de golpe. No habia forma de saber
 // que camino habias tomado, porque los dos eran el mismo camino.
 //
-// Ahora la calzada se parte de verdad. Desde la X salen DOS calzadas de tres
-// carriles que se separan hacia los lados, y el mundo se recoloca sobre la que
-// llevas puesta: el ramal que dejas se va abriendo hacia fuera hasta perderse.
-// Es la separacion lo que dice por donde te fuiste, no un rotulo.
-const FORK_SPREAD = 8.4;            // cuanto se separan los dos ramales
-// Y ademas se aparta en bloque nada mas elegir, deprisa al principio: lo que
-// hay que resolver es el primer palmo, cuando las dos calzadas aun se pisan. Sin esto los dos ramales
-// SE SOLAPAN durante mas de un segundo justo delante de los pies: en la X la
-// separacion vale cero y crece hacia el fondo, asi que a la altura del jugador
-// las dos calzadas de 8,4 de ancho estaban a medio metro una de otra y parecia
-// que se podia pasar de una a la otra andando.
-const FORK_PUSH = 11;
-const FORK_LEN = 105;               // unidades en las que se abren
+// Ahora la calzada se parte de verdad. Desde la cola del divisor salen DOS
+// calzadas de tres carriles que se separan hacia los lados hasta quedar a
+// veintiseis unidades una de otra —mas del doble de lo que miden de ancho— y a
+// partir de ahi siguen paralelas. Lo que se ve por delante es esto:
+//
+//     ####      ####      dos calzadas, muy separadas y paralelas
+//     ####      ####
+//      ###    ###         abriendose
+//        ######
+//          ##             una sola, con el divisor
+//          ##
+//
+// Con las 8,4 del principio las dos vias quedaban a un palmo y se leian como
+// una sola calzada ancha con una raya en medio. Pero 13 en 105 unidades se
+// pasaba al otro lado: abria una V de casi sesenta grados que se leia como un
+// barranco entre dos carreteras, no como una carretera que se parte. Lo que
+// hace falta es SEPARACION, no ANGULO: se baja el reparto y se alarga el tramo
+// en el que ocurre, de modo que las dos vias acaban igual de separadas pero se
+// abren como una Y de verdad.
+const FORK_SPREAD = 11;             // cuanto se separa cada ramal del eje
+const FORK_LEN = 150;               // unidades en las que se abren
 const FORK_CLEAR = 70;              // margen sin objetos alrededor de la X
+// Hueco libre entre el bordillo de una calzada y el de la otra. Nada mas
+// partirse, las dos calzadas de 8,4 de ancho comparten sitio: sus centros
+// estan a unos centimetros y quedan UNA ENCIMA DE LA OTRA, peleandose por el
+// pixel. Lo que se veia no eran dos caminos sino una mancha con cuatro
+// bordillos dentro. Ahora el ramal secundario se RECORTA contra el borde del
+// principal —nace pegado a su bordillo, con este hueco de por medio, y crece
+// hacia fuera segun se abren—, de modo que no se pisan nunca.
+const FORK_GAP = 2.2;
+// Media anchura visible a la altura del jugador. Es la base del recorte por
+// encuadre del ramal descartado: mas alla de esto, y creciendo con la
+// distancia, sus losas ya no caben en pantalla. Antes se apagaba con un reloj
+// —medio segundo despues de elegir— y eso lo hacia desaparecer EN EL AIRE, a
+// mitad de su curva. Ahora se apaga por donde esta, asi que se le ve marchar.
+const FORK_CULL = 13;
+
+// Ultimo tramo, ya dentro de la capital, entre tomar el desvio que lleva a
+// ella y el final de la carrera. Acabar en el propio cruce habria cerrado la
+// partida en el mismo frame en el que aparece el rotulo; asi da tiempo a ver
+// la ciudad, que es el premio.
+const FINISH_RUN = 420;
 
 // Cuanto tarda el paisaje en pasar de un departamento al otro al tomar el
 // desvio. Antes se cambiaba de golpe, en un frame, y se leia como un fallo de
@@ -250,14 +289,34 @@ const SLOPE_SPEED = 1.2;            // lo que se gana en el punto mas empinado
 // propia, mucho mas cerrada, hacia el lado en el que se planto el cartel. El
 // tramo va limpio de obstaculos —solo entran los enemigos— y se corre mas: lo
 // que hay que resolver ahi es la curva, no un obstaculo dentro de la curva.
-const TURN_LEN = 165;               // largo de la curva
+// Largo de la curva. Subio de 165 a 225: a la velocidad de crucero, 165
+// unidades son dos segundos y medio y la curva se acababa antes de que el
+// jugador terminara de colocarse por dentro. Una curva tiene que durar lo
+// bastante para que aguantar la linea sea el ejercicio, no un golpe de volante.
+const TURN_LEN = 225;
 // Cuanto se desplaza el trazado. Parece mucho al lado de las 6,4 unidades del
 // serpenteo de siempre, pero es que la mascara de distancia se come todo lo de
 // dentro de 158 unidades: lo que llega a verse es la ultima franja de calzada,
 // que en pantalla mide cuatro dedos. Con treinta la curva se leia como una
-// carretera casi recta.
-const TURN_AMP = 46;
-const TURN_SPEED = 1.16;
+// carretera casi recta. Y sube con el largo: repartir el mismo desplazamiento
+// en mas unidades habria alargado la curva abriendola, que es lo contrario.
+const TURN_AMP = 60;
+// Lo que se gana en el punto mas cerrado. La curva es el unico tramo donde
+// correr mas es lo que hace que cueste: lo que aprieta contra el borde de
+// fuera es la velocidad, asi que subirla es subir la curva entera.
+const TURN_SPEED = 1.3;
+// Peralte. La curva movia el trazado y subia la velocidad, pero el ENCUADRE
+// seguia igual de recto que en una recta, asi que el peligro no se sentia en
+// ninguna parte: se veia. Ahora la camara se tumba hacia dentro del giro y
+// ademas se va hacia fuera, que es lo que hace la inercia. Ocho grados largos
+// es mucho para un juego en primera persona y poco para uno como este, donde
+// lo unico que se ve del jugador es su espalda.
+//
+// El alabeo de la calzada de siempre —`curveAtZ(cam.aimZ) * 0.022`— no valia
+// aqui: va por la mascara de distancia, que es cero dentro de 158 unidades, y
+// el punto de mira de la camara esta mucho mas cerca que eso.
+const TURN_ROLL = 0.15;             // radianes de alabeo en el punto cerrado
+const TURN_DRIFT = 1.15;            // unidades que la camara se va hacia fuera
 // Segundos que se aguantan por el lado hacia el que cierra la curva antes de
 // salirse. Es tiempo de sobra para cruzar los tres carriles dos veces: quien
 // se sale es porque se quedo, no porque no le diera tiempo.
@@ -280,12 +339,43 @@ const TURN_HOLD = 1.9;
 // carril, en vez de con el despiece de la zona. El despiece no sirve: en
 // Tikal la losa es una sola pieza de lado a lado —medido, cuts = 1— y no
 // habria forma de tirar solo un tercio.
+// El desplome no es del TRAMO, es de cada tabla por separado, y se mide en
+// unidades de calzada y no en segundos. Antes las treinta y cuatro unidades se
+// caian a la vez en cuanto el jugador entraba en el radio: para cuando llegaba,
+// el agujero llevaba abierto y quieto un buen rato y lo unico que quedaba por
+// ver era el hueco. Ahora cada tabla empieza a hundirse cuando el jugador esta
+// a SINK_TRIGGER DE ELLA, asi que la rotura viene hacia el en oleada y el firme
+// se sigue rompiendo a pocos metros de sus pies hasta que llega. Medido en
+// unidades y no en tiempo, ademas, la oleada se ve igual a cualquier velocidad.
 const SINK_LEN = 34;                // largo del agujero
-const SINK_TRIGGER = 46;            // a que distancia por delante empieza a caerse
-const SINK_DROP_T = 0.5;            // lo que tarda en desplomarse
+const SINK_TRIGGER = 46;            // a que distancia por delante empieza a caerse cada tabla
+const SINK_DROP = 30;               // en cuantas unidades se desploma
 const SINK_DEEP = 16;               // cuanto baja la tabla antes de desaparecer
 const SINK_W = ROAD_WIDTH / 3;      // ancho de cada tabla
 const SINK_X = [-SINK_W, 0, SINK_W];
+
+// --- Sacudidas de camara ---
+// OJO CON LA ESCALA: la sacudida entra al cuadrado —`g = shake * shake`— para
+// que el primer instante sea el que se nota. Eso significa que los valores
+// pequenos no son sacudidas suaves, son NADA: con 0,3 el desplazamiento de
+// camara sale de cinco centesimas de unidad, que a catorce unidades de
+// distancia no se ve. Un golpe de verdad vale 1,05. Todo lo que quiera
+// sentirse tiene que estar por encima de 0,4.
+//
+// Y hay tres, no una, porque no todas dicen lo mismo:
+//   FALL - retumbo mientras las rocas del derrumbe caen por el aire. Es un
+//          aviso: algo viene, todavia no ha llegado.
+//   ROCK - el impacto contra la calzada, escalado con lo cerca que cae. Es lo
+//          que separa una piedra que aterriza al lado de una que aterriza en
+//          el horizonte, y sin ese escalado las dos se sentian igual, que no
+//          se lee como peso sino como una averia.
+//   SOFT - el firme rompiendose por delante. Lo provoca el propio jugador al
+//          acercarse, asi que es un retumbo sostenido y no un golpe: una
+//          sacudida de impacto ahi se leeria como que ya le ha pasado algo.
+const SHAKE_FALL = 0.4;
+const SHAKE_ROCK = 0.9;
+const SHAKE_SOFT = 0.42;
+const SHAKE_NEAR = 150;             // a esta distancia una roca ya solo retumba
 
 const NARROW_LEN = 62;
 const NARROW_TAPER = 22;            // lo que tarda en cerrarse a cada extremo
@@ -444,8 +534,30 @@ const C = {
 };
 
 // ===========================================================================
-// La ruta: doce puntos de Guatemala
+// La ruta: de Tikal a la capital, trece puntos
 // ===========================================================================
+// EL ORDEN DEL ARRAY ES LA RUTA, y la ruta es un camino, no una lista. Se sale
+// siempre de Tikal y se llega a Ciudad de Guatemala, y entre un punto y el
+// siguiente hay carretera de verdad —aproximando, que en Guatemala no todo
+// conecta con todo—:
+//
+//   Tikal -> Flores            CA-13
+//   Flores -> Semuc Champey    FTN por Sayaxché y Raxrujá
+//   Semuc -> Río Dulce         FTN hasta Modesto Méndez
+//   Río Dulce -> Esquipulas    CA-9 y CA-10 por Zacapa y Chiquimula
+//   Esquipulas -> Monterrico   oriente por Ipala, Jutiapa y Taxisco
+//   Monterrico -> Tajumulco    CA-2, la costera, hasta San Marcos
+//   Tajumulco -> Todos Santos  por Huehuetenango
+//   Todos Santos -> Chichi     Sacapulas y Santa Cruz del Quiché
+//   Chichi -> Atitlán          Los Encuentros
+//   Atitlán -> Fuego           CA-1 hasta Chimaltenango
+//   Fuego -> Antigua           al lado
+//   Antigua -> Guatemala       RN-14
+//
+// Ese orden es lo que hace que el mapa signifique algo: el minimapa dibuja los
+// tramos como caminos y se van encendiendo al recorrerlos. Reordenar el array
+// reordena la ruta y nada mas; nadie depende de los indices por su valor.
+//
 // Cada tramo define su cielo, su niebla, su suelo, sus luces, el material de
 // la calzada, el color de los obstaculos, que crece a los lados y que se ve
 // en el horizonte. Las coordenadas mm son las del minimapa (viewBox 108x116),
@@ -516,6 +628,74 @@ const REGIONS = [
         ob: [0.95, 1.1, 0.95]
     },
     {
+        id: 'monterrico', name: 'Monterrico', dept: 'Santa Rosa', mm: [47.4, 105.0],
+        skyTop: 0x3b4f8a, skyBot: 0xf2a86b, fog: 0xd09a72, ground: 0x2b2b2e,
+        sun: 0xffcf9c, sunI: 1.75, hemi: 0xcdb6a6, hemiI: 1.75,
+        roadA: 0x5a544f, roadB: 0x484340, kerb: 0x7a6a55,
+        stone: 0x6f5a3f, accent: 0xe8c98a, hazard: 0x2f6f8a, pit: 0x07202b,
+        land: 'palm', landA: 0x4a3a26, landB: 0x2f7a4e,
+        ridge: 0x6a5a54, sky: 'cloud', skyC: 0xffd9b0,
+        // Arena negra: sin cortes y sin junta, para que se lea como superficie
+        // continua y no como losas.
+        road: [1, 1, 1.0, 0.02], prop: 'palm', propA: 0x4a3a26, propB: 0x2f7a4e,
+        ob: [1.2, 0.88, 1.12]
+    },
+    {
+        id: 'tajumulco', name: 'Volcán Tajumulco', dept: 'San Marcos', mm: [12.0, 76.4],
+        skyTop: 0x081120, skyBot: 0x1d3b46, fog: 0x17313b, ground: 0x152720,
+        sun: 0xa8c6e6, sunI: 0.85, hemi: 0x6d90a4, hemiI: 1.05,
+        roadA: 0x8c9aa0, roadB: 0x717e87, kerb: 0x5a666b,
+        stone: 0x4a5560, accent: 0xcfe4ef, hazard: 0xd4451f, pit: 0x2a0e06,
+        land: 'peak', landA: 0x2b3540, landB: 0xe8f2f7,
+        ridge: 0x1e2b34, sky: 'star', skyC: 0xdfeaff,
+        road: [3, 2, 0.93, 0.06], prop: 'rock', propA: 0x3a4550, propB: 0xcfe4ef,
+        ob: [1.0, 1.1, 0.9]
+    },
+    {
+        id: 'todossantos', name: 'Todos Santos', dept: 'Huehuetenango', mm: [19.5, 64.6],
+        skyTop: 0x2f5fa8, skyBot: 0xcfe4f0, fog: 0x9fb8c4, ground: 0x3a5a44,
+        sun: 0xf2f8ff, sunI: 2.0, hemi: 0xd6e6f0, hemiI: 2.1,
+        roadA: 0xa8a89c, roadB: 0x8f8f7d, kerb: 0x7a7a68,
+        stone: 0x8a8f88, accent: 0xd93a3a, hazard: 0x2a3f4a, pit: 0x131c22,
+        land: 'peak', landA: 0x445a4a, landB: 0xdfe8ee,
+        ridge: 0x51707a, sky: 'cloud', skyC: 0xffffff,
+        road: [2, 1, 0.89, 0.07], prop: 'pine', propA: 0x2f5a3f, propB: 0xd93a3a,
+        ob: [1.0, 1.05, 1.0]
+    },
+    {
+        id: 'chichi', name: 'Chichicastenango', dept: 'Quiché', mm: [31.8, 78.9],
+        skyTop: 0x1f2a52, skyBot: 0x6b4a7a, fog: 0x4a3f63, ground: 0x22362c,
+        sun: 0xc9a8e0, sunI: 1.15, hemi: 0x8f7fa8, hemiI: 1.35,
+        roadA: 0xb9ae95, roadB: 0xa0957c, kerb: 0x7d6f5a,
+        stone: 0xd8d2c4, accent: 0xe0483f, hazard: 0x2a1f33, pit: 0x120c18,
+        land: 'market', landA: 0xe6e0d2, landB: 0xe0483f,
+        ridge: 0x3a3550, sky: 'star', skyC: 0xdfe6ff,
+        road: [2, 2, 0.91, 0.04], prop: 'stall', propA: 0xe0483f, propB: 0xf0c34a,
+        ob: [1.05, 0.95, 1.05]
+    },
+    {
+        id: 'atitlan', name: 'Lago de Atitlán', dept: 'Sololá', mm: [29.6, 85.2],
+        skyTop: 0x3a3a6d, skyBot: 0xe37a45, fog: 0xc2724a, ground: 0x2c4436,
+        sun: 0xffad6a, sunI: 1.9, hemi: 0xd9aea0, hemiI: 1.8,
+        roadA: 0xc9b9a0, roadB: 0xb0a088, kerb: 0x8f6f5a,
+        stone: 0x6d5a72, accent: 0xd94f6a, hazard: 0x1d4f7a, pit: 0x081c2c,
+        land: 'volcano', landA: 0x3f4a55, landB: 0x8d6a4f,
+        ridge: 0x46405f, sky: 'cloud', skyC: 0xf0a483,
+        road: [3, 1, 0.9, 0.03], prop: 'maize', propA: 0x4f7a3f, propB: 0xd94f6a,
+        ob: [0.95, 1.05, 1.0]
+    },
+    {
+        id: 'fuego', name: 'Volcán de Fuego', dept: 'Chimaltenango', mm: [37.6, 90.7],
+        skyTop: 0x18131f, skyBot: 0xd4501f, fog: 0x8a3a22, ground: 0x241d1a,
+        sun: 0xff8a4a, sunI: 1.5, hemi: 0x8a5a4a, hemiI: 1.2,
+        roadA: 0x6a625c, roadB: 0x534d47, kerb: 0x4a423c,
+        stone: 0x3a332e, accent: 0xff5a1f, hazard: 0xff3d00, pit: 0x2a0a02,
+        land: 'volcano', landA: 0x2e2622, landB: 0xff5a1f,
+        ridge: 0x3a2822, sky: 'star', skyC: 0xff8a4a,
+        road: [3, 2, 0.9, 0.08], prop: 'lava', propA: 0x2e2622, propB: 0xff5a1f,
+        ob: [1.05, 1.0, 1.0]
+    },
+    {
         id: 'antigua', name: 'Antigua', dept: 'Sacatepéquez', mm: [41.3, 88.4],
         skyTop: 0x5a7fb8, skyBot: 0xf0c48a, fog: 0xd0a479, ground: 0x3a5340,
         sun: 0xffd9a4, sunI: 1.95, hemi: 0xdcc4ad, hemiI: 1.85,
@@ -530,72 +710,25 @@ const REGIONS = [
         ob: [0.9, 1.15, 0.95]
     },
     {
-        id: 'fuego', name: 'Volcán de Fuego', dept: 'Chimaltenango', mm: [37.6, 90.7],
-        skyTop: 0x18131f, skyBot: 0xd4501f, fog: 0x8a3a22, ground: 0x241d1a,
-        sun: 0xff8a4a, sunI: 1.5, hemi: 0x8a5a4a, hemiI: 1.2,
-        roadA: 0x6a625c, roadB: 0x534d47, kerb: 0x4a423c,
-        stone: 0x3a332e, accent: 0xff5a1f, hazard: 0xff3d00, pit: 0x2a0a02,
-        land: 'volcano', landA: 0x2e2622, landB: 0xff5a1f,
-        ridge: 0x3a2822, sky: 'star', skyC: 0xff8a4a,
-        road: [3, 2, 0.9, 0.08], prop: 'lava', propA: 0x2e2622, propB: 0xff5a1f,
-        ob: [1.05, 1.0, 1.0]
-    },
-    {
-        id: 'atitlan', name: 'Lago de Atitlán', dept: 'Sololá', mm: [29.6, 85.2],
-        skyTop: 0x3a3a6d, skyBot: 0xe37a45, fog: 0xc2724a, ground: 0x2c4436,
-        sun: 0xffad6a, sunI: 1.9, hemi: 0xd9aea0, hemiI: 1.8,
-        roadA: 0xc9b9a0, roadB: 0xb0a088, kerb: 0x8f6f5a,
-        stone: 0x6d5a72, accent: 0xd94f6a, hazard: 0x1d4f7a, pit: 0x081c2c,
-        land: 'volcano', landA: 0x3f4a55, landB: 0x8d6a4f,
-        ridge: 0x46405f, sky: 'cloud', skyC: 0xf0a483,
-        road: [3, 1, 0.9, 0.03], prop: 'maize', propA: 0x4f7a3f, propB: 0xd94f6a,
-        ob: [0.95, 1.05, 1.0]
-    },
-    {
-        id: 'chichi', name: 'Chichicastenango', dept: 'Quiché', mm: [31.8, 78.9],
-        skyTop: 0x1f2a52, skyBot: 0x6b4a7a, fog: 0x4a3f63, ground: 0x22362c,
-        sun: 0xc9a8e0, sunI: 1.15, hemi: 0x8f7fa8, hemiI: 1.35,
-        roadA: 0xb9ae95, roadB: 0xa0957c, kerb: 0x7d6f5a,
-        stone: 0xd8d2c4, accent: 0xe0483f, hazard: 0x2a1f33, pit: 0x120c18,
-        land: 'market', landA: 0xe6e0d2, landB: 0xe0483f,
-        ridge: 0x3a3550, sky: 'star', skyC: 0xdfe6ff,
-        road: [2, 2, 0.91, 0.04], prop: 'stall', propA: 0xe0483f, propB: 0xf0c34a,
-        ob: [1.05, 0.95, 1.05]
-    },
-    {
-        id: 'todossantos', name: 'Todos Santos', dept: 'Huehuetenango', mm: [19.5, 64.6],
-        skyTop: 0x2f5fa8, skyBot: 0xcfe4f0, fog: 0x9fb8c4, ground: 0x3a5a44,
-        sun: 0xf2f8ff, sunI: 2.0, hemi: 0xd6e6f0, hemiI: 2.1,
-        roadA: 0xa8a89c, roadB: 0x8f8f7d, kerb: 0x7a7a68,
-        stone: 0x8a8f88, accent: 0xd93a3a, hazard: 0x2a3f4a, pit: 0x131c22,
-        land: 'peak', landA: 0x445a4a, landB: 0xdfe8ee,
-        ridge: 0x51707a, sky: 'cloud', skyC: 0xffffff,
-        road: [2, 1, 0.89, 0.07], prop: 'pine', propA: 0x2f5a3f, propB: 0xd93a3a,
-        ob: [1.0, 1.05, 1.0]
-    },
-    {
-        id: 'tajumulco', name: 'Volcán Tajumulco', dept: 'San Marcos', mm: [12.0, 76.4],
-        skyTop: 0x081120, skyBot: 0x1d3b46, fog: 0x17313b, ground: 0x152720,
-        sun: 0xa8c6e6, sunI: 0.85, hemi: 0x6d90a4, hemiI: 1.05,
-        roadA: 0x8c9aa0, roadB: 0x717e87, kerb: 0x5a666b,
-        stone: 0x4a5560, accent: 0xcfe4ef, hazard: 0xd4451f, pit: 0x2a0e06,
-        land: 'peak', landA: 0x2b3540, landB: 0xe8f2f7,
-        ridge: 0x1e2b34, sky: 'star', skyC: 0xdfeaff,
-        road: [3, 2, 0.93, 0.06], prop: 'rock', propA: 0x3a4550, propB: 0xcfe4ef,
-        ob: [1.0, 1.1, 0.9]
-    },
-    {
-        id: 'monterrico', name: 'Monterrico', dept: 'Santa Rosa', mm: [47.4, 105.0],
-        skyTop: 0x3b4f8a, skyBot: 0xf2a86b, fog: 0xd09a72, ground: 0x2b2b2e,
-        sun: 0xffcf9c, sunI: 1.75, hemi: 0xcdb6a6, hemiI: 1.75,
-        roadA: 0x5a544f, roadB: 0x484340, kerb: 0x7a6a55,
-        stone: 0x6f5a3f, accent: 0xe8c98a, hazard: 0x2f6f8a, pit: 0x07202b,
-        land: 'palm', landA: 0x4a3a26, landB: 0x2f7a4e,
-        ridge: 0x6a5a54, sky: 'cloud', skyC: 0xffd9b0,
-        // Arena negra: sin cortes y sin junta, para que se lea como superficie
-        // continua y no como losas.
-        road: [1, 1, 1.0, 0.02], prop: 'palm', propA: 0x4a3a26, propB: 0x2f7a4e,
-        ob: [1.2, 0.88, 1.12]
+        // La meta. Es el unico punto del que no se sale: llegar aqui cierra la
+        // carrera. De noche y con las torres encendidas, porque despues de doce
+        // desvios acertados el sitio tiene que verse distinto desde lejos.
+        id: 'guate', name: 'Ciudad de Guatemala', dept: 'Guatemala', mm: [46.6, 86.6],
+        // En el rotulo va corto. "CIUDAD DE GUATEMALA" a 62 px se aplasta
+        // contra los 440 de ancho utiles del cartel y deja de leerse a la
+        // distancia a la que hay que leerlo, que es toda la gracia. En las
+        // señales de la CA-9 tambien pone GUATEMALA y nadie se confunde.
+        sign: 'Guatemala',
+        skyTop: 0x131a30, skyBot: 0xd9743c, fog: 0x7a5f55, ground: 0x2a2c30,
+        sun: 0xffc48a, sunI: 1.6, hemi: 0xb4aab8, hemiI: 1.6,
+        // Asfalto: junta casi cerrada y sin irregularidad. Es la unica calzada
+        // del recorrido que no es piedra puesta a mano.
+        roadA: 0x4c4c50, roadB: 0x3e3e42, kerb: 0xd8d2c4,
+        stone: 0x8f9298, accent: 0xf0c34a, hazard: 0x2f6f8a, pit: 0x090b0f,
+        land: 'city', landA: 0x3a3f4a, landB: 0xf0c34a,
+        ridge: 0x2b3242, sky: 'star', skyC: 0xffe0b0,
+        road: [3, 1, 0.97, 0], prop: 'block', propA: 0x4a4f58, propB: 0xf0c34a,
+        ob: [1.0, 1.0, 1.0]
     }
 ];
 
@@ -823,7 +956,8 @@ const REGION_ICONS = {
     chichi:      '<path d="M2 9l4-5h12l4 5z"/><path d="M4 9h16v12H4z"/><path d="M9 21v-6h6v6z" fill="#0b1512" opacity=".5"/>',
     todossantos: '<path d="M1 21L9 6l5 9 3-5 6 11z"/><path d="M9 6l2.6 4.7-2.6 1-2.6-1z" fill="#0b1512" opacity=".4"/>',
     tajumulco:   '<path d="M2 21L12 3l10 18z"/><path d="M12 3l3.4 6.2-3.4-1.4-3.4 1.4z" fill="#0b1512" opacity=".45"/>',
-    monterrico:  '<circle cx="18" cy="6" r="3.4"/><path d="M2 15c2-1.6 4-1.6 6 0s4 1.6 6 0 4-1.6 6 0" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2 20c2-1.6 4-1.6 6 0s4 1.6 6 0 4-1.6 6 0" fill="none" stroke="currentColor" stroke-width="2"/>'
+    monterrico:  '<circle cx="18" cy="6" r="3.4"/><path d="M2 15c2-1.6 4-1.6 6 0s4 1.6 6 0 4-1.6 6 0" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2 20c2-1.6 4-1.6 6 0s4 1.6 6 0 4-1.6 6 0" fill="none" stroke="currentColor" stroke-width="2"/>',
+    guate:       '<path d="M2 21h20v1H2z"/><rect x="4" y="11" width="4.6" height="10"/><rect x="9.8" y="5" width="4.6" height="16"/><rect x="15.6" y="13" width="4.4" height="8"/><path d="M11.6 2h1v3h-1z"/>'
 };
 
 const svg = body => '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">' + body + '</svg>';
@@ -892,6 +1026,11 @@ const game = {
     best: 0,
     startRegion: 0,
     region: 0,           // indice del departamento actual
+    // Distancia a la que se cierra la carrera por haber llegado a la capital,
+    // -1 mientras quede ruta. No se acaba en el propio cruce: queda un ultimo
+    // tramo de ciudad, que es lo que convierte la llegada en llegada.
+    finishS: -1,
+    won: false,          // la carrera se cerro por llegar, no por morir
     powers: { magnet: 0, double: 0, amber: 0, flight: 0 },
     powerMax: { magnet: 1, double: 1, amber: 1, flight: 1 },
     boost: 0,            // segundos que quedan de impulso
@@ -902,7 +1041,11 @@ const game = {
     // abrirse; mainBand dice cual de los dos ramales dibuja la calzada
     // principal, y se voltea al elegir para que el jugador siempre corra sobre
     // la malla detallada y no sobre la del ramal descartado.
-    fork: { active: false, s0: 0, chosen: 0, mainBand: -1, away: 0, blocked: 0 },
+    //
+    // mainBand sigue al carril mientras no se ha elegido: antes del divisor
+    // los dos ramales son simetricos, asi que el relevo entre las dos mallas
+    // no mueve un solo pixel y el jugador corre siempre sobre la detallada.
+    fork: { active: false, s0: 0, chosen: 0, mainBand: -1, blocked: 0 },
     // Cruce suave de departamento: de donde se venia y cuanto lleva.
     snapFrom: -1,
     snapT: 1,
@@ -910,9 +1053,10 @@ const game = {
     turn: { active: false, s0: 0, dir: 1 },
     turnHold: 0,         // segundos aguantando por el lado que cierra
     narrowS0: -1,        // distancia en la que empieza el estrechamiento
-    // Hundimiento: mask lleva un bit por carril que se cae, t es el reloj del
-    // desplome y free el carril por el que se puede pasar.
-    sink: { active: false, s0: 0, mask: 0, t: 0, free: 1 },
+    // Hundimiento: mask lleva un bit por carril que se cae y free el carril por
+    // el que se puede pasar. No hay reloj: cada tabla se hunde en funcion de lo
+    // cerca que este el jugador de ella.
+    sink: { active: false, s0: 0, mask: 0, free: 1 },
     nextTramo: 0,        // distancia a la que toca armar el proximo tramo
     lastTramo: -1,       // cual salio la vez anterior, para no repetirlo
     crossKind: 1,        // 0 = cruce de destino, 1 = bifurcacion cortada
@@ -977,7 +1121,8 @@ const dom = {
     speedVeil: $('speedVeil'), hitVeil: $('hitVeil'), pauseBtn: $('pauseBtn'),
     menuRoute: $('menuRoute'), menuBank: $('menuBank'), menuBest: $('menuBest'),
     shopBank: $('shopBank'), tabSkins: $('tabSkins'), tabUpg: $('tabUpg'), tabRoute: $('tabRoute'),
-    minimap: $('minimap'), mmDots: $('mmDots'), mmYou: $('mmYou'),
+    minimap: $('minimap'), mmDots: $('mmDots'), mmRoute: $('mmRoute'),
+    mmYou: $('mmYou'),
     mmName: $('mmName'), mmDept: $('mmDept'), mmFill: $('mmFill'),
     revive: $('revive'), reviveBtn: $('reviveBtn'), reviveSkip: $('reviveSkip'),
     reviveTimer: $('reviveTimer'), reviveSub: $('reviveSub'),
@@ -1009,7 +1154,9 @@ const save = {
     skin: 'ajaw',
     skins: ['ajaw'],    // trajes comprados
     regions: ['tikal'], // tramos alcanzados
-    start: 0,           // indice del tramo de salida elegido
+    // Ya no se guarda la salida: la ruta es una y empieza en Tikal. Elegir por
+    // donde entrar rompia lo unico que el mapa tenia que decir, que es cuanto
+    // te falta para la capital.
     sound: true,
     music: true
 };
@@ -1021,7 +1168,6 @@ function loadSave() {
     save.skin = store.get('sacbe-skin', 'ajaw');
     save.skins = store.json('sacbe-skins', ['ajaw']) || ['ajaw'];
     save.regions = store.json('sacbe-regions', ['tikal']) || ['tikal'];
-    save.start = parseInt(store.get('sacbe-start', '0'), 10) || 0;
     const s = store.get('sacbe-sound', null);
     save.sound = s === null ? true : s === '1';
     const m = store.get('sacbe-music', null);
@@ -1031,8 +1177,8 @@ function loadSave() {
     if (!SKINS.some(s2 => s2.id === save.skin)) save.skin = 'ajaw';
     if (!save.skins.includes('ajaw')) save.skins.push('ajaw');
     if (!save.regions.includes('tikal')) save.regions.push('tikal');
-    if (!(save.start >= 0 && save.start < REGION_N)) save.start = 0;
-    if (!save.regions.includes(REGIONS[save.start].id)) save.start = 0;
+    // Un guardado de la version anterior puede traer ids que ya no existen
+    save.regions = save.regions.filter(id => REGIONS.some(R => R.id === id));
 }
 
 function persist() {
@@ -1042,7 +1188,6 @@ function persist() {
     store.set('sacbe-skin', save.skin);
     store.set('sacbe-skins', JSON.stringify(save.skins));
     store.set('sacbe-regions', JSON.stringify(save.regions));
-    store.set('sacbe-start', String(save.start));
 }
 
 // --- Lo que cada mejora hace, en un solo sitio ---
@@ -1590,7 +1735,7 @@ function buildScene() {
     buildPlayer();
     buildJaguar();
     buildQuetzal();
-    applyBlend(save.start);
+    applyBlend(0);
 }
 
 // --- Materiales compartidos ---
@@ -1751,18 +1896,17 @@ function buildRoad() {
     roadGroup.add(roadMesh);
 
     // Bordillos: los sacbeob tenian los cantos levantados
-    // El otro ramal. Va sin el detalle por celdas de la calzada principal: solo
-    // se ve de refilon y unos segundos, y darle adoquin propio seria pagar mil
-    // matrices por frame para algo que se esta yendo de plano. Losa, sub-base y
-    // dos bordillos por tramo, y basta.
+    // El otro ramal. Lleva el mismo despiece que la calzada principal, mas la
+    // sub-base y los dos bordillos.
     forkMesh = new THREE.InstancedMesh(
-        BOX, new THREE.MeshLambertMaterial({ color: 0xffffff }), TILE_COUNT * 4
+        BOX, new THREE.MeshLambertMaterial({ color: 0xffffff }),
+        TILE_COUNT * FORK_CELLS
     );
     forkMesh.instanceColor = new THREE.InstancedBufferAttribute(
-        new Float32Array(TILE_COUNT * 4 * 3), 3
+        new Float32Array(TILE_COUNT * FORK_CELLS * 3), 3
     );
     forkMesh.frustumCulled = false;
-    for (let i = 0; i < TILE_COUNT * 4; i++) {
+    for (let i = 0; i < TILE_COUNT * FORK_CELLS; i++) {
         dummy.position.set(0, -999, 0);
         dummy.scale.set(0.0001, 0.0001, 0.0001);
         dummy.rotation.set(0, 0, 0);
@@ -1834,36 +1978,48 @@ function curveY(s) {
     return CURVE_AY * Math.sin(s / CURVE_LY + 0.6) - slopeAt(s) * SLOPE_DROP;
 }
 
-// Separacion de un ramal respecto al eje de la bifurcacion, para una
-// coordenada de trazado dada. Cero antes de la X y creciendo suave despues.
+// Medio reparto: cuanto se ha abierto ya la bifurcacion en una coordenada de
+// trazado. Cero hasta la cola del divisor y creciendo despues.
+//
+// El perfil no es un smoothstep, que arranca PLANO: con el, a veinte unidades
+// del divisor los dos ramales seguian a metro y medio uno de otro —y cada
+// calzada mide 8,4 de ancho—, o sea que se pisaban durante todo ese tramo.
+// Pero tampoco una cubica invertida, que arranca DEMASIADO deprisa y abria las
+// dos vias en abanico delante de las narices. Es una cuadratica invertida: sale
+// con decision y se va calmando, que es como se abre un desvio de verdad.
 function forkSpread(s) {
     const f = game.fork;
     if (!f.active) return 0;
     const t = (s - f.s0) / FORK_LEN;
     if (t <= 0) return 0;
     if (t >= 1) return FORK_SPREAD;
-    return FORK_SPREAD * t * t * (3 - 2 * t);
+    const u = 1 - t;
+    return FORK_SPREAD * (1 - u * u);
 }
 
-// Desplazamiento lateral de un ramal en la z dada.
+// Desplazamiento lateral de un ramal en la z dada. Son dos terminos y cada uno
+// hace una cosa distinta.
 //
-// El segundo termino es el truco: se resta la separacion del ramal que lleva
-// EL JUGADOR en su propia posicion. Con eso su calzada queda siempre centrada
-// —el mundo se recoloca sobre ella— y la otra se abre hacia fuera al doble de
-// velocidad hasta salirse de plano. Y en cuanto la bifurcacion queda atras,
-// los dos terminos se cancelan solos y todo vuelve a la normalidad sin tener
-// que desactivar nada.
+// El primero, `band * S(s)`, abre los dos ramales por igual a partir del
+// divisor. Antes de elegir es lo unico que hay: una Y simetrica, las dos
+// opciones puestas encima de la mesa.
+//
+// El segundo, `- chosen * S(D)`, es el que convierte la eleccion en una CURVA.
+// Al restar la separacion del ramal elegido MEDIDA EN LA POSICION DEL JUGADOR,
+// el mundo se recoloca sobre esa calzada: le pasa siempre por debajo de los
+// pies —a su altura los dos terminos se cancelan— pero por delante se va
+// abriendo, o sea que se ve TORCER hacia el lado que tomo. Y el otro ramal,
+// que tiene el signo contrario en los dos terminos, hace la curva simetrica
+// hacia el lado opuesto y se va por ahi. No se le empuja fuera de plano: se
+// marcha porque es una carretera que va a otro sitio, que es lo que es.
+//
+// El salto de este termino cuando se toma la salida sale gratis porque la
+// bifurcacion empieza justo en la cola del divisor, o sea exactamente donde se
+// resuelve: ahi S(D) todavia vale cero y encenderlo no mueve nada.
 function forkDX(z, band) {
     const f = game.fork;
     if (!f.active) return 0;
-    // El ramal que NO se tomo se abre cada vez mas a partir del momento de
-    // elegir. Como la separacion vale cero en la X y crece hacia el fondo,
-    // multiplicarla entera hace que el ramal PIVOTE sobre el cruce: se ve
-    // curvarse y marcharse, en vez de deslizarse de lado en bloque.
-    const mio = f.chosen !== 0 && band === f.chosen;
-    const k = mio ? 1 : 1 + f.away * f.away * 5;
-    return band * forkSpread(game.distance - z) * k +
-           (mio ? 0 : band * (1 - (1 - f.away) * (1 - f.away)) * FORK_PUSH) -
+    return band * forkSpread(game.distance - z) -
            f.chosen * forkSpread(game.distance);
 }
 
@@ -1928,11 +2084,19 @@ function turnGrip(sc) {
 // --- Hundimiento ---
 // Cuanto ha caido ya la tabla de este carril en esta coordenada de trazado:
 // -1 si ahi no hay hundimiento, 0 mientras aguanta, 1 cuando ya no hay suelo.
+//
+// Cada tabla lleva su propio reloj, y ese reloj es la distancia que le queda al
+// jugador para llegar a ELLA. Con un reloj unico para todo el tramo, las
+// treinta y cuatro unidades se desplomaban a la vez y el agujero estaba abierto
+// y quieto mucho antes de pisarlo. Asi la rotura avanza hacia el jugador y el
+// suelo se sigue cayendo a pocos metros por delante hasta el ultimo momento.
 function sinkFall(sc, lane) {
     const S = game.sink;
     if (!S.active || !(S.mask & (1 << lane))) return -1;
     if (sc < S.s0 || sc > S.s0 + SINK_LEN) return -1;
-    return Math.min(1, S.t / SINK_DROP_T);
+    const d = game.distance - (sc - SINK_TRIGGER);
+    if (d <= 0) return 0;
+    return Math.min(1, d / SINK_DROP);
 }
 
 // Ahi ya no hay nada sobre lo que correr.
@@ -1960,6 +2124,20 @@ function narrowAt(sc) {
 
 // La coordenada de trazado de un punto ya pasada la X.
 const pastFork = z => game.fork.active && (game.distance - z) > game.fork.s0;
+
+// Cae este punto de la cuneta encima del OTRO ramal? El matorral se coloca
+// respecto al eje de la calzada que pisa el jugador, y a partir del divisor el
+// otro ramal le pasa por encima: se veian pinos creciendo en mitad del asfalto
+// del camino que no habias tomado. Lo que hay ENTRE los dos ramales si se
+// queda —una cuna de monte entre dos carreteras que se separan es justo lo que
+// hay en una bifurcacion de verdad—; lo que se quita es lo que estorba.
+function overOtherFork(x, z) {
+    const f = game.fork;
+    if (!f.active || !pastFork(z)) return false;
+    const otro = (curveX(game.distance - z) - game.curveBase) * curveMask(z) +
+                 forkDX(z, -f.mainBand);
+    return Math.abs(x - otro) < ROAD_WIDTH / 2 + 1.4;
+}
 
 // Mascara de distancia: 0 en la zona de juego, 1 en el fondo. Es lo que hace
 // que el giro y la ondulacion sean decorado y no un problema de geometria.
@@ -2361,26 +2539,18 @@ function resetRoadColors() {
     roadTileWarn.fill(0);
 }
 
-// El ramal que no se ha tomado. Solo existe pasada la X: antes de ella los dos
-// ramales estarian exactamente en el mismo sitio y se pelearian por el pixel.
+// El ramal que no se ha tomado. Solo existe pasada la cola del divisor: antes
+// de ella la calzada es una sola y no hay dos ramales que dibujar.
 let forkBandOn = false;
 
 function updateForkBand(off) {
     const f = game.fork;
     const band = -f.mainBand;
 
-    // Una vez elegido, el otro ramal se abre y se va; pasado el segundo largo
-    // ya esta fuera de plano y mantenerlo dibujado no aporta nada.
-    if (!f.active || f.away >= 1) {
+    if (!f.active) {
         if (forkBandOn) {
             forkBandOn = false;
-            for (let k = 0; k < TILE_COUNT * 4; k++) {
-                dummy.position.set(0, -999, 0);
-                dummy.scale.set(0.0001, 0.0001, 0.0001);
-                dummy.rotation.set(0, 0, 0);
-                dummy.updateMatrix();
-                forkMesh.setMatrixAt(k, dummy.matrix);
-            }
+            for (let k = 0; k < TILE_COUNT * FORK_CELLS; k++) hideAt(forkMesh, k);
             forkMesh.instanceMatrix.needsUpdate = true;
         }
         return;
@@ -2390,48 +2560,93 @@ function updateForkBand(off) {
     for (let i = 0; i < TILE_COUNT; i++) {
         const zLocal = ROAD_FROM + i * TILE_DEPTH;
         const zWorld = zLocal + off;
-        const base = i * 4;
+        const base = i * FORK_CELLS;
 
         // Fuera de la bifurcacion, o dentro de un vacio, este ramal no existe
         if (!pastFork(zWorld) || inGap(zWorld)) {
-            for (let k = 0; k < 4; k++) {
-                dummy.position.set(0, -999, 0);
-                dummy.scale.set(0.0001, 0.0001, 0.0001);
-                dummy.rotation.set(0, 0, 0);
-                dummy.updateMatrix();
-                forkMesh.setMatrixAt(base + k, dummy.matrix);
-            }
+            for (let k = 0; k < FORK_CELLS; k++) hideAt(forkMesh, base + k);
             continue;
         }
 
-        const mask = curveMask(zWorld);
-        const dx = (curveX(game.distance - zWorld) - game.curveBase) * mask +
-                   forkDX(zWorld, band);
-        const dy = riseAtS(game.distance - zWorld, zWorld);
-        const R = REGIONS[roadRegionOf(game.distance - zWorld)];
+        const sWorld = game.distance - zWorld;
+        const curve = (curveX(sWorld) - game.curveBase) * curveMask(zWorld);
+        const dx = curve + forkDX(zWorld, band);
+        const dy = riseAtS(sWorld, zWorld);
+        const R = REGIONS[roadRegionOf(sWorld)];
+
+        // --- Recorte contra la calzada principal ---
+        // Junto al divisor las dos calzadas caerian una encima de la otra: la
+        // separacion vale cero ahi y crece hacia el fondo, asi que durante las
+        // primeras decenas de unidades sus centros estan a menos de lo que
+        // miden de ancho. Este ramal se corta contra el bordillo del otro —con
+        // FORK_GAP de aire— y crece hacia fuera segun se abren. Nace como una
+        // franja pegada al borde y acaba siendo una calzada entera: eso se lee
+        // como un camino que se separa, no como dos capas superpuestas.
+        const mainX = curve + forkDX(zWorld, f.mainBand);
+        const outer = dx + band * ROAD_WIDTH / 2;
+        let inner = dx - band * ROAD_WIDTH / 2;
+        const lim = mainX + band * (ROAD_WIDTH / 2 + FORK_GAP);
+        if ((lim - inner) * band > 0) inner = lim;
+        // Nada que dibujar: o el recorte se lo ha comido entero —esta pegado al
+        // otro, justo detras del divisor— o ya se fue tan de lado que no cabe
+        // en pantalla. El limite se abre con la distancia porque el encuadre
+        // tambien se abre: a la altura del jugador, el ramal descartado se sale
+        // de plano a doce unidades, y a ciento cincuenta por delante esas mismas
+        // veintiseis unidades siguen viendose perfectamente. Comparar contra un
+        // numero fijo habria borrado justo la parte que hay que ver marcharse.
+        const cabe = FORK_CULL - zWorld * 0.5;
+        if ((outer - inner) * band < 0.2 ||
+            Math.min(Math.abs(inner), Math.abs(outer)) > cabe) {
+            for (let k = 0; k < FORK_CELLS; k++) hideAt(forkMesh, base + k);
+            continue;
+        }
+        const lo = Math.min(inner, outer), hi = Math.max(inner, outer);
 
         dummy.rotation.set(0, 0, 0);
 
-        dummy.position.set(dx, -0.5 + dy, zLocal);
-        dummy.scale.set(ROAD_WIDTH, 1, TILE_DEPTH * 0.94);
-        dummy.updateMatrix();
-        forkMesh.setMatrixAt(base, dummy.matrix);
-        forkMesh.setColorAt(base, _rc.setHex(i % 2 ? R.roadA : R.roadB));
+        // Mismo despiece que la calzada principal, y anclado a SU eje: las
+        // juntas tienen que caer donde caerian si el ramal fuera entero, o al
+        // ensancharse el adoquin se veria deslizarse de lado.
+        const cuts = R.road[0], rows = R.road[1], gap = R.road[2], jit = R.road[3];
+        const cw = ROAD_WIDTH / cuts;
+        const cd = TILE_DEPTH / rows;
+        let c = 0;
+        for (let rr = 0; rr < rows; rr++) {
+            for (let cc = 0; cc < cuts; cc++, c++) {
+                const id = base + c;
+                let x0 = dx - ROAD_WIDTH / 2 + cw * cc;
+                let x1 = x0 + cw;
+                if (x0 < lo) x0 = lo;
+                if (x1 > hi) x1 = hi;
+                if (x1 - x0 < 0.03) { hideAt(forkMesh, id); continue; }
+                const bump = jit ? (((i * 7 + c * 13) % 7) - 3) / 3 * jit : 0;
+                dummy.position.set(
+                    (x0 + x1) / 2,
+                    -0.5 + dy + bump,
+                    zLocal - TILE_DEPTH / 2 + cd * (rr + 0.5)
+                );
+                dummy.scale.set((x1 - x0) * gap, 1, cd * gap);
+                dummy.updateMatrix();
+                forkMesh.setMatrixAt(id, dummy.matrix);
+                forkMesh.setColorAt(id, _rc.setHex((i + cc + rr) % 2 ? R.roadA : R.roadB));
+            }
+        }
+        for (; c < ROAD_CELLS; c++) hideAt(forkMesh, base + c);
 
-        dummy.position.set(dx, -0.62 + dy, zLocal);
-        dummy.scale.set(ROAD_WIDTH, 1, TILE_DEPTH);
+        dummy.position.set((lo + hi) / 2, -0.62 + dy, zLocal);
+        dummy.scale.set(hi - lo, 1, TILE_DEPTH);
         dummy.updateMatrix();
-        forkMesh.setMatrixAt(base + 1, dummy.matrix);
-        forkMesh.setColorAt(base + 1, _rc.setHex(R.roadB).multiplyScalar(0.55));
+        forkMesh.setMatrixAt(base + ROAD_CELLS, dummy.matrix);
+        forkMesh.setColorAt(base + ROAD_CELLS, _rc.setHex(R.roadB).multiplyScalar(0.55));
 
+        // Bordillo a los dos bordes, incluido el recortado: ahi la calzada se
+        // acaba de verdad, y un canto es justo lo que dice donde acaba.
         for (let sd = 0; sd < 2; sd++) {
-            dummy.position.set(
-                dx + (sd ? ROAD_WIDTH / 2 : -ROAD_WIDTH / 2), -0.1 + dy, zLocal
-            );
+            dummy.position.set(sd ? hi : lo, -0.1 + dy, zLocal);
             dummy.scale.set(0.55, 0.8, TILE_DEPTH * 0.94);
             dummy.updateMatrix();
-            forkMesh.setMatrixAt(base + 2 + sd, dummy.matrix);
-            forkMesh.setColorAt(base + 2 + sd, _rc.setHex(R.kerb));
+            forkMesh.setMatrixAt(base + ROAD_CELLS + 1 + sd, dummy.matrix);
+            forkMesh.setColorAt(base + ROAD_CELLS + 1 + sd, _rc.setHex(R.kerb));
         }
     }
     forkMesh.instanceMatrix.needsUpdate = true;
@@ -2501,6 +2716,14 @@ function propSpec(kind, k, out) {
             put(0, 0, 0.9 * t, 0, 0.28, 1.8 * t, 0.28, 0, 1);
             put(1, 0, 2.0 * t, 0, 2.8 * t, 0.3, 2.4 * t, 0.14, 0);
             put(2, 0.3, 0.5 * t, 0.4, 1.2 * t, 1.0 * t, 1.0 * t, 0, 1);
+            break;
+        case 'block':
+            // Manzana de ciudad: bloque, cornisa encendida y un anexo bajo. Lo
+            // que hay al borde de la calzada en la capital no crece, se
+            // construye, asi que ni una sola pieza va girada.
+            put(0, 0, 1.9 * t, 0, 2.2 * t, 3.8 * t, 2.2 * t, 0, 0);
+            put(1, 0, 3.95 * t, 0, 1.6 * t, 0.32 * t, 1.6 * t, 0, 1);
+            put(2, 1.7 * t, 0.8 * t, 0.5, 1.1 * t, 1.6 * t, 1.1 * t, 0, 0);
             break;
         case 'pine':
             put(0, 0, 0.9 * t, 0, 0.4, 1.8 * t, 0.4, 0, 1);
@@ -2582,13 +2805,20 @@ function updateScenery(A, B, e) {
         propSpec(R.prop, k, propBuf);
 
         const mask = curveMask(zWorld);
-        const dx = (curveX(game.distance - zWorld) - game.curveBase) * mask;
+        // La cuneta va con SU calzada, tambien en la bifurcacion. Sin este
+        // termino el matorral se quedaba en el eje del cruce mientras la
+        // calzada elegida se abria trece unidades hacia un lado: el jugador
+        // corria por una carretera que se separaba de sus propios arboles.
+        const dx = (curveX(game.distance - zWorld) - game.curveBase) * mask +
+                   forkDX(zWorld, game.fork.mainBand);
         const dy = (curveY(game.distance - zWorld) - game.riseBase) * mask;
         const base = side * (ROAD_WIDTH / 2 + 2.2 + ((slot * 5) % 4) * 1.3);
+        const tapa = overOtherFork(base + dx, zWorld);
 
         for (let t = 0; t < PROP_PARTS; t++) {
             const q = propBuf[t];
             const id = k * PROP_PARTS + t;
+            if (tapa) { hideAt(propMesh, id); continue; }
             dummy.position.set(base + q.x * side + dx, q.y - 1 + dy, zWorld + q.z);
             dummy.scale.set(Math.max(0.02, q.w), Math.max(0.02, q.h), Math.max(0.02, q.d));
             dummy.rotation.set(0, 0, q.rz * side);
@@ -2736,6 +2966,21 @@ function silhouette(kind, s, R) {
             put(0, 5.6 * s, 1.8 * s, 2.0 * s, 4.4 * s, 2.0 * s, R.landA);
             put(0, 8.1 * s, 1.8 * s, 2.4 * s, 0.7 * s, 2.4 * s, R.landB);
             put(0, 8.9 * s, 1.8 * s, 0.3 * s, 1.1 * s, 0.3 * s, R.landB);
+            break;
+        }
+        case 'city': {                                    // Ciudad de Guatemala
+            // Torres de distinta altura con la coronacion encendida. Es el
+            // unico hito del recorrido que se reconoce por sus luces y no por
+            // su forma, que es exactamente como se reconoce una ciudad de
+            // noche desde la carretera.
+            const T = [[-3.4, 5.2, 2.6], [0, 8.4, 3.2], [3.6, 6.4, 2.8]];
+            for (let t = 0; t < 3; t++) {
+                const x = T[t][0] * s, h = T[t][1] * s, w = T[t][2] * s;
+                put(x, h / 2 - 1, 0, w, h, w, R.landA);
+                put(x, h - 0.55 * s, 0, w * 0.68, 0.5 * s, w * 0.68, R.landB);
+            }
+            put(0, 9.7 * s, 0, 0.3 * s, 2.2 * s, 0.3 * s, R.landB);   // antena
+            put(0, 0.5 * s - 1, 3.4 * s, 11 * s, 1.0 * s, 2.4 * s, R.landA);
             break;
         }
         case 'market': {                                  // Chichicastenango
@@ -4242,8 +4487,12 @@ function forkWindows() {
     if (game.fork.active) {
         w.push([game.fork.s0 - QUIET_PRE, game.fork.s0 + FORK_LEN + QUIET_POST]);
     }
-    const s0 = game.nextCross + CROSS_ISLAND_AT;
-    w.push([s0 - QUIET_PRE, s0 + FORK_LEN + QUIET_POST]);
+    // Tomado el desvio a la capital ya no viene ninguna mas, y reservarle sitio
+    // dejaria el ultimo tramo vacio justo cuando tiene que estar mas lleno.
+    if (game.finishS < 0) {
+        const s0 = game.nextCross + CROSS_ISLAND_AT;
+        w.push([s0 - QUIET_PRE, s0 + FORK_LEN + QUIET_POST]);
+    }
     return w;
 }
 
@@ -4333,7 +4582,6 @@ function armSink() {
     game.sink.active = true;
     game.sink.s0 = game.distance + ARM_AHEAD;
     game.sink.mask = mask;
-    game.sink.t = 0;
     game.sink.free = libre;
 
     // El unico obstaculo del tramo, y en el carril que se salva. Tiene que
@@ -4360,14 +4608,13 @@ function updateTrackSystems(dt) {
     const d = game.distance;
 
     if (game.sink.active) {
-        // El desplome arranca cuando el jugador esta a SINK_TRIGGER: lo
-        // bastante cerca para verlo caerse —que es la mitad del aviso— y lo
-        // bastante lejos para que de tiempo a cambiarse de carril.
-        if (d > game.sink.s0 - SINK_TRIGGER) game.sink.t += dt;
-        if (d > game.sink.s0 + SINK_LEN + 40) {
-            game.sink.active = false;
-            game.sink.t = 0;
+        // Retumbo mientras hay firme rompiendose por delante. Al minimo: lo
+        // provoca el propio jugador al acercarse, y una sacudida de las de
+        // impacto ahi se leeria como que ya le ha pasado algo.
+        if (d > game.sink.s0 - SINK_TRIGGER && d < game.sink.s0 + SINK_LEN) {
+            shake = Math.max(shake, SHAKE_SOFT);
         }
+        if (d > game.sink.s0 + SINK_LEN + 40) game.sink.active = false;
     }
 
     // La linea del firme se apaga cuando ya no queda calzada por detras de
@@ -4735,12 +4982,16 @@ function spawnCrossing(z) {
     c.kind = game.crossKind;                       // 0 = destino, 1 = cortada
 
     const here = Math.floor(routePos()) % REGION_N;
-    // Destino: cualquier departamento menos en el que ya se esta.
-    let target = (Math.random() * (REGION_N - 1)) | 0;
-    if (target >= here) target++;
+    // El destino ya NO se sortea. La ruta es una sola y va de Tikal a la
+    // capital, asi que solo hay dos salidas posibles: el SIGUIENTE punto del
+    // camino, o el retorno, que deja al jugador donde ya estaba. Sorteando el
+    // destino, el mapa no significaba nada —se saltaba de Petén a San Marcos y
+    // de ahi a Izabal— y no habia forma de estar cerca ni lejos de ninguna
+    // parte. Con la ruta encadenada, cada cruce acertado es un punto menos.
+    const target = Math.min(here + 1, REGION_N - 1);
 
-    // El sorteo del lado es lo que obliga a leer el rotulo en vez de
-    // memorizar. 0 = el cambio esta a la izquierda, 2 = a la derecha.
+    // Lo que si se sortea es el LADO, y es lo que obliga a leer el rotulo en
+    // vez de memorizar. 0 = seguir la ruta es por la izquierda, 2 = derecha.
     c.swapLane = Math.random() < 0.5 ? 0 : 2;
     c.target = target;
     c.z = z - CROSS_SIGN_AHEAD;
@@ -4750,18 +5001,21 @@ function spawnCrossing(z) {
 
     if (c.kind === 0) {
         const izq = c.swapLane === 0;
-        const nombre = REGIONS[target].name.toUpperCase();
-        const aqui = REGIONS[here].name.toUpperCase();
+        const nombre = (REGIONS[target].sign || REGIONS[target].name).toUpperCase();
+        const depto = REGIONS[target].dept.toUpperCase();
+        const aqui = (REGIONS[here].sign || REGIONS[here].name).toUpperCase();
 
         // Se rehacen las dos texturas: el destino y el lado cambian cada vez.
+        // El rotulo bueno lleva sitio y departamento, como una senal de
+        // carretera de verdad; el otro dice RETORNO y adonde no lleva.
         const put = (i, titulo, sub, flecha) => {
             if (c.sign.tex[i]) c.sign.tex[i].dispose();
             c.sign.tex[i] = signTexture(titulo, sub, flecha);
             c.sign.panels[i].material.map = c.sign.tex[i];
             c.sign.panels[i].material.needsUpdate = true;
         };
-        put(0, izq ? nombre : 'RETORNO', izq ? 'DESVÍO' : aqui, -1);
-        put(1, izq ? 'RETORNO' : nombre, izq ? aqui : 'DESVÍO', 1);
+        put(0, izq ? nombre : 'RETORNO', izq ? depto : aqui, -1);
+        put(1, izq ? 'RETORNO' : nombre, izq ? aqui : depto, 1);
 
         c.sign.z = z;
         c.sign.curve = trackCurve(c.sign.z);
@@ -4778,13 +5032,14 @@ function spawnCrossing(z) {
         spawnWarn('noVirar', z - 74, c.blocked, true);
     }
 
-    // La bifurcacion empieza donde esta la isleta. s0 se guarda como distancia
-    // recorrida y no como z, porque la z se mueve y la coordenada de trazado no.
+    // La bifurcacion empieza donde ACABA la isleta: mientras el divisor esta
+    // ahi la calzada es una sola y los dos ramales salen de su cola. s0 se
+    // guarda como distancia recorrida y no como z, porque la z se mueve y la
+    // coordenada de trazado no.
     game.fork.active = true;
-    game.fork.s0 = game.distance - (z - CROSS_SIGN_AHEAD);
+    game.fork.s0 = game.distance - (z - CROSS_SIGN_AHEAD) + CROSS_ISLAND_LEN / 2;
     game.fork.chosen = 0;
     game.fork.mainBand = -1;
-    game.fork.away = 0;
 
     c.island.z = z - CROSS_SIGN_AHEAD;
     c.island.curve = trackCurve(c.island.z);
@@ -4798,18 +5053,20 @@ function spawnCrossing(z) {
 // mueve routePos, que es lo unico que decide en que departamento se esta.
 function takeExit(c, lane) {
     // El ramal se fija SIEMPRE, incluso si se ha saltado el divisor por
-    // arriba. Dejandolo sin fijar, forkDX pierde el termino que recentra el
-    // mundo sobre el jugador y la calzada se le desliza de debajo de los pies
-    // hasta ocho unidades. Quien salta el divisor cae en el ramal izquierdo.
+    // arriba: es lo que hace que el otro se aparte y se pierda de vista, y sin
+    // fijarlo los dos se quedarian abiertos y paralelos hasta que la
+    // bifurcacion caduca. Quien salta el divisor cae en el ramal izquierdo.
     game.fork.chosen = lane === 2 ? 1 : -1;
     game.fork.mainBand = game.fork.chosen;
 
     // --- Bifurcacion cortada ---
-    // No lleva a ninguna parte: lo unico que hay que hacer es no meterse por
-    // donde el disco rojo dice que no. Si se hace, el derrumbe aparece unas
-    // decenas de unidades mas alla —tiempo de verlo llegar y de entender que
-    // era eso del cartel— y se apunta por donde tendria que haber ido, para
-    // devolverlo ahi si decide revivir.
+    // NO MUEVE LA RUTA. Ni avanza al siguiente punto ni retorna al actual: es
+    // un obstaculo de la propia carretera, dentro del mismo tramo, y por eso
+    // sale de esta funcion antes de tocar routePos. Lo unico que hay que hacer
+    // es no meterse por donde el disco rojo dice que no. Si se hace, el
+    // derrumbe aparece unas decenas de unidades mas alla —tiempo de verlo
+    // llegar y de entender que era eso del cartel— y se apunta por donde
+    // tendria que haber ido, para devolverlo ahi si decide revivir.
     if (c.kind === 1) {
         if (lane === 1) return;                    // saltar el divisor no elige
         if (game.fork.chosen === c.blocked) {
@@ -4828,8 +5085,8 @@ function takeExit(c, lane) {
     }
 
     // Pero por encima del divisor no se TOMA ninguna salida: el muro se puede
-    // librar, pero entonces no se ha elegido nada, y cobrar el premio del
-    // retorno por ello seria pagar por no decidir.
+    // librar, pero entonces no se ha elegido nada, y avanzar de punto por ello
+    // seria pagar por no decidir.
     if (lane === 1) return;
 
     const cambio = lane === c.swapLane;
@@ -4850,7 +5107,6 @@ function takeExit(c, lane) {
     lastBlendKey = -1;          // la escena se repinta entera, sin cache
     mmLastName = '';
     resetRoadColors();
-    showRegionBanner(destino);
 
     // Solo se cruza el paisaje si de verdad se cambia de departamento
     if (destino !== desde) {
@@ -4859,23 +5115,34 @@ function takeExit(c, lane) {
     }
 
     if (cambio) {
+        showRegionBanner(destino);
         const id = REGIONS[destino].id;
         if (!save.regions.includes(id)) {
             save.regions.push(id);
             persist();
             refreshMinimapDots();
         }
-    } else {
-        // El retorno no lleva a ningun sitio nuevo, asi que paga en jade: sin
-        // nada a cambio nadie lo tomaria jamas y la mitad del cruce sobraria.
+        // Avanzar es lo unico que paga. Antes pagaba el retorno —"si no, nadie
+        // lo tomaria jamas"—, y eso era premiar la respuesta equivocada: ahora
+        // el camino lleva a un sitio, y quedarse ya no es media opcion sino un
+        // error que cuesta setecientos ochenta metros a una velocidad que no
+        // deja de subir.
         game.jade += 3;
         game.jadeScore += Math.round(75 * jadeScale());
         burstParticles(player.x, player.y + 1.2, PLAYER_Z, 18, 1.1, C.jade);
+
+        // Y si lo que se acaba de tomar es el desvio a la capital, la carrera
+        // tiene final: un ultimo tramo de ciudad y se cierra.
+        if (destino === REGION_N - 1) game.finishS = game.distance + FINISH_RUN;
+    } else {
+        // El retorno deja al jugador donde estaba. El rotulo lo dice con todas
+        // las letras para que no se lea como un fallo del juego.
+        showBanner('Retorno', 'Sigues en ' + REGIONS[destino].name);
+        sfx.region();
     }
 
     game.region = destino;
     hudDirty = true;
-    sfx.region();
 }
 
 function updateCrossings(dt) {
@@ -4883,11 +5150,18 @@ function updateCrossings(dt) {
 
     if (game.snapT < 1) game.snapT = Math.min(1, game.snapT + dt / SNAP_TIME);
 
-    // Elegido un ramal, el otro se abre y se pierde de vista en poco mas de un
-    // segundo. Es lo que hace legible por donde se fue uno: si los dos siguen
-    // ahi, abiertos y paralelos, no hay forma de saber cual es el tuyo.
-    if (game.fork.active && game.fork.chosen !== 0) {
-        game.fork.away = Math.min(1, game.fork.away + dt / 0.55);
+    // --- Cual de las dos mallas lleva los carriles ---
+    // La calzada detallada —la del adoquin, los avisos y las colisiones— tiene
+    // que ser SIEMPRE aquella por la que el jugador va a pasar, asi que sigue
+    // a su carril mientras no se ha resuelto la salida. Se hace en seco y sin
+    // suavizado a proposito: antes del divisor los dos ramales son simetricos,
+    // de modo que intercambiar las mallas las deja exactamente donde estaba la
+    // otra y no se ve nada. Por el carril del medio no se cambia: ahi todavia
+    // no se ha elegido.
+    const fk = game.fork;
+    if (fk.active && fk.chosen === 0) {
+        if (player.lane === 0) fk.mainBand = -1;
+        else if (player.lane === 2) fk.mainBand = 1;
     }
 
     for (const c of crossings) {
@@ -4918,9 +5192,10 @@ function updateCrossings(dt) {
         }
     }
 
-    // La bifurcacion se apaga cuando el jugador la ha dejado del todo atras:
-    // pasado ese punto los dos terminos de forkDX ya se cancelan y apagarla no
-    // mueve nada, asi que no hay tiron.
+    // La bifurcacion se apaga cuando el jugador la ha dejado del todo atras.
+    // Para entonces el reparto ya coincide con el ramal tomado y el
+    // desplazamiento de la calzada principal vale cero en todo el trazado, asi
+    // que apagarla no mueve nada y no hay tiron.
     if (game.fork.active && game.distance > game.fork.s0 + FORK_LEN + 40) {
         game.fork.active = false;
         game.fork.chosen = 0;
@@ -5546,8 +5821,17 @@ function scrollWorld(dt) {
             if (h.drop > 0) {
                 h.dropV -= 62 * dt;
                 h.drop = Math.max(0, h.drop + h.dropV * dt);
+                // Mientras la piedra esta en el aire, el suelo ya retumba. Es
+                // lo que hace que el derrumbe se SIENTA venir en vez de
+                // aparecer: cuando llega la sacudida del impacto, el jugador ya
+                // sabia que algo se estaba cayendo.
+                shake = Math.max(shake, SHAKE_FALL);
                 if (h.drop === 0) {
-                    shake = Math.max(shake, 0.3);
+                    // Y el impacto, escalado con lo cerca que cae. Nunca por
+                    // debajo del retumbo: una piedra lejana golpea flojo, pero
+                    // golpea.
+                    const cerca = Math.max(0, 1 + Math.min(0, h.z) / SHAKE_NEAR);
+                    shake = Math.max(shake, SHAKE_ROCK * (0.62 + 0.38 * cerca));
                     burstParticles(x, riseAtZ(h.z), h.z, 10, 1, 0x8a7a68);
                     sfx.bump();
                 }
@@ -5616,7 +5900,9 @@ function scrollWorld(dt) {
     // --- Distribuidor vial ---
     // Se dispara por distancia y no dentro de un compas: tiene que aparecer
     // donde toca, no cuando le venga bien al generador.
-    if (game.distance > game.nextCross) {
+    // Con la llegada ya tomada no se planta ninguno mas: el ultimo tramo de
+    // ciudad es de una sola pieza, sin nada que elegir.
+    if (game.finishS < 0 && game.distance > game.nextCross) {
         game.nextCross += CROSS_EVERY;
         spawnCrossing(SPAWN_Z);
         // Solo la Y de bifurcacion, una a cada lado porque la decision es de
@@ -6065,15 +6351,20 @@ function routePos() {
     return game.routePos;
 }
 
-// Cuanto se lleva recorrido hacia el proximo distribuidor, de 0 a 1.
+// Cuanto se lleva recorrido hacia el proximo distribuidor, de 0 a 1. Y en el
+// ultimo tramo, lo que falta para la meta: es lo que hay que saber ahi.
 function crossProgress() {
-    const t = 1 - (game.nextCross - game.distance) / CROSS_EVERY;
+    const t = game.finishS >= 0
+        ? 1 - (game.finishS - game.distance) / FINISH_RUN
+        : 1 - (game.nextCross - game.distance) / CROSS_EVERY;
     return Math.max(0, Math.min(1, t));
 }
 
 function applyBlend(pos) {
     const i = Math.floor(pos) % REGION_N;
-    const j = (i + 1) % REGION_N;
+    // El siguiente de la ruta, no el siguiente del array dando la vuelta: la
+    // ruta se acaba en la capital y despues de ella no hay nada.
+    const j = Math.min(i + 1, REGION_N - 1);
     const raw = pos - Math.floor(pos);
     // El tramo se sostiene y la transicion ocurre al final, en vez de estar
     // cambiando de color permanentemente.
@@ -6158,12 +6449,25 @@ function applyBlend(pos) {
 // mueve el marcador y se cambia una clase.
 function buildMinimap() {
     const ns = 'http://www.w3.org/2000/svg';
+    // Primero los caminos: un segmento por cada par de puntos consecutivos de
+    // la ruta. Son lo que hace legible que esto es un recorrido y no una
+    // coleccion de sitios, y ademas dicen cuantas paradas faltan para la
+    // capital sin escribir un solo numero.
+    for (let i = 0; i + 1 < REGION_N; i++) {
+        const ln = document.createElementNS(ns, 'line');
+        ln.setAttribute('x1', REGIONS[i].mm[0]);
+        ln.setAttribute('y1', REGIONS[i].mm[1]);
+        ln.setAttribute('x2', REGIONS[i + 1].mm[0]);
+        ln.setAttribute('y2', REGIONS[i + 1].mm[1]);
+        ln.setAttribute('class', 'mm-leg');
+        dom.mmRoute.appendChild(ln);
+    }
     REGIONS.forEach((R, i) => {
         const dot = document.createElementNS(ns, 'circle');
         dot.setAttribute('cx', R.mm[0]);
         dot.setAttribute('cy', R.mm[1]);
-        dot.setAttribute('r', '2.2');
-        dot.setAttribute('class', 'mm-dot');
+        dot.setAttribute('r', i === REGION_N - 1 ? '2.9' : '2.2');
+        dot.setAttribute('class', 'mm-dot' + (i === REGION_N - 1 ? ' goal' : ''));
         dot.dataset.i = String(i);
         dom.mmDots.appendChild(dot);
     });
@@ -6178,6 +6482,17 @@ function refreshMinimapDots() {
 }
 
 let mmLastName = '';
+let mmLastLeg = -1;
+
+// Los caminos recorridos EN ESTA CARRERA, no los de siempre. Los puntos si
+// recuerdan lo alcanzado alguna vez —son el mapa de lo descubierto—, pero el
+// trazo tiene que decir por donde va uno ahora.
+function paintRouteLegs(upto) {
+    if (upto === mmLastLeg) return;
+    mmLastLeg = upto;
+    const legs = dom.mmRoute.children;
+    for (let k = 0; k < legs.length; k++) legs[k].classList.toggle('done', k < upto);
+}
 
 function renderMinimap(i, j, raw, e) {
     // El marcador viaja del punto actual al siguiente durante la transicion,
@@ -6185,6 +6500,7 @@ function renderMinimap(i, j, raw, e) {
     const A = REGIONS[i].mm, B = REGIONS[j].mm;
     dom.mmYou.setAttribute('cx', lerp(A[0], B[0], e).toFixed(1));
     dom.mmYou.setAttribute('cy', lerp(A[1], B[1], e).toFixed(1));
+    paintRouteLegs(i);
 
     if (REGIONS[i].id !== mmLastName) {
         mmLastName = REGIONS[i].id;
@@ -6193,7 +6509,8 @@ function renderMinimap(i, j, raw, e) {
     }
     // La barra ya no mide el avance dentro del departamento —no hay tal cosa,
     // la ruta esta quieta— sino lo que falta para el proximo cruce, que es lo
-    // unico que puede cambiarlo.
+    // unico que puede cambiarlo. Y en el ultimo tramo, lo que falta para la
+    // meta.
     dom.mmFill.style.width = (raw * 100).toFixed(0) + '%';
 }
 
@@ -6282,8 +6599,9 @@ function startGame() {
     game.elapsed = 0;
     game.nextMilestone = MILESTONE_EVERY;
     game.best = save.best;
-    game.startRegion = save.start;
-    game.region = save.start;
+    // Siempre se sale de Petén: la ruta es una y empieza en Tikal.
+    game.startRegion = 0;
+    game.region = 0;
     for (const k of POWER_KEYS) if (k !== 'shield') game.powers[k] = 0;
     game.boost = 0;
     game.boostTaken = 0;
@@ -6293,19 +6611,20 @@ function startGame() {
     game.nextTramo = 0;
     game.lastTramo = -1;
     game.crossKind = 1;
-    game.routePos = save.start + 0.02;
+    game.routePos = 0.02;
+    game.finishS = -1;
+    game.won = false;
+    mmLastLeg = -1;
     game.roadS0 = -1;
     game.roadFrom = 0;
     game.nextCross = CROSS_EVERY;
     game.fork.active = false;
     game.fork.chosen = 0;
     game.fork.mainBand = -1;
-    game.fork.away = 0;
     game.turn.active = false;
     game.turnHold = 0;
     game.narrowS0 = -1;
     game.sink.active = false;
-    game.sink.t = 0;
     game.wrongC = null;
     game.snapT = 1;
     game.crossTaken = 0;
@@ -6382,6 +6701,17 @@ function startGame() {
 // anuncio del patrocinador. Solo si se rechaza (o si ya se gasto) se cierra.
 function endGame() {
     if (!game.revived) { offerRevive(); return; }
+    finishGame();
+}
+
+// Llegar a la capital. Es la unica forma de terminar una carrera sin morir, y
+// paga de golpe lo que doce desvios acertados valen: sin premio, llegar seria
+// solo dejar de jugar.
+function winGame() {
+    game.won = true;
+    game.jade += 40;
+    game.jadeScore += Math.round(2000 * jadeScale());
+    burstParticles(player.x, player.y + 1.2, PLAYER_Z, 40, 1.8, C.jade);
     finishGame();
 }
 
@@ -6577,7 +6907,7 @@ function declineRevive() {
 function finishGame() {
     game.state = State.OVER;
     stopPendingTones();
-    sfx.over();
+    if (game.won) sfx.milestone(); else sfx.over();
 
     const score = scoreOf();
     const isRecord = score > save.best;
@@ -6591,8 +6921,12 @@ function finishGame() {
     dom.finalRegion.textContent = REGIONS[game.region].name + ' · ' + REGIONS[game.region].dept;
     dom.finalBank.textContent = save.bank;
     dom.bestScore.textContent = save.best;
-    dom.recordTag.textContent = isRecord ? '¡Nueva mejor marca!' : '';
-    dom.overTitle.textContent = isRecord ? '¡RÉCORD!' : 'FIN';
+    // Llegar manda sobre el record: son dos cosas distintas y la que cierra la
+    // ruta entera es la que tiene que salir en el titulo.
+    dom.recordTag.textContent = game.won
+        ? 'Ruta completa, de Tikal a la capital.'
+        : isRecord ? '¡Nueva mejor marca!' : '';
+    dom.overTitle.textContent = game.won ? '¡LLEGASTE!' : isRecord ? '¡RÉCORD!' : 'FIN';
 
     // Sin esto el jaguar y el quetzal se quedaban colgados en mitad de la
     // pantalla de fin, sobre un mundo que ya no se mueve.
@@ -6606,7 +6940,7 @@ function finishGame() {
     game.snapT = 1;
     game.slopeS0 = -1;
     game.sink.active = false;
-    game.sink.t = 0;
+    game.finishS = -1;
 
     // Los poderes se apagan al morir. Si el vuelo sobreviviese a la partida,
     // la camara se quedaria encuadrada en el aire durante todo el menu.
@@ -6648,7 +6982,10 @@ let shopReturn = State.MENU;
 function refreshMenu() {
     dom.menuBank.textContent = save.bank;
     dom.menuBest.textContent = save.best;
-    dom.menuRoute.textContent = REGIONS[save.start].name + ' · ' + REGIONS[save.start].dept;
+    // Ya no es "de donde sales" —siempre es Tikal— sino cuanto de la ruta
+    // llevas visto. Es lo unico que se acumula entre carreras.
+    const vistos = REGIONS.filter(R => save.regions.includes(R.id)).length;
+    dom.menuRoute.textContent = vistos + ' de ' + REGION_N;
     // Aqui, y no al arrancar: es el unico sitio por el que se pasa siempre al
     // volver al menu o al acabar una partida, y es lo que hace que el banner
     // rote en vez de quedarse el mismo toda la sesion.
@@ -6697,16 +7034,21 @@ function renderShop() {
     }).join('');
 
     // --- Ruta ---
+    // Ya no se compra ni se elige nada: la ruta es una y va en orden. Esto es
+    // el itinerario, y lo unico que cambia de una carrera a otra es hasta
+    // donde se ha llegado. El boton se queda porque la tarjeta sin el se
+    // descuadra, pero solo dice en que estado esta cada punto.
     dom.tabRoute.innerHTML = REGIONS.map((R, i) => {
         const open = save.regions.includes(R.id);
-        const on = save.start === i;
-        const label = on ? 'Salida' : open ? 'Salir de aquí' : 'Por descubrir';
-        return '<div class="card' + (on ? ' on' : '') + (open ? '' : ' locked') + '">' +
+        const meta = i === REGION_N - 1;
+        const label = i === 0 ? 'Salida' : meta ? 'Meta' : open ? 'Visitado' : 'Por descubrir';
+        const paso = meta ? 'Final de la ruta.' : 'Parada ' + (i + 1) + ' de ' + REGION_N + '.';
+        return '<div class="card' + (open ? ' on' : ' locked') + '">' +
             '<span class="card-ic">' + svg(REGION_ICONS[R.id] || '') + '</span>' +
             swatch([R.skyBot, R.landA, R.landB, R.roadA]) +
-            '<b>' + R.name + '</b><p>' + R.dept + '. Tramo ' + (i + 1) + ' de ' + REGION_N + '.</p>' +
-            '<button type="button" data-route="' + i + '"' +
-            (!open || on ? ' disabled' : '') + (on ? ' class="equipped"' : '') + '>' + label + '</button>' +
+            '<b>' + R.name + '</b><p>' + R.dept + '. ' + paso + '</p>' +
+            '<button type="button" disabled' + (open ? ' class="equipped"' : '') + '>' +
+            label + '</button>' +
             '</div>';
     }).join('');
 }
@@ -6777,16 +7119,6 @@ function initShop() {
             renderShop();
             return;
         }
-
-        if (btn.dataset.route) {
-            const i = +btn.dataset.route;
-            if (!save.regions.includes(REGIONS[i].id)) { sfx.deny(); return; }
-            save.start = i;
-            sfx.buy();
-            persist();
-            renderShop();
-            refreshMenu();
-        }
     });
 
     setShopTab('skins');
@@ -6850,6 +7182,13 @@ function frame(now) {
             scrollWorld(STEP);
             checkCollisions();
             checkMilestone();
+            // La meta. Va DESPUES de las colisiones: morir en el ultimo metro
+            // es morir, y cobrar la llegada por haber cruzado la linea ya
+            // muerto seria regalarla.
+            if (game.finishS >= 0 && game.distance > game.finishS &&
+                game.state === State.PLAYING) {
+                winGame();
+            }
             updateParticles(STEP);
             updateCompanions(STEP);
             accumulator -= STEP;
@@ -6907,7 +7246,7 @@ function frame(now) {
         game.curveBase = curveX(game.distance);
         game.riseBase = curveY(game.distance);
         game.slopeBase = -slopeAt(game.distance) * SLOPE_DROP;
-        const mb = applyBlend(save.start);
+        const mb = applyBlend(0);
         updateRoadCurve();
         updateScenery(mb.A, mb.B, mb.e);
     }
@@ -6932,8 +7271,15 @@ function frame(now) {
     // el trazado se iria de plano en cuanto la curva apretase.
     const aimCurve = curveAtZ(cam.aimZ) * CURVE_FOLLOW;
 
-    // Camara: sigue al jugador con retardo y acusa el golpe
-    const targetX = player.x * 0.32 + aimCurve * 0.5;
+    // Lo que aprieta la curva cerrada aqui mismo. Manda sobre el peralte y
+    // sobre la deriva de la camara, y es cero fuera del tramo.
+    const giro = game.state === State.PLAYING ? turnGrip(game.distance) : 0;
+    const peralte = giro * game.turn.dir;
+
+    // Camara: sigue al jugador con retardo, acusa el golpe y en la curva se va
+    // hacia FUERA. La deriva entra por el objetivo y no por la posicion, asi
+    // que se suaviza con el mismo retardo que el seguimiento y no da tirones.
+    const targetX = player.x * 0.32 + aimCurve * 0.5 - peralte * TURN_DRIFT;
     camera.position.x += (targetX - camera.position.x) * Math.min(1, 6 * delta);
     camera.position.y = cam.y + player.y * (0.12 + 0.85 * f);
 
@@ -6962,12 +7308,14 @@ function frame(now) {
         cam.aimZ
     );
 
-    // Alabeo: la camara se tumba un poco hacia dentro de la curva. Va DESPUES
-    // de lookAt, que reescribe la rotacion entera. Un grado escaso: lo justo
-    // para que el giro se sienta en el cuerpo sin marear.
-    // El alabeo del golpe se suma al de la curva. Va aqui y no antes porque
-    // lookAt reescribe la rotacion entera.
-    camera.rotation.z += curveAtZ(cam.aimZ) * 0.022 + camRoll;
+    // Alabeo. Va DESPUES de lookAt, que reescribe la rotacion entera, y suma
+    // tres cosas: el bamboleo de la calzada de siempre, el del golpe, y el
+    // peralte de la curva cerrada, que es el que de verdad se nota.
+    //
+    // El signo: en una curva a la derecha (dir = +1) la camara se tumba hacia
+    // la derecha, o sea que rota en sentido horario, que en Three.js es una
+    // rotacion.z NEGATIVA. Si alguna vez se lee al reves, es este menos.
+    camera.rotation.z += curveAtZ(cam.aimZ) * 0.022 + camRoll - peralte * TURN_ROLL;
 
     renderer.render(scene, camera);
 }

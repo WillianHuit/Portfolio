@@ -145,20 +145,36 @@ el secreto sin explicarlo y dicen cuántos faltan. En táctil, donde no hay
 hover, el primer toque los deja visibles. La ventana entre clics es de 3 s y
 se reinicia sola.
 
-**La ruta.** Doce sitios de Guatemala, y **solo se cambia de uno a otro en una
-bifurcación**: la ruta no avanza con los metros, la mueve la salida que tomes.
-Antes el departamento cambiaba solo cada 500 m y el cruce era un atajo; así el
-cruce es la única forma de ir a otro sitio, que es lo que convierte elegir
-salida en la decisión del juego y no en un adorno. El orden del circuito es: Tikal y Flores (Petén) → Semuc
-Champey (Alta Verapaz) → Río Dulce (Izabal) → Esquipulas (Chiquimula) →
-Antigua (Sacatepéquez) → Volcán de Fuego (Chimaltenango) → Atitlán (Sololá) →
-Chichicastenango (Quiché) → Todos Santos (Huehuetenango) → Tajumulco (San
-Marcos) → Monterrico (Santa Rosa), y vuelta a empezar. Cada tramo trae su
-cielo, su niebla, su luz, **el material de su calzada**, el color de sus
-obstáculos, lo que crece en sus cunetas y su propio hito en el horizonte
-—templo escalonado, isla, karst, palmera, basílica, arco colonial, volcán,
-mercado, pico nevado—. Un minimapa en el HUD dibuja la silueta del país y va
-moviendo el marcador.
+**La ruta.** Trece sitios de Guatemala encadenados en **un camino, no en un
+circuito**: se sale siempre de Tikal y se llega —o no— a Ciudad de Guatemala.
+Entre un punto y el siguiente hay carretera de verdad, aproximando, que en
+Guatemala no todo conecta con todo:
+
+> Tikal → Flores *(CA-13)* → Semuc Champey *(FTN por Sayaxché y Raxrujá)* →
+> Río Dulce *(FTN hasta Modesto Méndez)* → Esquipulas *(CA-9 y CA-10)* →
+> Monterrico *(oriente por Ipala, Jutiapa y Taxisco)* → Tajumulco *(CA-2, la
+> costera)* → Todos Santos *(por Huehuetenango)* → Chichicastenango
+> *(Sacapulas)* → Atitlán *(Los Encuentros)* → Volcán de Fuego *(CA-1)* →
+> Antigua → **Ciudad de Guatemala** *(RN-14)*.
+
+**La ruta solo se mueve en una bifurcación**, y solo hacia delante: de las dos
+salidas del distribuidor, una lleva al **siguiente punto** y la otra es el
+**retorno**, que deja donde estabas. Qué lado es cuál se sortea cada vez, así
+que hay que leer el rótulo. Y ahí está el juego: la velocidad no deja de
+subir, de modo que cada retorno son 780 m corridos más rápido para acabar en
+el mismo sitio. Equivocarse no mata, cansa.
+
+Antes el destino se sorteaba entre los doce y se saltaba de Petén a San Marcos
+y de ahí a Izabal: el mapa no significaba nada porque no había forma de estar
+cerca ni lejos de ninguna parte. Ahora el minimapa dibuja los **tramos como
+caminos** —discontinuos los que faltan, encendidos los recorridos— y decir
+cuánto queda es mirarlo.
+
+Cada tramo trae su cielo, su niebla, su luz, **el material de su calzada**, el
+color de sus obstáculos, lo que crece en sus cunetas y su propio hito en el
+horizonte —templo escalonado, isla, karst, palmera, basílica, arco colonial,
+volcán, mercado, pico nevado y, al final, un skyline con las coronaciones
+encendidas sobre el único asfalto del recorrido—.
 
 **El juego.** Tres vidas (hasta cinco con mejoras), escudo que absorbe un
 golpe, multiplicador por racha de jade, hitos cada 250 m, jaguar que se acerca
@@ -174,7 +190,7 @@ está plantada.**
 | Derrumbe | Caen piedras del cerro **sobre ese carril**. En los dos márgenes, un tronco de lado a lado. |
 | Ganado | Una **vaca** entra por ese margen y cruza la calzada al paso hasta el otro. |
 | Parada de camioneta | Por ese carril viene un **bus** de frente, que no se aparta ni se salta. |
-| Curva | La calzada **cierra de verdad hacia ese lado**, se corre un 16 % más y el tramo va limpio de obstáculos: solo entran enemigos. **El carril de FUERA se pinta de rojo**: es hacia donde tira la inercia, y quedarse ~2 s en él te saca de la carretera. |
+| Curva | La calzada **cierra de verdad hacia ese lado** durante 225 unidades, se corre un 30 % más en el punto cerrado y el tramo va limpio de obstáculos: solo entran enemigos. **El carril de FUERA se pinta de rojo**: es hacia donde tira la inercia, y quedarse ~2 s en él te saca de la carretera. |
 | Pendiente | Bajada real de 150 unidades: la calzada se hunde por delante, la cámara cabecea y se corre un 20 % más. Sin obstáculos ni tramos elevados. |
 | `] [` Carril estrecho | Los tres carriles **se vuelven uno**. Por los lados ya no hay calzada: quien siga ahí se cae. |
 | Bifurcación en Y | Viene una bifurcación. |
@@ -187,18 +203,45 @@ la piedra rodante sueltos salen SIN señal**, a propósito: son el ruido de
 fondo del camino, y ponerles cartel llenaría el margen de rombos hasta que
 dejaran de mirarse los que sí anuncian algo gordo.
 
-**Las bifurcaciones.** Cada 780 m la calzada se parte de verdad: desde la X
-salen dos vías de tres carriles que se separan hacia los lados, el mundo se
-recoloca sobre la que llevas puesta y la otra pivota sobre el cruce y se pierde
-de vista en poco más de un segundo. **Y son dos cosas distintas, alternándose:**
+**Las bifurcaciones.** Cada 780 m la calzada se parte de verdad. Desde la cola
+del divisor salen dos vías de tres carriles que se van separando a lo largo de
+150 unidades hasta quedar a 22 una de otra —más del doble de lo que miden de
+ancho— y a partir de ahí siguen paralelas hacia el fondo:
+
+```
+    ####      ####     dos calzadas, muy separadas y paralelas
+    ####      ####
+     ###    ###        abriéndose
+       ######
+         ##            una sola, con el divisor
+         ##
+```
+
+Con las 8,4 del principio las dos vías quedaban a un palmo y se leían como una
+sola calzada ancha con una raya en medio. Pero 13 en 105 unidades se pasaba al
+otro lado: **lo que hacía falta era separación, no ángulo**. Abría una V de casi
+60° delante de las narices, que se lee como un barranco entre dos carreteras y
+no como una carretera que se parte. Bajando el reparto y alargando el tramo en
+el que ocurre, las dos vías acaban igual de separadas pero se abren como una Y
+de verdad. **Y al tomar una, el mundo se recoloca
+sobre ella**: te pasa por debajo de los pies, pero por delante se va abriendo,
+o sea que la ves *torcer* hacia el lado que tomaste. La otra hace la curva
+simétrica hacia el lado contrario y se marcha por ahí. No se la echa de plano
+—eso se veía como si desapareciera en el aire, a mitad de camino—: se va porque
+es una carretera que lleva a otro sitio, que es exactamente lo que es.
+
+**Son dos cosas distintas, alternándose:**
 
 - **Distribuidor de destino.** Un pórtico con dos rótulos verdes: una salida
-  lleva a otro departamento, la otra es el **retorno** al actual. Se decide
-  leyendo, y qué lado es cuál se sortea cada vez. El retorno paga en jade; el
-  cambio, en paisaje nuevo.
+  lleva al **siguiente punto de la ruta** —con su nombre y su departamento,
+  como una señal de la CA-9— y la otra es el **retorno**, que deja donde
+  estabas. Se decide leyendo, y qué lado es cuál se sortea cada vez. Avanzar
+  paga en jade y en paisaje; el retorno no paga nada y cuesta 780 m.
 - **Bifurcación cortada.** Sin pórtico. Un disco rojo de **prohibido virar**
   marca el ramal que está tapado por un derrumbe. Se decide mirando: acertar
   paga jade, meterse por ahí se acabó —y si revives, sales ya en el bueno—.
+  **No mueve la ruta**: ni avanza ni retorna, es un obstáculo de la propia
+  carretera dentro del mismo punto.
 
 Iban mezcladas en el mismo cruce y eso las estropeaba a las dos: el disco rojo
 se leía como una parte más de la señalización de destinos, y el rótulo verde
@@ -207,6 +250,13 @@ un lado. **Alrededor de las dos hay 315 unidades sin absolutamente nada** —ni
 obstáculos, ni rampas, ni enemigos, ni poderes—, porque lo que se pide ahí es
 elegir, y un murciélago apareciendo a mitad de un cambio de carril no es
 dificultad: es no dejar jugar.
+
+**La meta.** Tomar el desvío a la capital no cierra la partida en ese mismo
+frame: quedan 420 m de ciudad —sin cruces, sin nada que elegir— y ahí termina
+la carrera con **¡LLEGASTE!** en vez de FIN. Es la única forma de acabar una
+partida sin morir, y paga 40 de jade y 2.000 puntos de golpe: llegar tenía que
+valer más que cualquier récord de distancia, o completar la ruta habría sido
+solo dejar de correr.
 
 **La calzada no es recta ni plana.** Gira, ondula y a partir de los 120 m
 aparecen tramos elevados: uno de los cinco repartos alto/bajo entre los tres
@@ -304,13 +354,22 @@ Lo que importa mantener si se toca:
   1,5 dentro de un cubo de 1,45: sobresalían dos centímetros y quedaban
   enterradas, y la amenaza se veía como un cubo negro sin más. El filo rojo es
   además emisivo, o en las zonas de noche no se ve venir.
-- **La bifurcación se recoloca sobre el jugador, no al revés.** A la
-  separación de cada ramal se le resta la del ramal que él lleva en su propia
-  posición: así su calzada queda siempre centrada, la otra se abre al doble de
-  velocidad, y en cuanto la X queda atrás los dos términos se cancelan solos
-  sin tener que desactivar nada. La versión anterior resolvía el cruce con una
-  isleta y ya: no había forma de saber qué camino habías tomado, porque los dos
-  eran el mismo camino.
+- **La elección se convierte en una curva con un solo término.** Cada ramal se
+  dibuja a `ramal × S(s) − elegido × S(D)`: el primer sumando abre los dos por
+  igual a partir del divisor —la Y simétrica, las dos opciones sobre la mesa— y
+  el segundo resta la separación del ramal elegido **medida en la posición del
+  jugador**. Eso recoloca el mundo sobre esa calzada: a su altura los dos
+  términos se cancelan y le pasa por debajo de los pies, pero por delante se va
+  abriendo, así que se ve torcer. Y el ramal descartado, que tiene el signo
+  contrario en los dos sumandos, hace la curva simétrica hacia el otro lado. Un
+  intento intermedio dibujaba el ramal apuntado **recto** y empujaba al otro
+  fuera de plano con un término de fuerza bruta; se leía como que el camino
+  descartado se evaporaba en mitad del aire.
+- **Y el salto de ese término al elegir sale gratis.** Encenderlo en seco
+  movería la calzada tres unidades de golpe… salvo que la bifurcación empiece
+  justo donde la salida se resuelve. Empieza en la **cola del divisor**, que es
+  exactamente el punto en el que la isleta deja atrás al jugador, y ahí `S(D)`
+  todavía vale cero.
 - **El carril que mata se pinta, no se tiñe.** El primer intento fue teñir de
   rojo las piedras del firme que cayeran en ese carril, y no vale: el despiece
   cambia por zona y en Tikal la losa es **una sola pieza de lado a lado**
@@ -346,11 +405,33 @@ Lo que importa mantener si se toca:
   plataforma de ascensor. Con la aceleración al cuadrado y un vuelco hacia
   fuera se lee como lo que es: un suelo que se rompe.
 
-- **El desplome empieza a 46 unidades, no al llegar.** Antes de eso solo hay
-  marca roja parpadeando. Ese margen es lo único que separa un obstáculo de una
-  trampa: da tiempo a ver cuál es el carril bueno, a cambiarse, y aun así a ver
-  caer el firme por el rabillo del ojo. A la velocidad de crucero el agujero
-  queda abierto unas treinta unidades antes de llegar a él.
+- **El desplome es de cada tabla, no del tramo, y se mide en metros.** Antes
+  había un reloj único: en cuanto el jugador entraba en el radio, las 34
+  unidades enteras se caían a la vez en medio segundo. El resultado medido era
+  que para cuando llegabas el agujero llevaba abierto y **quieto** un buen
+  rato, y lo único que quedaba por ver era el hueco. Ahora cada tabla empieza a
+  hundirse cuando el jugador está a 46 unidades **de ella**, así que la rotura
+  viene hacia él en oleada y el firme se sigue partiendo a pocos metros de sus
+  pies hasta el último momento. Y en unidades y no en segundos, de modo que la
+  oleada se ve igual a cualquier velocidad. Lo que separa el obstáculo de la
+  trampa sigue siendo la marca roja, que aparece mucho antes.
+
+- **Las sacudidas pequeñas no eran suaves: eran nada.** La sacudida entra **al
+  cuadrado** (`g = shake * shake`) para que el primer instante sea el que se
+  nota, y eso significa que la escala no es lineal ni por asomo: un golpe de
+  verdad vale 1,05, pero con el 0,3 que tenía la roca del derrumbe el
+  desplazamiento de cámara salía de **cinco centésimas de unidad**, que a
+  catorce unidades de distancia no se ve. Todo lo que quiera sentirse tiene que
+  estar por encima de 0,4. Tres valores, y no uno, porque no dicen lo mismo:
+  **0,40** de retumbo mientras las rocas caen por el aire —el aviso: algo viene
+  y todavía no ha llegado—, **0,90** en el impacto contra la calzada y **0,42**
+  sostenido mientras el firme se rompe por delante. Ese último va bajo a
+  propósito: lo provoca el propio jugador al acercarse, y un golpe ahí se leería
+  como que ya le ha pasado algo.
+- **Y el impacto de la roca se escala con lo cerca que cae** (nunca por debajo
+  del retumbo: una piedra lejana golpea flojo, pero golpea). Antes una que
+  tocaba suelo en el horizonte movía la cámara exactamente igual que una que
+  caía al lado, y eso no se lee como peso, se lee como una avería.
 
 - **La curva late y el hundimiento parpadea.** El mismo material sirve a los
   dos —no coinciden nunca, `trackBusy` no deja armar un tramo con otro puesto—
@@ -364,15 +445,42 @@ Lo que importa mantener si se toca:
   demás. También se niega a armarse si hay un tramo elevado cerca: su tablero
   cruzaría por encima del agujero y el jugador lo pasaría andando por el aire.
 
-- **Los dos ramales se pisaban durante segundo y medio.** La separación de la
-  bifurcación vale cero en la X y crece hacia el fondo, que es lo que hace que
-  se vea abrirse. Pero a la altura del jugador eso significa que, en el momento
-  de elegir, las dos calzadas de 8,4 de ancho estaban a medio metro una de la
-  otra: superpuestas. Se veía —y era— como si se pudiera pasar de un camino al
-  otro andando. Ahora el ramal descartado, además de pivotar, **se aparta en
-  bloque** con una curva rápida al principio: medido, las dos calzadas están
-  despegadas del todo a las tres décimas. Y el divisor pasa de 22 a 30
-  unidades, porque su único trabajo es impedir el cruce mientras siguen juntas.
+- **Los dos ramales se pisaban, y no había perfil que lo arreglase.** La
+  separación de la bifurcación vale cero donde nace y crece hacia el fondo, que
+  es lo que hace que se vea abrirse. Pero eso significa que durante las primeras
+  decenas de unidades las dos calzadas de 8,4 de ancho tienen los centros a
+  menos de lo que miden: **una encima de la otra**, peleándose por el píxel. Lo
+  que se veía no eran dos caminos, era una mancha con cuatro bordillos dentro.
+  Se atacó por tres sitios a la vez: el reparto **arranca deprisa** en vez de
+  con un `smoothstep`, que sale plano; la bifurcación empieza en la **cola del
+  divisor** y no en su centro, así que mientras el muro está ahí la calzada es
+  una sola; y el ramal secundario **se recorta contra el bordillo del
+  principal**, con 2,2 unidades de aire, de modo que nace como una franja
+  pegada al borde y crece hacia fuera según se abren. No se pisan nunca.
+
+- **Y por eso el ramal descartado lleva adoquín propio.** Cuesta 1.260 matrices
+  por frame en vez de 240, y antes iba con losa lisa a propósito. Pero la
+  calzada detallada tiene que ser **siempre la que pisa el jugador**, y cuál es
+  esa se decide por su carril hasta el último momento, así que las dos mallas se
+  intercambian si cambia de idea en la aproximación. El relevo se hace en seco
+  porque antes del divisor los dos ramales son simétricos y cada malla acaba
+  exactamente donde estaba la otra; con una lisa y otra empedrada, en cambio, se
+  veía como un parpadeo de toda la carretera.
+- **La cuneta va con su calzada, y se aparta del otro ramal.** El matorral se
+  posicionaba solo con la curva de siempre, así que en la bifurcación se quedaba
+  en el eje del cruce mientras la calzada elegida se abría: el jugador corría
+  por una carretera que se separaba de sus propios árboles. Al engancharlo al
+  ramal bueno apareció el problema contrario —pinos creciendo en mitad del
+  asfalto del camino que no habías tomado—, así que las matas que caen encima
+  del otro ramal se apagan. Lo que queda ENTRE los dos sí se deja: una cuña de
+  monte entre dos carreteras que se separan es justo lo que hay en una
+  bifurcación de verdad.
+- **El ramal que se va se apaga por dónde está, no por un reloj.** Se apagaba
+  medio segundo después de elegir, y eso lo hacía desaparecer en el aire a mitad
+  de su curva. Ahora se recorta contra el encuadre, y el límite **se abre con la
+  distancia**: a la altura del jugador se sale de plano a doce unidades, pero a
+  ciento cincuenta por delante esas mismas veintiséis se siguen viendo
+  perfectamente, que es justo la parte que hay que ver marcharse.
 
 - **Los poderes se llevan puestos.** El HUD ya dice cuál está activo, pero
   mirarlo cuesta el medio segundo que no hay. El escudo es una burbuja —es el
@@ -412,7 +520,17 @@ Lo que importa mantener si se toca:
   la del sitio nuevo. Se ve venir el adoquín.
 - **La barra del minimapa mide otra cosa.** Medía el avance dentro del
   departamento; con la ruta quieta eso no existe, así que ahora mide lo que
-  falta para el próximo cruce, que es lo único que puede cambiarlo.
+  falta para el próximo cruce, que es lo único que puede cambiarlo. Y en el
+  último tramo, lo que falta para la meta.
+- **Los caminos del minimapa se dibujan una vez y se encienden por clase.** Un
+  `<line>` por cada par de puntos consecutivos, discontinuos de salida y
+  continuos en cuanto se recorren. Los puntos recuerdan lo alcanzado alguna vez
+  —son el mapa de lo descubierto y se guardan— pero el trazo dice por dónde va
+  uno **en esta carrera**, así que se repinta solo cuando cambia el índice, no
+  cada frame.
+- **Se quitó elegir por dónde salir.** El taller vendía el punto de salida y
+  eso rompía lo único que el mapa tenía que decir: cuánto te falta para la
+  capital. La pestaña Ruta se quedó como itinerario de solo lectura.
 
 - **El cartel de curva se dibuja una vez y se voltea.** Está dibujado torciendo
   a la derecha, y para el margen izquierdo se invierte el plano. La primera
@@ -468,9 +586,10 @@ Lo que importa mantener si se toca:
   multiplicarla entera hace que el ramal PIVOTE sobre el cruce: se ve curvarse y
   perderse. Dejando los dos ahí, abiertos y paralelos, no había forma de saber
   cuál era el tuyo —que era exactamente la queja—.
-- **El ramal se fija incluso si se salta el divisor por arriba.** Sin fijarlo,
-  `forkDX` pierde el término que recoloca el mundo y la calzada se le desliza
-  al jugador de debajo de los pies hasta ocho unidades.
+- **El ramal se fija incluso si se salta el divisor por arriba.** Es lo que
+  hace que el otro se aparte y se pierda de vista; sin fijarlo los dos se
+  quedarían abiertos y paralelos hasta que la bifurcación caduca. Quien salta
+  el divisor cae en el ramal izquierdo.
 - **Toda la bifurcación va limpia de objetos.** Un obstáculo ahí dentro caería
   sobre un ramal que se está abriendo, o sobre el que no se ha tomado, o justo
   donde hay que estar leyendo y colocándose.
@@ -533,8 +652,9 @@ Lo que importa mantener si se toca:
   Resolverla al llegar la punta le quitaría al tramo toda su tensión: hasta el
   último momento se puede cambiar de carril.
 - **Saltar la isleta no toma ninguna salida.** El muro se puede librar por
-  arriba, pero entonces no se ha elegido nada, y cobrar el premio del retorno
-  por ello sería pagar por no decidir.
+  arriba, pero entonces no se ha elegido nada, y avanzar de punto por ello
+  sería pagar por no decidir. El ramal sí se fija —a la izquierda— o los dos se
+  quedarían abiertos y paralelos hasta que la bifurcación caduca.
 - **`roadRegionOf` también suma `regionShift`.** Sin eso, al tomar la salida de
   cambio el cielo y la vegetación saltaban al departamento nuevo y la calzada se
   quedaba con el adoquín del anterior.
@@ -558,6 +678,22 @@ Lo que importa mantener si se toca:
   Misma corrección: el desplazamiento cierra hacia el lado del cartel y **se
   queda ahí**. Sale gratis porque todo se mide restando el desplazamiento del
   propio jugador, así que quedarse desviado no desvía nada.
+- **La curva se veía, pero no se sentía en ninguna parte.** Movía el trazado y
+  subía la velocidad, y el encuadre seguía tan recto como en una recta. Ahora
+  lleva **peralte**: la cámara se tumba 8,5° hacia dentro del giro y además
+  deriva hacia fuera, que es lo que hace la inercia. El alabeo de la calzada de
+  siempre no servía aquí —va por la máscara de distancia, que vale cero dentro
+  de 158 unidades, y el punto de mira de la cámara está mucho más cerca que
+  eso—, así que el peralte sale de `turnGrip`, que es una campana y devuelve la
+  cámara a la horizontal al salir sin tener que apagar nada.
+- **Y la curva duraba menos que el gesto de tomarla.** 165 unidades son dos
+  segundos y medio a velocidad de crucero: se acababa antes de que el jugador
+  terminara de colocarse por dentro, así que no se aguantaba una línea, se daba
+  un volantazo. Ahora mide 225, cierra 60 en vez de 46 —repartir el mismo
+  desplazamiento en más unidades habría sido alargarla abriéndola, que es lo
+  contrario— y en el punto cerrado se corre un 30 % más en vez de un 16 %: lo
+  que aprieta contra el borde de fuera es la velocidad, así que subirla es
+  subir la curva entera.
 
 - **Los tres tramos que cambian la calzada se arman 215 unidades por delante.**
   La calzada llega a 204 y los compases nacen a 170. Armar dentro de eso hacía
