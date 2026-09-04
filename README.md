@@ -203,32 +203,38 @@ la piedra rodante sueltos salen SIN señal**, a propósito: son el ruido de
 fondo del camino, y ponerles cartel llenaría el margen de rombos hasta que
 dejaran de mirarse los que sí anuncian algo gordo.
 
-**Las bifurcaciones.** Cada 780 m la calzada se parte de verdad. Desde la cola
-del divisor salen dos vías de tres carriles que se van separando a lo largo de
-150 unidades hasta quedar a 22 una de otra —más del doble de lo que miden de
-ancho— y a partir de ahí siguen paralelas hacia el fondo:
+**Las bifurcaciones.** Cada 950 m la calzada se parte de verdad, y no se abre:
+**se desvía, a 45° clavados**. Desde la cola del divisor los dos ramales salen
+en aspa y en 24 unidades ya están a 32 uno de otro, casi cuatro veces lo que
+miden de ancho:
 
 ```
-    ####      ####     dos calzadas, muy separadas y paralelas
-    ####      ####
-     ###    ###        abriéndose
-       ######
-         ##            una sola, con el divisor
-         ##
+   ####            ####
+     ####        ####        a 45 grados
+       ####    ####
+          ######
+            ##               una sola, con el divisor
+            ##
 ```
 
-Con las 8,4 del principio las dos vías quedaban a un palmo y se leían como una
-sola calzada ancha con una raya en medio. Pero 13 en 105 unidades se pasaba al
-otro lado: **lo que hacía falta era separación, no ángulo**. Abría una V de casi
-60° delante de las narices, que se lee como un barranco entre dos carreteras y
-no como una carretera que se parte. Bajando el reparto y alargando el tramo en
-el que ocurre, las dos vías acaban igual de separadas pero se abren como una Y
-de verdad. **Y al tomar una, el mundo se recoloca
-sobre ella**: te pasa por debajo de los pies, pero por delante se va abriendo,
-o sea que la ves *torcer* hacia el lado que tomaste. La otra hace la curva
-simétrica hacia el lado contrario y se marcha por ahí. No se la echa de plano
-—eso se veía como si desapareciera en el aire, a mitad de camino—: se va porque
-es una carretera que lleva a otro sitio, que es exactamente lo que es.
+Los tres intentos anteriores repartían la separación a lo largo de 105 o 150
+unidades, y eso da ángulos de 8° o 14°: una carretera que se dobla despacio, no
+un cruce. **Un desvío se lee porque SALE**, y sale con un ángulo que se ve. Los
+dos números están atados: con un `smoothstep` la pendiente máxima vale
+`1,5 × separación / largo`, así que `largo = 1,5 × separación` da exactamente
+pendiente 1 —la tangente de 45°— en el punto medio, y el perfil entra y sale con
+pendiente cero, de modo que el desvío empalma con la recta sin un solo pico.
+
+**Y al tomar uno, el mundo gira contigo.** El mundo se recoloca sobre la calzada
+elegida, así que te pasa por debajo de los pies; sin nada más, un desvío
+pronunciado se vería como la carretera cruzándosete en diagonal mientras sigues
+mirando al frente —patinando de lado, no girando—. La cámara y el personaje giran
+con la calzada, y entonces lo que se ve es lo correcto: tuerces, y el mundo entero
+rota a tu alrededor. De paso resuelve lo otro: **el ramal descartado sale del
+encuadre por el lado durante el giro**, en vez de quedarse en el centro de la
+pantalla justo cuando deja de dibujarse. Y en las últimas unidades se hunde bajo
+la explanada, porque la niebla cierra a 185 y a cien por delante un corte en seco
+sí se ve.
 
 **Son dos cosas distintas, alternándose:**
 
@@ -354,6 +360,14 @@ Lo que importa mantener si se toca:
   1,5 dentro de un cubo de 1,45: sobresalían dos centímetros y quedaban
   enterradas, y la amenaza se veía como un cubo negro sin más. El filo rojo es
   además emisivo, o en las zonas de noche no se ve venir.
+- **Un desvío a 45° obliga a enderezar las losas.** La calzada se dibuja como
+  cajas alineadas con los ejes del mundo, desplazadas lateralmente según el
+  trazado. Con desplazamientos suaves eso no se nota; con uno de metro por metro
+  sale **una escalera de bloques solapados con el bordillo en zigzag**. Así que
+  cada losa se gira con la pendiente del ramal, las celdas y los bordillos se
+  corren por la PERPENDICULAR al trazado en vez de por la x del mundo, y el paso
+  se estira `√(1+m²)` para que sigan juntándose. En recta la transformación es la
+  identidad y no cuesta nada.
 - **La elección se convierte en una curva con un solo término.** Cada ramal se
   dibuja a `ramal × S(s) − elegido × S(D)`: el primer sumando abre los dos por
   igual a partir del divisor —la Y simétrica, las dos opciones sobre la mesa— y
@@ -565,10 +579,14 @@ Lo que importa mantener si se toca:
   cada tramo especial— ya no reinician el reloj de los 95 m. Lo reiniciaban, y
   como son unas cuantas y van seguidas, los sucesos anunciados se quedaban sin
   plantar una y otra vez: esa era la otra mitad de por qué no aparecían.
-- **Y para eso hubo que separar las bifurcaciones 780 m en vez de 620.** Entre
-  una y la siguiente tienen que caber las dos zonas limpias más un tramo
-  especial entero con sus márgenes. Con 620 no cabía; el hueco libre era de
-  poco más de cien unidades y casi nunca coincidía con un compás.
+- **Y para eso hubo que separar las bifurcaciones, primero a 780 m y luego a
+  950.** Entre una y la siguiente tienen que caber las dos zonas limpias más un
+  tramo especial entero con sus márgenes; con 620 no cabía, el hueco libre era
+  de poco más de cien unidades y casi nunca coincidía con un compás. Los 950
+  son por otra razón: los cruces alternan destino y cortada, así que solo uno de
+  cada dos cambia de sitio, y con 780 se pasaba de departamento cada 1.560 m
+  —menos de treinta segundos por lugar a la velocidad de ahora—. Un sitio que se
+  abandona antes de haberlo mirado no es un sitio, es un color.
 - **La zona limpia se calcula por delante, no cuando el cruce ya existe.** Un
   compás suelta cosas que no llegan al jugador hasta 170 unidades después, así
   que para cuando el cruce nace ya sería tarde para no ponerlas: la posición de
@@ -642,13 +660,13 @@ Lo que importa mantener si se toca:
 - **La velocidad sube con la DISTANCIA, no con el reloj.** Con el reloj,
   quedarse en el menú de pausa aceleraba igual, y sobre todo el que juega bien
   no notaba recompensa: llegaba al techo a los 32 s y de ahí no se movía. La
-  curva es una raíz —sube donde se nota y se va aplanando—: se sale a **20** y
-  van 28 a los 100 m, 38 a los 500, 45 a los 1000 y el techo de 60 hacia los
-  2800. Antes se salía a 15 y se subía a 6,2: los primeros doscientos metros
+  curva es una raíz —sube donde se nota y se va aplanando—: se sale a **23** y
+  van 32 a los 100 m, 43 a los 500, 51 a los 1000 y el techo de 68 hacia los
+  2600. Antes se salía a 15 y se subía a 6,2: los primeros doscientos metros
   eran un paseo por un sitio bonito y con la ruta entera midiendo casi veinte
   kilómetros, llegar al tercero con margen de sobra para pensar no era llegar
   lejos, era esperar.
-- **Y hay DOS techos, que son cosas distintas.** El de reparto (60) es hasta
+- **Y hay DOS techos, que son cosas distintas.** El de reparto (68) es hasta
   dónde llega la velocidad por haber recorrido distancia; los impulsos lo pasan
   a propósito, porque esa es justamente su gracia. El absoluto (120) va después
   de todos los multiplicadores y es de seguridad pura: a un paso fijo de 1/60 el

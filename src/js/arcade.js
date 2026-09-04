@@ -53,10 +53,11 @@ const LAND_PARTS = 8;                                // cubos por hito
 
 // Se sale corriendo, no andando. Con 15 los primeros doscientos metros eran un
 // paseo por un sitio bonito y el juego no empezaba hasta pasado el minuto.
-const SPEED_START = 20;
+const SPEED_START = 23;
 // Techo de lo que el REPARTO puede dar: hasta aqui llega la velocidad por
-// haber recorrido distancia, y nada mas.
-const SPEED_MAX = 60;
+// haber recorrido distancia, y nada mas. A 68 el mundo avanza 1,13 por paso de
+// simulacion, muy dentro de la ventana de colision de 2,2.
+const SPEED_MAX = 68;
 
 // Y el techo ABSOLUTO, ya con todos los multiplicadores encima. Son dos cosas
 // distintas: los impulsos pasan del de reparto a proposito —esa es su gracia—
@@ -75,13 +76,13 @@ const SPEED_HARD = 120;
 // y de ahi no se movia. Ahora acelera el que avanza.
 //
 // La curva es una raiz: sube deprisa al principio, donde se nota, y se va
-// aplanando, de modo que nunca hay un salto brusco. A los 100 m van 28, a los
-// 500 m van 38, a los 1000 m van 45 y a los 2800 m se toca el techo.
+// aplanando, de modo que nunca hay un salto brusco. A los 100 m van 32, a los
+// 500 m van 43, a los 1000 m van 51 y a los 2600 m se toca el techo.
 //
-// Subio de 6,2 a 8: la ruta entera son casi veinte kilometros y con el reparto
-// anterior se llegaba al kilometro tres con margen de sobra para pensar. Lo
-// que tiene que costar es llegar, no empezar.
-const SPEED_GAIN = 8;
+// Subio de 6,2 a 8,8: la ruta entera son mas de veinte kilometros y con el
+// reparto anterior se llegaba al kilometro tres con margen de sobra para
+// pensar. Lo que tiene que costar es llegar, no empezar.
+const SPEED_GAIN = 8.8;
 
 // El hueco entre compases se mide en SEGUNDOS, no en unidades. Con un hueco
 // fijo en unidades, doblar la velocidad partia por la mitad el tiempo de
@@ -196,7 +197,12 @@ const BOOST_POOL = 8;
 // siguiente tienen que caber la zona limpia de las dos y ademas un tramo
 // especial entero con sus margenes. Con 620 no cabia, y el resultado medido
 // era que no salia ni una bajada ni una curva en dos mil metros.
-const CROSS_EVERY = 780;
+// Y subio de 780 a 950. Los cruces alternan destino y cortada, asi que solo
+// uno de cada dos cambia de sitio: con 780 se pasaba de departamento cada 1.560
+// metros, que a la velocidad de ahora son menos de treinta segundos por lugar.
+// Un sitio que se abandona antes de haberlo mirado no es un sitio, es un color.
+// Con 950 cada punto de la ruta dura casi dos kilometros.
+const CROSS_EVERY = 950;
 const CROSS_SIGN_AHEAD = 62;        // el rotulo, adelantado a la isleta
 // El divisor. Es lo unico que impide cruzar de un ramal al otro mientras los
 // dos siguen pegados, asi que mide lo que mide por eso y no por estetica.
@@ -237,15 +243,19 @@ const QUIET_POST = 105;             // ...y despues de que los ramales se abran
 //          ##             una sola, con el divisor
 //          ##
 //
-// Con las 8,4 del principio las dos vias quedaban a un palmo y se leian como
-// una sola calzada ancha con una raya en medio. Pero 13 en 105 unidades se
-// pasaba al otro lado: abria una V de casi sesenta grados que se leia como un
-// barranco entre dos carreteras, no como una carretera que se parte. Lo que
-// hace falta es SEPARACION, no ANGULO: se baja el reparto y se alarga el tramo
-// en el que ocurre, de modo que las dos vias acaban igual de separadas pero se
-// abren como una Y de verdad.
-const FORK_SPREAD = 11;             // cuanto se separa cada ramal del eje
-const FORK_LEN = 150;               // unidades en las que se abren
+// Y no se abren en abanico: SE DESVIAN, a cuarenta y cinco grados clavados.
+// Todos los intentos anteriores repartian la separacion a lo largo de cien o
+// ciento cincuenta unidades, y eso da angulos de ocho o catorce grados: una
+// carretera que se dobla despacio, no un cruce. Un desvio se lee porque SALE,
+// y sale con un angulo que se ve.
+//
+// Los dos numeros estan atados: con un smoothstep la pendiente maxima vale
+// 1,5 x separacion / largo, asi que largo = 1,5 x separacion da exactamente
+// pendiente 1, o sea 45 grados, en el punto medio del desvio. Cambiar uno sin
+// el otro cambia el angulo. El smoothstep ademas entra y sale con pendiente
+// cero, de modo que el desvio empalma con la recta sin un solo pico.
+const FORK_SPREAD = 16;             // cuanto se separa cada ramal del eje
+const FORK_LEN = 24;                // = 1,5 x FORK_SPREAD -> 45 grados clavados
 const FORK_CLEAR = 70;              // margen sin objetos alrededor de la X
 // Hueco libre entre el bordillo de una calzada y el de la otra. Nada mas
 // partirse, las dos calzadas de 8,4 de ancho comparten sitio: sus centros
@@ -261,6 +271,13 @@ const FORK_GAP = 2.2;
 // —medio segundo despues de elegir— y eso lo hacia desaparecer EN EL AIRE, a
 // mitad de su curva. Ahora se apaga por donde esta, asi que se le ve marchar.
 const FORK_CULL = 13;
+// Y en las ultimas unidades el ramal descartado se HUNDE bajo la explanada.
+// Cortarlo en seco al caducar la bifurcacion dejaba una carretera entera
+// esfumandose de golpe a cien unidades por delante —dentro de la niebla no
+// llega, la bruma cierra a 185— que es justo donde el jugador esta mirando.
+// Hundiendose se va por debajo del suelo, que es opaco, y no hay corte.
+const FORK_SINK = 40;               // unidades que dura el hundimiento
+const FORK_SINK_DEEP = 4.5;         // cuanto baja: de sobra para pasar el suelo
 
 // Ultimo tramo, ya dentro de la capital, entre tomar el desvio que lleva a
 // ella y el final de la carrera. Acabar en el propio cruce habria cerrado la
@@ -2019,20 +2036,72 @@ function curveY(s) {
 // Medio reparto: cuanto se ha abierto ya la bifurcacion en una coordenada de
 // trazado. Cero hasta la cola del divisor y creciendo despues.
 //
-// El perfil no es un smoothstep, que arranca PLANO: con el, a veinte unidades
-// del divisor los dos ramales seguian a metro y medio uno de otro —y cada
-// calzada mide 8,4 de ancho—, o sea que se pisaban durante todo ese tramo.
-// Pero tampoco una cubica invertida, que arranca DEMASIADO deprisa y abria las
-// dos vias en abanico delante de las narices. Es una cuadratica invertida: sale
-// con decision y se va calmando, que es como se abre un desvio de verdad.
+// Un smoothstep, y ahora si: entra y sale con pendiente cero —el desvio empalma
+// con la recta de antes y con la de despues sin un solo pico— y en el medio
+// alcanza exactamente pendiente 1, porque FORK_LEN vale 1,5 x FORK_SPREAD. Los
+// perfiles anteriores repartian la separacion a lo largo de cien unidades o
+// mas, y eso no es un desvio: es una carretera doblandose despacio.
 function forkSpread(s) {
     const f = game.fork;
     if (!f.active) return 0;
     const t = (s - f.s0) / FORK_LEN;
     if (t <= 0) return 0;
     if (t >= 1) return FORK_SPREAD;
-    const u = 1 - t;
-    return FORK_SPREAD * (1 - u * u);
+    return FORK_SPREAD * t * t * (3 - 2 * t);
+}
+
+// Lo inclinada que va la calzada de un ramal respecto al eje del mundo, en
+// unidades de lado por unidad de avance: la derivada de lo anterior. Vale 1 en
+// el punto mas cerrado del desvio, que es la tangente de 45 grados.
+//
+// Es lo que endereza las losas. Sin ella, una calzada que se va un metro de
+// lado por cada metro de avance se dibuja como una escalera de bloques
+// solapados con el bordillo en zigzag, porque las losas son cajas alineadas
+// con los ejes del mundo. Con ella, cada losa se gira y se estira para que el
+// firme se lea como lo que es: una carretera que sale en diagonal.
+function forkSlope(s, band) {
+    const f = game.fork;
+    if (!f.active) return 0;
+    const t = (s - f.s0) / FORK_LEN;
+    if (t <= 0 || t >= 1) return 0;
+    return band * FORK_SPREAD * 6 * t * (1 - t) / FORK_LEN;
+}
+
+// El giro que le toca a un tramo de calzada por ir en diagonal, y lo que hay
+// que estirarle el paso para que las losas sigan juntandose. Se devuelven los
+// tres numeros de golpe porque los cuatro sitios que dibujan calzada los
+// necesitan los tres.
+// El giro que le toca a la CAMARA y al personaje: el mismo que lleva la
+// calzada justo debajo de los pies del jugador.
+//
+// Sin esto un desvio de 45 grados no se puede hacer. El mundo se recoloca de
+// modo que la calzada elegida siempre pasa por debajo del jugador, asi que un
+// desvio pronunciado se veria como la carretera cruzandosele en diagonal
+// mientras el sigue mirando al frente: patinando de lado, no girando. Girando
+// la camara con la calzada, lo que se ve es lo contrario y lo correcto: el
+// personaje tuerce y el mundo entero rota a su alrededor.
+//
+// Y de paso resuelve lo otro: el ramal descartado sale del encuadre por el
+// lado durante el giro, en vez de quedarse en el centro de la pantalla justo
+// cuando deja de dibujarse.
+function forkCamYaw() {
+    const f = game.fork;
+    if (!f.active) return 0;
+    return -Math.atan(forkSlope(game.distance, f.mainBand));
+}
+
+const _yaw = { ang: 0, ca: 1, sa: 0, zst: 1 };
+function forkYawAt(s, band) {
+    const m = forkSlope(s, band);
+    if (m === 0) {
+        _yaw.ang = 0; _yaw.ca = 1; _yaw.sa = 0; _yaw.zst = 1;
+        return _yaw;
+    }
+    _yaw.ang = -Math.atan(m);
+    _yaw.ca = Math.cos(_yaw.ang);
+    _yaw.sa = Math.sin(_yaw.ang);
+    _yaw.zst = Math.sqrt(1 + m * m);
+    return _yaw;
 }
 
 // Desplazamiento lateral de un ramal en la z dada. Son dos terminos y cada uno
@@ -2395,6 +2464,14 @@ function updateRoadCurve() {
         // acaba, no que las piedras son mas pequenas.
         const halfW = ROAD_WIDTH * narrowAt(game.distance - zWorld) / 2;
 
+        // Enderezado del desvio. En una recta vale identidad y no cuesta nada;
+        // dentro de la bifurcacion gira cada losa para que apunte adonde va la
+        // calzada, corre las celdas y los bordillos por la PERPENDICULAR al
+        // trazado en vez de por la x del mundo, y estira el paso para que las
+        // losas sigan juntandose. Sin esto una calzada a 45 grados sale como
+        // una escalera de bloques solapados con el bordillo en zigzag.
+        const yw = forkYawAt(sWorld, game.fork.mainBand);
+
         if (enSink) {
             // Dentro del hundimiento la calzada se dibuja en tres tablas
             // iguales, una por carril, y cada una cae por su cuenta. Es la
@@ -2459,13 +2536,14 @@ function updateRoadCurve() {
                     // Desnivel de piedra a piedra, determinista por indice: si
                     // fuera aleatorio por frame la calzada herviria.
                     const bump = jit ? (((i * 7 + c * 13) % 7) - 3) / 3 * jit : 0;
+                    const u = (x0 + x1) / 2;
                     dummy.position.set(
-                        dx + (x0 + x1) / 2,
+                        dx + u * yw.ca,
                         -0.5 + dy + bump,
-                        zLocal - TILE_DEPTH / 2 + cd * (rr + 0.5)
+                        zLocal - TILE_DEPTH / 2 + cd * (rr + 0.5) + u * yw.sa
                     );
-                    dummy.scale.set((x1 - x0) * gap, 1, cd * gap);
-                    dummy.rotation.set(0, 0, 0);
+                    dummy.scale.set((x1 - x0) * gap, 1, cd * gap * yw.zst);
+                    dummy.rotation.set(0, yw.ang, 0);
                     dummy.updateMatrix();
                     roadMesh.setMatrixAt(id, dummy.matrix);
                     if (recolor) {
@@ -2484,8 +2562,8 @@ function updateRoadCurve() {
             // Sub-base, con el tono de la losa oscura bajado a la mitad: lo
             // que se ve por las juntas es sombra de junta, no jungla.
             dummy.position.set(dx, -0.62 + dy, zLocal);
-            dummy.scale.set(halfW * 2, 1, TILE_DEPTH);
-            dummy.rotation.set(0, 0, 0);
+            dummy.scale.set(halfW * 2, 1, TILE_DEPTH * yw.zst);
+            dummy.rotation.set(0, yw.ang, 0);
             dummy.updateMatrix();
             baseMesh.setMatrixAt(i, dummy.matrix);
             if (recolor) baseMesh.setColorAt(i, _rc.setHex(R.roadB).multiplyScalar(0.55));
@@ -2505,15 +2583,16 @@ function updateRoadCurve() {
             if (l !== wl && !(pf >= 0 && pf < 1)) { hideAt(warnMesh, mid); continue; }
             warnAny = true;
             const cai = pf > 0 ? pf * pf : 0;
+            const ul = pf >= 0 ? SINK_X[l] : LANE_X[l];
             dummy.position.set(
-                dx + (pf >= 0 ? SINK_X[l] : LANE_X[l]),
+                dx + ul * yw.ca,
                 0.03 + dy - cai * SINK_DEEP,
-                zLocal
+                zLocal + ul * yw.sa
             );
             dummy.scale.set(
-                pf >= 0 ? SINK_W * 0.9 : WARN_LANE_W, 0.05, TILE_DEPTH * 0.96
+                pf >= 0 ? SINK_W * 0.9 : WARN_LANE_W, 0.05, TILE_DEPTH * 0.96 * yw.zst
             );
-            dummy.rotation.set(0, 0, cai * 0.5 * (l === 2 ? -1 : 1));
+            dummy.rotation.set(0, yw.ang, cai * 0.5 * (l === 2 ? -1 : 1));
             dummy.updateMatrix();
             warnMesh.setMatrixAt(mid, dummy.matrix);
         }
@@ -2525,11 +2604,12 @@ function updateRoadCurve() {
             const kp = enSink ? (sd ? sf2 : sf0) : -1;
             if (kp >= 1) { hideAt(kerbMesh, i * 2 + sd); continue; }
             const kc = kp > 0 ? kp * kp : 0;
+            const uk = sd ? halfW : -halfW;
             dummy.position.set(
-                dx + (sd ? halfW : -halfW), -0.1 + dy - kc * SINK_DEEP, zLocal
+                dx + uk * yw.ca, -0.1 + dy - kc * SINK_DEEP, zLocal + uk * yw.sa
             );
-            dummy.scale.set(0.55, 0.8, TILE_DEPTH * 0.94);
-            dummy.rotation.set(0, 0, kc * 0.5 * (sd ? -1 : 1));
+            dummy.scale.set(0.55, 0.8, TILE_DEPTH * 0.94 * yw.zst);
+            dummy.rotation.set(0, yw.ang, kc * 0.5 * (sd ? -1 : 1));
             dummy.updateMatrix();
             kerbMesh.setMatrixAt(i * 2 + sd, dummy.matrix);
             if (recolor) {
@@ -2595,6 +2675,13 @@ function updateForkBand(off) {
     }
     forkBandOn = true;
 
+    // Lo que ya lleva hundido. Arranca justo cuando el desvio termina de
+    // abrirse y llega al fondo exactamente cuando la bifurcacion caduca, de
+    // modo que al dejar de dibujarse ya estaba debajo del suelo.
+    const fin = f.s0 + FORK_LEN + 40;
+    const bajo = Math.max(0, Math.min(1,
+        (game.distance - (fin - FORK_SINK)) / FORK_SINK)) * FORK_SINK_DEEP;
+
     for (let i = 0; i < TILE_COUNT; i++) {
         const zLocal = ROAD_FROM + i * TILE_DEPTH;
         const zWorld = zLocal + off;
@@ -2609,7 +2696,7 @@ function updateForkBand(off) {
         const sWorld = game.distance - zWorld;
         const curve = (curveX(sWorld) - game.curveBase) * curveMask(zWorld);
         const dx = curve + forkDX(zWorld, band);
-        const dy = riseAtS(sWorld, zWorld);
+        const dy = riseAtS(sWorld, zWorld) - bajo;
         const R = REGIONS[roadRegionOf(sWorld)];
 
         // --- Recorte contra la calzada principal ---
@@ -2640,7 +2727,11 @@ function updateForkBand(off) {
         }
         const lo = Math.min(inner, outer), hi = Math.max(inner, outer);
 
-        dummy.rotation.set(0, 0, 0);
+        // Este ramal se va por el otro lado, asi que se endereza con SU propia
+        // pendiente: el descartado sale girado al reves que el tomado, y verlos
+        // salir en aspa es la mitad de lo que hace legible el cruce.
+        const yw = forkYawAt(sWorld, band);
+        dummy.rotation.set(0, yw.ang, 0);
 
         // Mismo despiece que la calzada principal, y anclado a SU eje: las
         // juntas tienen que caer donde caerian si el ramal fuera entero, o al
@@ -2658,12 +2749,14 @@ function updateForkBand(off) {
                 if (x1 > hi) x1 = hi;
                 if (x1 - x0 < 0.03) { hideAt(forkMesh, id); continue; }
                 const bump = jit ? (((i * 7 + c * 13) % 7) - 3) / 3 * jit : 0;
+                const u = (x0 + x1) / 2 - dx;
                 dummy.position.set(
-                    (x0 + x1) / 2,
+                    dx + u * yw.ca,
                     -0.5 + dy + bump,
-                    zLocal - TILE_DEPTH / 2 + cd * (rr + 0.5)
+                    zLocal - TILE_DEPTH / 2 + cd * (rr + 0.5) + u * yw.sa
                 );
-                dummy.scale.set((x1 - x0) * gap, 1, cd * gap);
+                dummy.scale.set((x1 - x0) * gap, 1, cd * gap * yw.zst);
+                dummy.rotation.set(0, yw.ang, 0);
                 dummy.updateMatrix();
                 forkMesh.setMatrixAt(id, dummy.matrix);
                 forkMesh.setColorAt(id, _rc.setHex((i + cc + rr) % 2 ? R.roadA : R.roadB));
@@ -2671,8 +2764,10 @@ function updateForkBand(off) {
         }
         for (; c < ROAD_CELLS; c++) hideAt(forkMesh, base + c);
 
-        dummy.position.set((lo + hi) / 2, -0.62 + dy, zLocal);
-        dummy.scale.set(hi - lo, 1, TILE_DEPTH);
+        const ub = (lo + hi) / 2 - dx;
+        dummy.position.set(dx + ub * yw.ca, -0.62 + dy, zLocal + ub * yw.sa);
+        dummy.scale.set(hi - lo, 1, TILE_DEPTH * yw.zst);
+        dummy.rotation.set(0, yw.ang, 0);
         dummy.updateMatrix();
         forkMesh.setMatrixAt(base + ROAD_CELLS, dummy.matrix);
         forkMesh.setColorAt(base + ROAD_CELLS, _rc.setHex(R.roadB).multiplyScalar(0.55));
@@ -2680,8 +2775,10 @@ function updateForkBand(off) {
         // Bordillo a los dos bordes, incluido el recortado: ahi la calzada se
         // acaba de verdad, y un canto es justo lo que dice donde acaba.
         for (let sd = 0; sd < 2; sd++) {
-            dummy.position.set(sd ? hi : lo, -0.1 + dy, zLocal);
-            dummy.scale.set(0.55, 0.8, TILE_DEPTH * 0.94);
+            const uk = (sd ? hi : lo) - dx;
+            dummy.position.set(dx + uk * yw.ca, -0.1 + dy, zLocal + uk * yw.sa);
+            dummy.scale.set(0.55, 0.8, TILE_DEPTH * 0.94 * yw.zst);
+            dummy.rotation.set(0, yw.ang, 0);
             dummy.updateMatrix();
             forkMesh.setMatrixAt(base + ROAD_CELLS + 1 + sd, dummy.matrix);
             forkMesh.setColorAt(base + ROAD_CELLS + 1 + sd, _rc.setHex(R.kerb));
@@ -5722,7 +5819,10 @@ function updatePlayer(dt) {
     // tumba al salir y se endereza al llegar.
     const lean = (LANE_X[player.lane] - player.x) / 2.3;
     playerGroup.rotation.z = -lean * 0.34;
-    playerGroup.rotation.y = lean * 0.28;
+    // Y el desvio: el personaje tuerce con su calzada. La camara gira lo mismo,
+    // asi que en pantalla se le sigue viendo de espaldas y lo que rota es el
+    // mundo, que es exactamente lo que pasa cuando uno toma una salida.
+    playerGroup.rotation.y = lean * 0.28 + forkCamYaw();
 
     const s = Math.sin(player.run);
     const c = Math.cos(player.run);
@@ -7439,6 +7539,10 @@ function frame(now) {
     // la derecha, o sea que rota en sentido horario, que en Three.js es una
     // rotacion.z NEGATIVA. Si alguna vez se lee al reves, es este menos.
     camera.rotation.z += curveAtZ(cam.aimZ) * 0.022 + camRoll - peralte * TURN_ROLL;
+    // Y el giro del desvio, tambien despues de lookAt y por el mismo motivo.
+    // Es lo que convierte una bifurcacion de 45 grados en un giro y no en un
+    // derrape lateral.
+    if (game.state === State.PLAYING) camera.rotation.y += forkCamYaw();
 
     renderer.render(scene, camera);
 }
