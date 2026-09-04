@@ -51,11 +51,23 @@ const LAND_CYCLES = 3;                               // cubre lo visible
 const LAND_TOTAL = LAND_PER_CYCLE * LAND_CYCLES;     // 42 hitos
 const LAND_PARTS = 8;                                // cubos por hito
 
-const SPEED_START = 15;
-// Techo duro por seguridad, no por diseno: a un paso fijo de 1/60 el mundo
-// avanza speed/60 por paso, y la ventana de colision mide 2,2 de fondo. Por
-// encima de unos 66 los obstaculos empezarian a colarse entre dos pasos.
-const SPEED_MAX = 52;
+// Se sale corriendo, no andando. Con 15 los primeros doscientos metros eran un
+// paseo por un sitio bonito y el juego no empezaba hasta pasado el minuto.
+const SPEED_START = 20;
+// Techo de lo que el REPARTO puede dar: hasta aqui llega la velocidad por
+// haber recorrido distancia, y nada mas.
+const SPEED_MAX = 60;
+
+// Y el techo ABSOLUTO, ya con todos los multiplicadores encima. Son dos cosas
+// distintas: los impulsos pasan del de reparto a proposito —esa es su gracia—
+// pero ninguno puede pasar de este, porque a un paso fijo de 1/60 el mundo
+// avanza speed/60 y la ventana de colision mide 2,2 de fondo. Por encima de
+// 132 un obstaculo se cuela entre dos pasos sin que nadie lo compruebe.
+//
+// Con el reparto en 52 el peor caso encadenado —placas al maximo por impulso
+// por curva— se quedaba en 127 por los pelos. Subiendo el reparto a 60 se iba
+// a 147, y eso no es un juego mas dificil: es un obstaculo atravesado.
+const SPEED_HARD = 120;
 
 // La velocidad sube con la DISTANCIA RECORRIDA y no con el reloj. Con el reloj,
 // quedarse quieto en el menu de pausa aceleraba igual, y sobre todo el que
@@ -63,9 +75,13 @@ const SPEED_MAX = 52;
 // y de ahi no se movia. Ahora acelera el que avanza.
 //
 // La curva es una raiz: sube deprisa al principio, donde se nota, y se va
-// aplanando, de modo que nunca hay un salto brusco. A los 100 m van 21, a los
-// 500 m van 29, a los 1000 m van 35 y a los 3000 m se roza el techo.
-const SPEED_GAIN = 6.2;
+// aplanando, de modo que nunca hay un salto brusco. A los 100 m van 28, a los
+// 500 m van 38, a los 1000 m van 45 y a los 2800 m se toca el techo.
+//
+// Subio de 6,2 a 8: la ruta entera son casi veinte kilometros y con el reparto
+// anterior se llegaba al kilometro tres con margen de sobra para pensar. Lo
+// que tiene que costar es llegar, no empezar.
+const SPEED_GAIN = 8;
 
 // El hueco entre compases se mide en SEGUNDOS, no en unidades. Con un hueco
 // fijo en unidades, doblar la velocidad partia por la mitad el tiempo de
@@ -308,15 +324,16 @@ const TURN_SPEED = 1.3;
 // Peralte. La curva movia el trazado y subia la velocidad, pero el ENCUADRE
 // seguia igual de recto que en una recta, asi que el peligro no se sentia en
 // ninguna parte: se veia. Ahora la camara se tumba hacia dentro del giro y
-// ademas se va hacia fuera, que es lo que hace la inercia. Ocho grados largos
-// es mucho para un juego en primera persona y poco para uno como este, donde
-// lo unico que se ve del jugador es su espalda.
+// ademas se va hacia fuera, que es lo que hace la inercia. Diecisiete grados
+// serian una barbaridad en primera persona; aqui, donde lo unico que se ve del
+// jugador es su espalda y la calzada ya se esta yendo de lado, es lo que hace
+// que la curva se note en el cuerpo. Con ocho no se notaba nada.
 //
 // El alabeo de la calzada de siempre —`curveAtZ(cam.aimZ) * 0.022`— no valia
 // aqui: va por la mascara de distancia, que es cero dentro de 158 unidades, y
 // el punto de mira de la camara esta mucho mas cerca que eso.
-const TURN_ROLL = 0.15;             // radianes de alabeo en el punto cerrado
-const TURN_DRIFT = 1.15;            // unidades que la camara se va hacia fuera
+const TURN_ROLL = 0.3;              // radianes de alabeo en el punto cerrado
+const TURN_DRIFT = 2.1;             // unidades que la camara se va hacia fuera
 // Segundos que se aguantan por el lado hacia el que cierra la curva antes de
 // salirse. Es tiempo de sobra para cruzar los tres carriles dos veces: quien
 // se sale es porque se quedo, no porque no le diera tiempo.
@@ -384,6 +401,16 @@ const NARROW_MIN = 1 / 3;           // se queda en un carril de los tres
 // --- Salirse de la carretera -----------------------------------------------
 const FALL_TIME = 1.15;             // lo que dura la caida antes del final
 
+// --- Morir de un golpe -----------------------------------------------------
+// La ultima vida se perdia y el menu de fin aparecia EN EL MISMO FRAME. No
+// habia forma de ver contra que se habia chocado, y la partida se cerraba como
+// si el juego se hubiera cortado en vez de como si te hubieras matado. Ahora
+// el golpe se ve: el cuerpo sale despedido hacia atras dando vueltas, el mundo
+// frena hasta pararse, y solo entonces se abre el final.
+const DEATH_TIME = 1.5;             // lo que dura la muerte antes del final
+const DEATH_UP = 12;                // impulso hacia arriba del cuerpo
+const DEATH_BACK = 11;              // ...y hacia la camara
+
 // --- Senalizacion de aviso -------------------------------------------------
 // Las senales no son decorado: cada una se planta porque VIENE lo que anuncia.
 // Se colocan por delante de aquello que avisan, de modo que el jugador lee el
@@ -404,6 +431,11 @@ const WARN_FADE = 26;
 // por compas: un pasillo de rombos deja de ser senalizacion y pasa a ser
 // ruido, y lo primero que se pierde es la costumbre de mirarlas.
 const WARN_MIN_GAP = 95;
+
+// Metros entre sucesos anunciados —derrumbe, ganado, camioneta—. Se reparten
+// por turnos en vez de sortearse: son tres, y con 240 sale algo mas de tres
+// por ciclo de bifurcacion, asi que en un ciclo normal se ven los tres.
+const EVENT_EVERY = 240;
 
 // --- Placas de impulso ---------------------------------------------------
 // Van pegadas al suelo y se pisan al pasar por encima: no son un objeto que
@@ -1059,6 +1091,8 @@ const game = {
     sink: { active: false, s0: 0, mask: 0, free: 1 },
     nextTramo: 0,        // distancia a la que toca armar el proximo tramo
     lastTramo: -1,       // cual salio la vez anterior, para no repetirlo
+    nextEvento: 0,       // distancia a la que toca el proximo suceso anunciado
+    lastEvento: -1,      // cual salio la vez anterior, para no repetirlo
     crossKind: 1,        // 0 = cruce de destino, 1 = bifurcacion cortada
     boostTaken: 0,       // aceleradores pisados, para la vida extra
     boostPerm: 0,        // velocidad que se queda para siempre
@@ -1086,8 +1120,12 @@ const player = {
     vy: 0,
     grounded: true,
     sliding: 0,
-    out: 0,              // segundos de caida fuera de la calzada, 0 = en pista
+    out: 0,              // segundos que quedan de la animacion final, 0 = vivo
+    outMax: 1,           // lo que duraba entera, para el frenado del mundo
+    outKind: 0,          // 0 = se salio de la calzada, 1 = murio de un golpe
     outVX: 0,            // lo que se aleja de lado mientras cae
+    outVZ: 0,            // ...y lo que sale despedido hacia la camara
+    outZ: 0,             // desplazamiento acumulado hacia la camara
     wantSlide: false, // picado que se convierte en deslizamiento al tocar suelo
     jumps: 0,         // saltos gastados desde que dejo el suelo
     holding: false,   // la tecla de salto sigue pulsada
@@ -3692,7 +3730,13 @@ function spawnWarn(kind, z, side, force) {
     if (!force && game.distance - game.lastWarn < WARN_MIN_GAP) return 0;
     const w = freeWarn();
     if (!w) return 0;
-    game.lastWarn = game.distance;
+    // El racionamiento es SOLO entre las de ambiente, y las forzadas ya no lo
+    // alimentan. Antes si: cada bifurcacion planta dos Y forzadas, la cortada
+    // otros dos discos y cada tramo especial su cartel, o sea que el reloj de
+    // los 95 se reiniciaba constantemente y los sucesos anunciados —derrumbe,
+    // ganado, camioneta— se quedaban sin plantar una y otra vez. Medido en una
+    // ruta entera: varios enemigos no llegaban a salir ni una sola vez.
+    if (!force) game.lastWarn = game.distance;
 
     w.face.material.map = tex;
     w.face.material.needsUpdate = true;
@@ -4760,12 +4804,21 @@ function generateChunk(z) {
     // Y lo que anuncia no nace con ella, sino unos metros mas tarde: la
     // camioneta viene de frente y cierra distancia mucho mas deprisa que el
     // cartel, asi que naciendo a la vez adelantaria a su propio aviso.
-    if (game.distance > 240 && Math.random() < 0.22 &&
+    // Con una probabilidad no se reparte nada —la misma leccion que ya costo
+    // los tramos especiales—. Un dado al 22 % por compas, con la mitad de los
+    // compases descartados por la zona limpia de la bifurcacion y el cartel
+    // racionado ademas por su cuenta, daba rutas enteras en las que la vaca o
+    // la camioneta no salian NI UNA VEZ. Ahora se reparten: uno cada
+    // EVENT_EVERY unidades en cuanto haya sitio, y sin repetir el anterior,
+    // que es lo unico que garantiza que los tres lleguen a verse.
+    if (game.distance > 240 && game.distance > game.nextEvento &&
         !limpioEntre(game.distance + 180, game.distance + 330)) {
-        const r = Math.random();
-        if (r < 0.4) {
+        let ev = (Math.random() * 3) | 0;
+        if (ev === game.lastEvento) ev = (ev + 1 + ((Math.random() * 2) | 0)) % 3;
+        let lado = 0;
+        if (ev === 0) {
             // Derrumbe: caen piedras del cerro sobre el carril de ese lado.
-            const lado = spawnWarn('derrumbe', z + WARN_AHEAD);
+            lado = spawnWarn('derrumbe', z + WARN_AHEAD);
             if (lado !== 0) {
                 const carril = lado < 0 ? 0 : 2;
                 schedule(78, () => {
@@ -4774,16 +4827,22 @@ function generateChunk(z) {
                     }
                 });
             }
-        } else if (r < 0.72) {
+        } else if (ev === 1) {
             // Ganado suelto: la vaca entra por ese margen y cruza al otro.
-            const lado = spawnWarn('animal', z + WARN_AHEAD);
+            lado = spawnWarn('animal', z + WARN_AHEAD);
             if (lado !== 0) schedule(80, () => spawnHazard(VACA, 1, -85, lado));
         } else {
             // Parada de camioneta: mas adelante viene un bus por ese carril.
-            const lado = spawnWarn('parada', z + WARN_AHEAD);
+            lado = spawnWarn('parada', z + WARN_AHEAD);
             if (lado !== 0) {
                 schedule(64, () => spawnHazard(BUS, lado < 0 ? 0 : 2, SPAWN_Z));
             }
+        }
+        // Solo cuenta si de verdad se planto: si el cartel no cabia, el turno
+        // no se gasta y se vuelve a intentar en el compas siguiente.
+        if (lado !== 0) {
+            game.lastEvento = ev;
+            game.nextEvento = game.distance + EVENT_EVERY;
         }
     }
 
@@ -5405,7 +5464,11 @@ function initInput() {
 function fallOut(vx) {
     if (player.out > 0 || game.state !== State.PLAYING) return;
     player.out = FALL_TIME;
+    player.outMax = FALL_TIME;
+    player.outKind = 0;
     player.outVX = vx;
+    player.outVZ = 0;
+    player.outZ = 0;
     player.vy = 2.5;                 // un empujoncito hacia arriba: se tropieza
     player.sliding = 0;
     player.wantSlide = false;
@@ -5416,17 +5479,55 @@ function fallOut(vx) {
     sfx.hit();
 }
 
+// Morir de un golpe. A diferencia de salirse, aqui SI hay suelo: el cuerpo
+// sale despedido hacia atras y hacia arriba, da vueltas y rebota en la
+// calzada. Cae mas despacio que en una caida de verdad —la gravedad va al 70 %—
+// porque lo que hay que ver es el vuelo, no el aterrizaje.
+function deathBlow() {
+    if (player.out > 0 || game.state !== State.PLAYING) return;
+    player.out = DEATH_TIME;
+    player.outMax = DEATH_TIME;
+    player.outKind = 1;
+    player.outVX = (Math.random() - 0.5) * 7;
+    player.outVZ = DEATH_BACK;
+    player.outZ = 0;
+    player.vy = DEATH_UP;
+    player.sliding = 0;
+    player.wantSlide = false;
+    player.grounded = false;
+    game.powers.flight = 0;
+    shake = 1.6;
+    flashHurt(HURT_RED, 1);
+}
+
 function updateFall(dt) {
     player.out -= dt;
-    player.vy += GRAVITY * 1.1 * dt;
+    const golpe = player.outKind === 1;
+
+    player.vy += GRAVITY * (golpe ? 0.7 : 1.1) * dt;
     player.y += player.vy * dt;
     player.x += player.outVX * dt;
     player.outVX *= 1 - Math.min(1, 0.7 * dt);
 
-    playerGroup.position.set(player.x, player.y, PLAYER_Z);
+    if (golpe) {
+        // Sale despedido hacia la camara y va frenando. Es lo que hace que el
+        // golpe se vea de cerca en vez de por encima del hombro.
+        player.outZ += player.outVZ * dt;
+        player.outVZ *= 1 - Math.min(1, 1.6 * dt);
+        // Y rebota en la calzada en vez de atravesarla: aqui hay suelo, y el
+        // cuerpo hundiendose en el firme se leeria como un fallo de colision.
+        if (player.y < 0.4 && player.vy < 0) {
+            player.y = 0.4;
+            player.vy *= -0.34;
+            if (player.vy < 2) player.vy = 0;
+            player.outVX *= 0.55;
+        }
+    }
+
+    playerGroup.position.set(player.x, player.y, PLAYER_Z + player.outZ);
     // Da vueltas al caer. Es lo que separa una caida de un salto largo.
-    playerGroup.rotation.z += dt * 4.2 * (player.outVX >= 0 ? -1 : 1);
-    playerGroup.rotation.x -= dt * 2.6;
+    playerGroup.rotation.z += dt * (golpe ? 6.5 : 4.2) * (player.outVX >= 0 ? -1 : 1);
+    playerGroup.rotation.x -= dt * (golpe ? 5.4 : 2.6);
     shadowMesh.material.opacity = 0;
 
     if (player.out <= 0) {
@@ -6185,7 +6286,7 @@ function takeHit() {
     burstParticles(player.x, player.y + 1.2, PLAYER_Z, 22, 1.5, 0xef4444);
     hudDirty = true;
 
-    if (game.lives <= 0) endGame();
+    if (game.lives <= 0) deathBlow();
 }
 
 function updatePowers(dt) {
@@ -6610,6 +6711,8 @@ function startGame() {
     dom.hitVeil.style.opacity = '0';
     game.nextTramo = 0;
     game.lastTramo = -1;
+    game.nextEvento = 0;
+    game.lastEvento = -1;
     game.crossKind = 1;
     game.routePos = 0.02;
     game.finishS = -1;
@@ -6649,6 +6752,10 @@ function startGame() {
     player.wantSlide = false;
     player.out = 0;
     player.outVX = 0;
+    player.outVZ = 0;
+    player.outZ = 0;
+    player.outKind = 0;
+    playerGroup.position.z = PLAYER_Z;
     playerGroup.rotation.set(0, 0, 0);
     shadowMesh.material.opacity = 0.4;
     player.jumps = 0;
@@ -6870,6 +6977,10 @@ function doRevive() {
     // de la calzada, el primer paso vuelve a ser caerse.
     player.out = 0;
     player.outVX = 0;
+    player.outVZ = 0;
+    player.outZ = 0;
+    player.outKind = 0;
+    playerGroup.position.z = PLAYER_Z;
     playerGroup.rotation.set(0, 0, 0);
     shadowMesh.material.opacity = 0.4;
     if (game.narrowS0 >= 0 || Math.abs(player.x) > ROAD_WIDTH / 2 - 1) {
@@ -7177,6 +7288,15 @@ function frame(now) {
             if (cuesta > 0) game.speed *= 1 + (SLOPE_SPEED - 1) * cuesta;
             const giro = turnGrip(game.distance);
             if (giro > 0) game.speed *= 1 + (TURN_SPEED - 1) * giro;
+            // Y al morir el mundo frena hasta pararse, en lo que dura la
+            // animacion. Seguir corriendo a toda velocidad mientras el cuerpo
+            // da vueltas por el aire se leia como que el juego continuaba sin
+            // el jugador; frenando, la carrera se acaba DONDE se acaba.
+            if (player.out > 0) game.speed *= player.out / player.outMax;
+            // Y el tope absoluto, el ultimo de todos: ningun encadenado de
+            // multiplicadores puede dejar que un obstaculo se cuele entre dos
+            // pasos de simulacion.
+            if (game.speed > SPEED_HARD) game.speed = SPEED_HARD;
             updatePowers(STEP);
             updatePlayer(STEP);
             scrollWorld(STEP);
@@ -7228,9 +7348,12 @@ function frame(now) {
         for (const k of POWER_KEYS) mat[k].emissiveIntensity = pulse;
 
         // Vineta y campo de vision segun la velocidad: es la unica pista de
-        // que aceleras de 15 a 31.
+        // que aceleras. El rango se mide desde la salida hasta el techo y no
+        // contra un numero fijo: con 34 escrito a mano y una salida de 20, la
+        // vineta se saturaba a los cuatrocientos metros y de ahi al final de la
+        // ruta ya no decia nada.
         const rush = Math.max(0, Math.min(1.25,
-            (game.speed - SPEED_START) / (34 - SPEED_START)));
+            (game.speed - SPEED_START) / (SPEED_MAX - SPEED_START)));
         dom.speedVeil.style.opacity = (rush * 0.85).toFixed(2);
         const wantFov = cam.fov + rush * 6;
         if (Math.abs(camera.fov - wantFov) > 0.05) {

@@ -553,6 +553,18 @@ Lo que importa mantener si se toca:
   saldría con la zona limpia de alguna bifurcación?— y el reparto es firme: uno
   por ciclo, sin repetir el anterior. Medido: **1,3 tramos por km**, y las
   bifurcaciones alternando destino/cortada sin fallar una.
+- **Y la misma lección hubo que aprenderla otra vez con los enemigos
+  anunciados.** El derrumbe, el ganado y la camioneta salían de un dado al 22 %
+  por compás, con la mitad de los compases descartados por la zona limpia de la
+  bifurcación **y** con el cartel racionado además por su cuenta. Medido en una
+  ruta entera: varios de ellos no salían ni una sola vez. Ahora se reparten por
+  turnos, uno cada 240 m en cuanto haya sitio y sin repetir el anterior, y el
+  turno **no se gasta si el cartel no llegó a plantarse**.
+- **El racionamiento de señales es solo entre las de ambiente.** Las forzadas
+  —las dos Y de cada bifurcación, los dos discos de la cortada, el cartel de
+  cada tramo especial— ya no reinician el reloj de los 95 m. Lo reiniciaban, y
+  como son unas cuantas y van seguidas, los sucesos anunciados se quedaban sin
+  plantar una y otra vez: esa era la otra mitad de por qué no aparecían.
 - **Y para eso hubo que separar las bifurcaciones 780 m en vez de 620.** Entre
   una y la siguiente tienen que caber las dos zonas limpias más un tramo
   especial entero con sus márgenes. Con 620 no cabía; el hueco libre era de
@@ -630,10 +642,21 @@ Lo que importa mantener si se toca:
 - **La velocidad sube con la DISTANCIA, no con el reloj.** Con el reloj,
   quedarse en el menú de pausa aceleraba igual, y sobre todo el que juega bien
   no notaba recompensa: llegaba al techo a los 32 s y de ahí no se movía. La
-  curva es una raíz —sube donde se nota y se va aplanando—: 21 a los 100 m,
-  29 a los 500, 35 a los 1000 y el techo de 52 hacia los 3600. El techo es de
-  seguridad, no de diseño: por encima de unos 66 los obstáculos empezarían a
-  colarse entre dos pasos de simulación.
+  curva es una raíz —sube donde se nota y se va aplanando—: se sale a **20** y
+  van 28 a los 100 m, 38 a los 500, 45 a los 1000 y el techo de 60 hacia los
+  2800. Antes se salía a 15 y se subía a 6,2: los primeros doscientos metros
+  eran un paseo por un sitio bonito y con la ruta entera midiendo casi veinte
+  kilómetros, llegar al tercero con margen de sobra para pensar no era llegar
+  lejos, era esperar.
+- **Y hay DOS techos, que son cosas distintas.** El de reparto (60) es hasta
+  dónde llega la velocidad por haber recorrido distancia; los impulsos lo pasan
+  a propósito, porque esa es justamente su gracia. El absoluto (120) va después
+  de todos los multiplicadores y es de seguridad pura: a un paso fijo de 1/60 el
+  mundo avanza `speed/60` y la ventana de colisión mide 2,2 de fondo, así que
+  por encima de 132 un obstáculo se cuela entre dos pasos sin que nadie lo
+  compruebe. Con el reparto en 52 el peor caso encadenado —placas al máximo por
+  impulso por curva— se quedaba en 127 por los pelos; subirlo a 60 lo llevaba a
+  147, y eso no es un juego más difícil, es un obstáculo atravesado.
 - **El hueco entre compáses se mide en SEGUNDOS, no en unidades.** Con un hueco
   fijo, doblar la velocidad partía por la mitad el tiempo de reacción y el
   juego se volvía imposible en vez de difícil. Lo que se estrecha es el margen,
@@ -680,8 +703,11 @@ Lo que importa mantener si se toca:
   propio jugador, así que quedarse desviado no desvía nada.
 - **La curva se veía, pero no se sentía en ninguna parte.** Movía el trazado y
   subía la velocidad, y el encuadre seguía tan recto como en una recta. Ahora
-  lleva **peralte**: la cámara se tumba 8,5° hacia dentro del giro y además
-  deriva hacia fuera, que es lo que hace la inercia. El alabeo de la calzada de
+  lleva **peralte**: la cámara se tumba 17° hacia dentro del giro y además
+  deriva dos unidades hacia fuera, que es lo que hace la inercia. Diecisiete
+  grados serían una barbaridad en primera persona; aquí, donde lo único que se
+  ve del jugador es su espalda y la calzada ya se está yendo de lado, es lo que
+  hace que la curva se note en el cuerpo. Con ocho no se notaba. El alabeo de la calzada de
   siempre no servía aquí —va por la máscara de distancia, que vale cero dentro
   de 158 unidades, y el punto de mira de la cámara está mucho más cerca que
   eso—, así que el peralte sale de `turnGrip`, que es una campana y devuelve la
@@ -721,6 +747,17 @@ Lo que importa mantener si se toca:
   ve al personaje caer dando vueltas antes de que termine. Sin esa caída, morir
   ahí se leería como un fallo del juego y no como uno propio, que es justo lo
   que hay que evitar cuando algo mata de golpe.
+- **Y morir de un golpe tampoco cierra la partida en el mismo frame.** Se
+  perdía la última vida y el menú de fin aparecía instantáneamente: no había
+  forma de ver contra qué te habías chocado, y la carrera se cerraba como si el
+  juego se hubiera cortado en vez de como si te hubieras matado. Ahora el cuerpo
+  sale despedido **hacia la cámara** y hacia arriba, da vueltas y rebota en la
+  calzada —hay suelo, a diferencia de la caída: hundirse en el firme se leería
+  como un fallo de colisión— durante segundo y medio. Cae con la gravedad al
+  70 %, porque lo que hay que ver es el vuelo y no el aterrizaje.
+- **Y el mundo frena hasta pararse mientras dura.** Seguir corriendo a toda
+  velocidad mientras el cuerpo da vueltas por el aire se leía como que el juego
+  continuaba sin el jugador. Frenando, la carrera se acaba **donde** se acaba.
 - **La piedra que aún cae no golpea, y eso salió gratis.** La franja de daño se
   mide desde el ancla de la amenaza, y el ancla de una piedra en el aire va
   alta. Medido: caen desde y=30, 25 y 20 escalonadas y solo pegan al tocar.
