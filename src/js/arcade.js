@@ -1022,7 +1022,22 @@ const SKINS = [
     // El unico traje que NO es solo color. Trae maquina debajo y casco encima, y
     // el casco es lo primero que se come un golpe: por eso cuesta lo que cuesta
     // y por eso va el ultimo de la lista.
-    { id: 'moto', name: 'Moto', icon: '≡', moto: true,
+    { id: 'bici', name: 'Bicicleta', icon: '◎', veh: 'bici',
+      desc: 'Sentado y pedaleando. Las piernas dan la vuelta entera.',
+      cost: 700, cloth: 0xf0c34a, skin: 0xd9a066, crest: 0x1f2a52, legs: 0x1f2a52,
+      trim: 0xd9d9d9, hair: 0x241810, boot: 0x2a2f38,
+      bike: 0x2ec4a0, bikeDark: 0x14161a, visor: 0x1b2430 },
+    { id: 'patineta', name: 'Patineta', icon: '▭', veh: 'patineta',
+      desc: 'De pie sobre la tabla, con los brazos abiertos para no caerse.',
+      cost: 800, cloth: 0xd94f6a, skin: 0xd9a066, crest: 0x2a2f38, legs: 0x3a4250,
+      trim: 0xd9d9d9, hair: 0x1a1008, boot: 0xf2f6fa,
+      bike: 0xc8862f, bikeDark: 0x14161a, visor: 0x1b2430 },
+    { id: 'monopatin', name: 'Monopatín', icon: '⌐', veh: 'monopatin',
+      desc: 'De pie y agarrado al manubrio, con un pie en la tabla.',
+      cost: 1000, cloth: 0x4a90d9, skin: 0xd9a066, crest: 0xf2f6fa, legs: 0x2a3038,
+      trim: 0xd9d9d9, hair: 0x241810, boot: 0x22242a,
+      bike: 0xef4444, bikeDark: 0x14161a, visor: 0x1b2430 },
+    { id: 'moto', name: 'Moto', icon: '≡', moto: true, veh: 'moto',
       desc: 'Con casco, y el casco aguanta un golpe antes que el escudo. Uno por carrera.',
       cost: 1500, cloth: 0x2a2f38, skin: 0xd9a066, crest: 0xd93a3a, legs: 0x1a1c20,
       trim: 0xd9d9d9, hair: 0x1a1008, boot: 0x22242a,
@@ -1308,6 +1323,52 @@ function skinIcon(sk) {
             '<rect x="12.6" y="15.4" width="3.4" height="4" rx=".9" fill="' + c(sk.legs) + '"/>' +
             '<rect x="7.4" y="19.6" width="4.4" height="2" rx="1" fill="' + c(sk.boot) + '"/>' +
             '<rect x="12.2" y="19.6" width="4.4" height="2" rx="1" fill="' + c(sk.boot) + '"/>'
+        );
+    }
+    if (sk.veh === 'bici') {
+        return svg(
+            '<rect x="1" y="0" width="22" height="24" rx="4" fill="#efe6d2" opacity=".16"/>' +
+            '<circle cx="12" cy="6" r="2.1" fill="' + c(sk.crest) + '"/>' +
+            '<path d="M10.6 8.4h4l2 4.2h-8z" fill="' + c(sk.cloth) + '"/>' +
+            '<circle cx="5.6" cy="17.4" r="4.3" fill="none" stroke="' + c(sk.bike) +
+                '" stroke-width="1.5"/>' +
+            '<circle cx="18.4" cy="17.4" r="4.3" fill="none" stroke="' + c(sk.bike) +
+                '" stroke-width="1.5"/>' +
+            '<path d="M5.6 17.4 12 12.4l6.4 5M12 12.4v5" fill="none" stroke="' + c(sk.bike) +
+                '" stroke-width="1.4"/>' +
+            '<rect x="15.6" y="10.4" width="4" height="1.3" rx=".6" fill="' + c(sk.trim) + '"/>'
+        );
+    }
+    if (sk.veh === 'patineta') {
+        return svg(
+            '<rect x="1" y="0" width="22" height="24" rx="4" fill="#efe6d2" opacity=".16"/>' +
+            '<circle cx="12" cy="4.6" r="2.1" fill="' + c(sk.crest) + '"/>' +
+            '<path d="M10.4 7h3.2l2.2 5h-7.6z" fill="' + c(sk.cloth) + '"/>' +
+            // Los brazos abiertos, que es lo que distingue a la patineta del
+            // monopatin de un vistazo: aqui no hay de que agarrarse.
+            '<path d="M4 8.6l5.2 1.6-.6 2-5.2-1.6zM20 8.6l-5.2 1.6.6 2 5.2-1.6z" fill="' +
+                c(sk.skin) + '"/>' +
+            '<rect x="8.6" y="12" width="2.4" height="4.4" rx=".8" fill="' + c(sk.legs) + '"/>' +
+            '<rect x="13" y="12" width="2.4" height="4.4" rx=".8" fill="' + c(sk.legs) + '"/>' +
+            '<rect x="4.6" y="17" width="14.8" height="1.8" rx=".9" fill="' + c(sk.bike) + '"/>' +
+            '<circle cx="8" cy="20.4" r="1.5" fill="' + c(sk.bikeDark) + '"/>' +
+            '<circle cx="16" cy="20.4" r="1.5" fill="' + c(sk.bikeDark) + '"/>'
+        );
+    }
+    if (sk.veh === 'monopatin') {
+        return svg(
+            '<rect x="1" y="0" width="22" height="24" rx="4" fill="#efe6d2" opacity=".16"/>' +
+            '<circle cx="10.4" cy="4.6" r="2.1" fill="' + c(sk.crest) + '"/>' +
+            '<path d="M8.8 7h3.2l2 5h-7.2z" fill="' + c(sk.cloth) + '"/>' +
+            '<rect x="7.4" y="12" width="2.4" height="4.6" rx=".8" fill="' + c(sk.legs) + '"/>' +
+            '<rect x="11" y="12.6" width="2.2" height="4" rx=".8" fill="' + c(sk.legs) + '"/>' +
+            // El mastil y el manubrio, agarrado: lo contrario de la patineta.
+            '<rect x="16.4" y="5.4" width="1.7" height="12.6" rx=".8" fill="' + c(sk.bike) + '"/>' +
+            '<rect x="13.6" y="4.6" width="7" height="1.6" rx=".8" fill="' + c(sk.trim) + '"/>' +
+            '<path d="M11.6 8.4l5 -2.4.8 1.9-5 2.4z" fill="' + c(sk.skin) + '"/>' +
+            '<rect x="5.4" y="17.6" width="13" height="1.7" rx=".85" fill="' + c(sk.bike) + '"/>' +
+            '<circle cx="7.4" cy="20.8" r="1.6" fill="' + c(sk.bikeDark) + '"/>' +
+            '<circle cx="17.2" cy="20.8" r="1.6" fill="' + c(sk.bikeDark) + '"/>'
         );
     }
     if (sk.moto) {
@@ -5395,49 +5456,131 @@ function buildPlayer() {
     //
     // Las ruedas son cilindros y no cajas, que es la unica geometria nueva de
     // todo esto: una caja girando sobre su eje se lee como una caja girando.
-    const moto = new THREE.Group();
-    moto.visible = false;
-    playerGroup.add(moto);
+    // Cuatro vehiculos con el mismo molde, no cuatro bloques copiados. Lo que
+    // cambia de uno a otro es la chatarra, el tamano de las ruedas y a que
+    // altura queda el jinete; todo lo demas —colgar de playerGroup, girar las
+    // ruedas con el mundo, levantar el morro en el aire— es identico y se
+    // escribe una vez.
+    //
+    // El cilindro va de radio 1 y se escala en cada rueda: la de la bici mide
+    // mas del doble que la de la patineta, y con una geometria fija por vehiculo
+    // habria cuatro cilindros donde basta uno.
+    const RUEDA = new THREE.CylinderGeometry(1, 1, 1, 14);
+    const vehs = {};
 
-    const RUEDA = new THREE.CylinderGeometry(0.52, 0.52, 0.24, 14);
-    const rueda = (z) => {
-        const w = new THREE.Mesh(RUEDA, playerMats.bikeDark);
-        w.position.set(0, 0.52, z);
-        w.rotation.z = Math.PI / 2;          // el eje pasa a ser el X
-        moto.add(w);
-        const llanta = new THREE.Mesh(BOX, playerMats.trim);
-        llanta.scale.set(0.26, 0.62, 0.13);
-        llanta.position.set(0, 0.52, z);
-        moto.add(llanta);
-        return w;
-    };
-    const ruedaT = rueda(1.05);              // trasera
-    const ruedaD = rueda(-1.15);             // delantera
+    function vehiculo(id, alto) {
+        const group = new THREE.Group();
+        group.visible = false;
+        playerGroup.add(group);
+        const ruedas = [];
+        // alto es donde quedan los pies del jinete: cero si va sentado, la
+        // altura de la tabla si va de pie encima.
+        const v = { group, ruedas, alto, radio: 0.52 };
+        vehs[id] = v;
 
-    const pieza = (m, sx, sy, sz, x, y, z, rx) => {
-        const q = new THREE.Mesh(BOX, m);
-        q.scale.set(sx, sy, sz);
-        q.position.set(x, y, z);
-        if (rx) q.rotation.x = rx;
-        moto.add(q);
-        return q;
-    };
-    pieza(playerMats.bike, 0.42, 0.34, 2.0, 0, 0.86, 0);                  // cuna
-    pieza(playerMats.bike, 0.56, 0.46, 0.92, 0, 1.12, -0.34);             // deposito
-    pieza(playerMats.bikeDark, 0.62, 0.16, 0.72, 0, 1.02, 0.5);           // asiento
-    pieza(playerMats.bike, 0.5, 0.5, 0.34, 0, 1.28, -0.98, -0.32);        // carenado
-    pieza(playerMats.trim, 0.18, 0.78, 0.18, -0.3, 0.9, -1.1, -0.28);     // horquilla
-    pieza(playerMats.trim, 0.18, 0.78, 0.18, 0.3, 0.9, -1.1, -0.28);
-    pieza(playerMats.trim, 1.0, 0.12, 0.12, 0, 1.36, -0.86);              // manillar
-    pieza(playerMats.bikeDark, 0.16, 0.16, 0.8, -0.34, 0.72, 0.72);       // escape
-    pieza(playerMats.bikeDark, 0.16, 0.16, 0.8, 0.34, 0.72, 0.72);
-    // Estriberas: es lo que explica donde apoya los pies, y sin ellas las
-    // piernas quedaban dobladas en el aire.
-    pieza(playerMats.trim, 0.5, 0.08, 0.16, -0.42, 0.6, 0.1);
-    pieza(playerMats.trim, 0.5, 0.08, 0.16, 0.42, 0.6, 0.1);
+        const rueda = (r, ancho, x, y, z, llanta) => {
+            const w = new THREE.Mesh(RUEDA, playerMats.bikeDark);
+            w.scale.set(r, ancho, r);
+            w.position.set(x, y, z);
+            w.rotation.z = Math.PI / 2;      // el eje pasa a ser el X
+            group.add(w);
+            ruedas.push(w);
+            if (llanta) {
+                const l = new THREE.Mesh(BOX, playerMats.trim);
+                l.scale.set(ancho + 0.02, r * 1.2, r * 0.25);
+                l.position.set(x, y, z);
+                group.add(l);
+            }
+            v.radio = r;
+            return w;
+        };
+        const pieza = (m, sx, sy, sz, x, y, z, rx, rz) => {
+            const q = new THREE.Mesh(BOX, m);
+            q.scale.set(sx, sy, sz);
+            q.position.set(x, y, z);
+            if (rx) q.rotation.x = rx;
+            if (rz) q.rotation.z = rz;
+            group.add(q);
+            return q;
+        };
+        return { rueda, pieza, v };
+    }
+
+    // --- Moto ---
+    {
+        const { rueda, pieza } = vehiculo('moto', 0);
+        rueda(0.52, 0.24, 0, 0.52, 1.05, true);
+        rueda(0.52, 0.24, 0, 0.52, -1.15, true);
+        pieza(playerMats.bike, 0.42, 0.34, 2.0, 0, 0.86, 0);                // cuna
+        pieza(playerMats.bike, 0.56, 0.46, 0.92, 0, 1.12, -0.34);           // deposito
+        pieza(playerMats.bikeDark, 0.62, 0.16, 0.72, 0, 1.02, 0.5);         // asiento
+        pieza(playerMats.bike, 0.5, 0.5, 0.34, 0, 1.28, -0.98, -0.32);      // carenado
+        pieza(playerMats.trim, 0.18, 0.78, 0.18, -0.3, 0.9, -1.1, -0.28);   // horquilla
+        pieza(playerMats.trim, 0.18, 0.78, 0.18, 0.3, 0.9, -1.1, -0.28);
+        pieza(playerMats.trim, 1.0, 0.12, 0.12, 0, 1.36, -0.86);            // manillar
+        pieza(playerMats.bikeDark, 0.16, 0.16, 0.8, -0.34, 0.72, 0.72);     // escape
+        pieza(playerMats.bikeDark, 0.16, 0.16, 0.8, 0.34, 0.72, 0.72);
+        pieza(playerMats.trim, 0.5, 0.08, 0.16, -0.42, 0.6, 0.1);           // estriberas
+        pieza(playerMats.trim, 0.5, 0.08, 0.16, 0.42, 0.6, 0.1);
+    }
+
+    // --- Bicicleta ---
+    // Ruedas grandes y finas, cuadro de tubos y nada de carroceria: una bici se
+    // reconoce por lo que NO tiene. El plato y las bielas van puestos porque son
+    // lo que explica que las piernas den la vuelta entera.
+    {
+        const { rueda, pieza } = vehiculo('bici', 0);
+        rueda(0.64, 0.1, 0, 0.64, 0.98, true);
+        rueda(0.64, 0.1, 0, 0.64, -1.02, true);
+        pieza(playerMats.bike, 0.1, 0.1, 1.7, 0, 1.16, -0.05, 0.1);         // tubo alto
+        pieza(playerMats.bike, 0.1, 1.0, 0.1, 0, 0.9, 0.5, 0.42);           // tubo diagonal
+        pieza(playerMats.bike, 0.1, 0.72, 0.1, 0, 1.0, 0.66);               // tija
+        pieza(playerMats.bike, 0.1, 0.9, 0.1, 0, 1.05, -0.86, -0.25);       // horquilla
+        pieza(playerMats.bikeDark, 0.34, 0.1, 0.44, 0, 1.38, 0.68);         // sillin
+        pieza(playerMats.trim, 0.9, 0.09, 0.09, 0, 1.44, -0.8);             // manubrio
+        pieza(playerMats.trim, 0.09, 0.09, 0.3, -0.42, 1.42, -0.72);        // punos
+        pieza(playerMats.trim, 0.09, 0.09, 0.3, 0.42, 1.42, -0.72);
+        pieza(playerMats.bikeDark, 0.06, 0.42, 0.42, 0.16, 0.42, 0.1);      // plato
+        pieza(playerMats.trim, 0.28, 0.06, 0.06, -0.26, 0.42, 0.1);         // bielas
+        pieza(playerMats.trim, 0.28, 0.06, 0.06, 0.26, 0.42, 0.1);
+    }
+
+    // --- Patineta ---
+    // La tabla va a 0,32 y el jinete ENCIMA, no sentado: es el primer vehiculo
+    // en el que el cuerpo entero sube. Cuatro ruedas pequenas y dos ejes.
+    {
+        const { rueda, pieza } = vehiculo('patineta', 0.32);
+        for (const sd of [-1, 1]) {
+            rueda(0.15, 0.12, sd * 0.26, 0.15, 0.58, false);
+            rueda(0.15, 0.12, sd * 0.26, 0.15, -0.58, false);
+        }
+        pieza(playerMats.bike, 0.78, 0.09, 2.5, 0, 0.32, 0);                // tabla
+        pieza(playerMats.bike, 0.62, 0.09, 0.4, 0, 0.36, 1.32, -0.42);      // cola
+        pieza(playerMats.bike, 0.62, 0.09, 0.4, 0, 0.36, -1.32, 0.42);      // punta
+        pieza(playerMats.trim, 0.5, 0.1, 0.16, 0, 0.24, 0.58);              // ejes
+        pieza(playerMats.trim, 0.5, 0.1, 0.16, 0, 0.24, -0.58);
+        pieza(playerMats.bikeDark, 0.74, 0.02, 2.4, 0, 0.375, 0);           // lija
+    }
+
+    // --- Monopatin ---
+    // La misma tabla baja, pero con mastil y manubrio, y dos ruedas en vez de
+    // cuatro. Es lo que lo separa de la patineta a la distancia a la que se ve:
+    // uno lleva las manos en el aire y el otro agarrado.
+    {
+        const { rueda, pieza } = vehiculo('monopatin', 0.28);
+        rueda(0.2, 0.11, 0, 0.2, 0.82, false);
+        rueda(0.2, 0.11, 0, 0.2, -0.9, false);
+        pieza(playerMats.bike, 0.5, 0.1, 1.9, 0, 0.28, 0);                  // tabla
+        pieza(playerMats.trim, 0.44, 0.02, 1.7, 0, 0.34, 0);                // lija
+        pieza(playerMats.bike, 0.16, 1.35, 0.16, 0, 1.0, -0.9, -0.12);      // mastil
+        pieza(playerMats.trim, 0.92, 0.09, 0.09, 0, 1.62, -0.95);           // manubrio
+        pieza(playerMats.bikeDark, 0.1, 0.1, 0.28, -0.42, 1.62, -0.9);      // punos
+        pieza(playerMats.bikeDark, 0.1, 0.1, 0.28, 0.42, 1.62, -0.9);
+        pieza(playerMats.trim, 0.2, 0.36, 0.2, 0, 0.4, -0.84);              // horquilla
+    }
 
     playerParts = { torso, head, armL, armR, legL, legR,
-                    tocado, casco, moto, ruedaT, ruedaD,
+                    tocado, casco, vehs,
                     runner, pachon, pachonAgua };
     scene.add(playerGroup);
 
@@ -5500,8 +5643,10 @@ function buildPlayer() {
 // Si el traje puesto trae maquina. Se guarda aparte y no se consulta el traje
 // en cada frame: la postura lo pregunta sesenta veces por segundo y skinById
 // recorre la lista entera.
-let motoOn = false;
+let motoOn = false;         // solo la moto: es la unica que trae casco
 let runnerOn = false;
+let vehOn = null;           // 'moto' | 'bici' | 'patineta' | 'monopatin' | null
+let vehAct = null;          // el vehiculo puesto, ya resuelto
 
 function applySkin(id) {
     const sk = skinById(id);
@@ -5518,12 +5663,20 @@ function applySkin(id) {
 
     motoOn = !!sk.moto;
     runnerOn = !!sk.runner;
-    playerParts.moto.visible = motoOn;
+    vehOn = sk.veh || null;
+    vehAct = vehOn ? playerParts.vehs[vehOn] : null;
+    for (const k in playerParts.vehs) {
+        playerParts.vehs[k].group.visible = (k === vehOn);
+    }
     playerParts.casco.visible = motoOn;
     playerParts.runner.visible = runnerOn;
-    // Con el casco o con la gorra puestos se apagan el pelo, el tocado y las
-    // plumas: los tres tapan la misma cabeza.
-    for (const p of playerParts.tocado) p.visible = !motoOn && !runnerOn;
+    // El tocado maya solo lo lleva el principal. Se apaga con la gorra del
+    // runner, con el casco de la moto y tambien encima de la bici, la patineta
+    // y el monopatin: un patinador con penacho de plumas de quetzal es el mismo
+    // fallo de montaje que las plumas saliendo por debajo de un integral.
+    // Antes la condicion miraba solo a motoOn y a runnerOn, asi que los tres
+    // vehiculos nuevos salian emplumados.
+    for (const p of playerParts.tocado) p.visible = !vehOn && !runnerOn;
     fillPachon();
 }
 
@@ -7341,16 +7494,24 @@ function updatePlayer(dt) {
     // Achatar Y tumbar dejaba una figura deforme.
     if (sliding) { sy = 0.92; sxz = 1; }
 
-    if (motoOn) {
-        // En moto no hay tumbada ni aplastamiento: agacharse es meterse detras
-        // del carenado, y el cuerpo no se estira porque debajo hay un chasis
-        // que no da de si. Solo cambia cuanto se echa hacia delante.
+    if (vehOn) {
+        // Encima de cualquier vehiculo no hay tumbada ni aplastamiento:
+        // agacharse es meterse hacia delante, y el cuerpo no se estira porque
+        // debajo hay algo rigido que no da de si. Lo que cambia entre uno y
+        // otro es cuanto se echa y a que altura van los pies.
         playerBody.scale.set(1, 1, 1);
-        playerBody.rotation.x = sliding ? -0.62 : -0.2 - (game.speed - SPEED_START) * 0.004;
-        playerBody.position.y = sliding ? -0.1 : 0;
-        // Vibracion del motor, muy corta y muy rapida. Es lo unico que hace que
-        // una moto parada en el sitio no parezca una pegatina.
-        playerBody.rotation.z = Math.sin(game.elapsed * 46) * 0.006;
+        const echa = vehOn === 'bici' ? -0.42 : vehOn === 'patineta' ? -0.14 : -0.2;
+        const agacha = vehOn === 'patineta' ? -0.72 : -0.62;
+        playerBody.rotation.x = sliding
+            ? agacha
+            : echa - (game.speed - SPEED_START) * 0.004;
+        // La altura de la tabla: en la patineta y el monopatin el jinete va DE
+        // PIE encima, asi que el cuerpo entero sube. Sentado, esto vale cero.
+        playerBody.position.y = (vehAct ? vehAct.alto : 0) + (sliding ? -0.1 : 0);
+        // Vibracion del motor, muy corta y muy rapida, y solo en la moto: es lo
+        // unico que hace que una moto parada en el sitio no parezca una
+        // pegatina, y una bici no vibra.
+        playerBody.rotation.z = motoOn ? Math.sin(game.elapsed * 46) * 0.006 : 0;
     } else {
         playerBody.scale.set(sxz, sy, sliding ? 1.6 : sxz);
         // Deslizarse no es agacharse: es tirarse de barriga. El cuerpo se pone
@@ -7387,19 +7548,51 @@ function updatePlayer(dt) {
         playerParts.legR.rotation.set(Math.sin(game.elapsed * 2.6 + 0.9) * 0.28 + 0.05, 0, 0);
         playerParts.torso.position.y = 1.28;
         playerParts.head.rotation.set(-0.12, 0, 0);
-    } else if (motoOn) {
-        // Sentado: brazos al manillar, rodillas dobladas y pies en las
-        // estriberas. Las piernas van a rotacion NEGATIVA para que la cadera
-        // las mande hacia delante, que es donde estan los estribos.
+    } else if (vehOn) {
         const tuck = sliding ? 1 : 0;
-        playerParts.armL.rotation.set(-1.5 + tuck * 0.28, 0, 0.3);
-        playerParts.armR.rotation.set(-1.5 + tuck * 0.28, 0, -0.3);
-        playerParts.legL.rotation.set(-1.15, 0, 0.16);
-        playerParts.legR.rotation.set(-1.15, 0, -0.16);
         playerParts.torso.position.y = 1.28;
-        // La cabeza compensa lo que se echa el cuerpo, para seguir mirando a la
-        // calzada tanto sentado como escondido tras el carenado.
-        playerParts.head.rotation.set(0.2 + tuck * 0.34, 0, 0);
+
+        if (vehOn === 'moto') {
+            // Sentado: brazos al manillar, rodillas dobladas y pies en las
+            // estriberas. Las piernas van a rotacion NEGATIVA para que la
+            // cadera las mande hacia delante, que es donde estan los estribos.
+            playerParts.armL.rotation.set(-1.5 + tuck * 0.28, 0, 0.3);
+            playerParts.armR.rotation.set(-1.5 + tuck * 0.28, 0, -0.3);
+            playerParts.legL.rotation.set(-1.15, 0, 0.16);
+            playerParts.legR.rotation.set(-1.15, 0, -0.16);
+            playerParts.head.rotation.set(0.2 + tuck * 0.34, 0, 0);
+
+        } else if (vehOn === 'bici') {
+            // PEDALEA. Es lo unico que separa a una bici de una moto sin motor,
+            // y va con player.run, o sea con la distancia recorrida: parado, los
+            // pies se paran. Las dos piernas en contrafase, como el pedal.
+            playerParts.armL.rotation.set(-1.32 + tuck * 0.2, 0, 0.2);
+            playerParts.armR.rotation.set(-1.32 + tuck * 0.2, 0, -0.2);
+            playerParts.legL.rotation.set(-0.88 + s * 0.46, 0, 0.1);
+            playerParts.legR.rotation.set(-0.88 - s * 0.46, 0, -0.1);
+            playerParts.head.rotation.set(0.42 + tuck * 0.3, 0, 0);
+
+        } else if (vehOn === 'patineta') {
+            // DE PIE y sin nada a que agarrarse: los brazos van abiertos y
+            // desiguales, que es como se mantiene el equilibrio de verdad. Los
+            // pies escalonados, uno delante y otro detras, que es la postura
+            // que hace que una tabla se lea como una tabla.
+            const balan = Math.sin(game.elapsed * 2.4) * 0.12;
+            playerParts.armL.rotation.set(-0.5 + balan, 0, 1.0);
+            playerParts.armR.rotation.set(-0.28 - balan, 0, -1.15);
+            playerParts.legL.rotation.set(-0.34, 0, 0.22);
+            playerParts.legR.rotation.set(0.24, 0, -0.26);
+            playerParts.head.rotation.set(0.16 + tuck * 0.38, 0, 0);
+
+        } else {
+            // Monopatin: de pie pero agarrado, que es justo lo contrario. Un pie
+            // en la tabla y el otro recogido detras, listo para empujar.
+            playerParts.armL.rotation.set(-1.42 + tuck * 0.22, 0, 0.14);
+            playerParts.armR.rotation.set(-1.42 + tuck * 0.22, 0, -0.14);
+            playerParts.legL.rotation.set(-0.12, 0, 0.1);
+            playerParts.legR.rotation.set(0.4, 0, -0.12);
+            playerParts.head.rotation.set(0.18 + tuck * 0.34, 0, 0);
+        }
     } else if (sliding) {
         // Los DOS brazos estirados hacia delante, como quien se tira de cabeza
         // a una piscina. Con el cuerpo ya tumbado, un brazo a -2,7 queda
@@ -7442,12 +7635,16 @@ function updatePlayer(dt) {
     // Las ruedas. Giran con el mundo y no con el reloj, asi que a poca
     // velocidad ruedan despacio: si fueran con el reloj, frenar dejaria la moto
     // parada con las ruedas a tope, que es lo que delata a un juguete.
-    if (motoOn) {
-        playerParts.ruedaT.rotation.x = -player.run * 1.6;
-        playerParts.ruedaD.rotation.x = -player.run * 1.6;
-        // En el aire la moto levanta el morro, y al aterrizar lo baja de golpe.
+    if (vehAct) {
+        // Y giran segun SU radio: la rueda de la patineta mide 0,15 y la de la
+        // bici 0,64, asi que a la misma velocidad la pequena tiene que dar
+        // cuatro vueltas por cada una de la grande. Con una tasa fija, las
+        // ruedas pequenas se veian patinando.
+        const giro = -player.run * (0.52 / vehAct.radio) * 1.6;
+        for (const w of vehAct.ruedas) w.rotation.x = giro;
+        // En el aire el vehiculo levanta el morro, y al aterrizar lo baja.
         const aire = player.grounded ? 0 : (player.vy > 0 ? 1 : -0.55);
-        playerParts.moto.rotation.x = aire * 0.16 - squashK * 0.1;
+        vehAct.group.rotation.x = aire * 0.16 - squashK * 0.1;
     }
 
     // Topetazo contra el muro de un carril alto: el cuerpo se asoma y vuelve.

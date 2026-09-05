@@ -1516,11 +1516,48 @@ Ceniza— eran **el mismo muñeco con otros siete colores**: se compraban una ve
 se miraban diez segundos y no cambiaban nada. Una lista corta en la que cada
 entrada es una forma de jugar vale más que una larga de recolores.
 
-| Traje | Qué es | Qué cambia |
+| Traje | Precio | Qué cambia |
 |---|---|---|
-| **Ajaw** | El corredor de la calzada | Nada: es el de referencia, y gratis |
-| **Runner** | Pantaloneta, playera y pachón | El jade se recoge como **agua**, y 100 gotas dan una vida |
-| **Moto** | Máquina y casco | El casco aguanta un golpe antes que el escudo |
+| **Ajaw** | 0 | Nada: es el de referencia |
+| **Runner** | 500 | El jade se recoge como **agua**, y 100 gotas dan una vida |
+| **Bicicleta** | 700 | Sentado y **pedaleando**: las piernas dan la vuelta entera |
+| **Patineta** | 800 | **De pie encima**, con los brazos abiertos para no caerse |
+| **Monopatín** | 1.000 | De pie pero **agarrado** al manubrio, un pie en la tabla |
+| **Moto** | 1.500 | El casco aguanta un golpe antes que el escudo |
+
+### Los cuatro vehículos salen del mismo molde
+
+No son cuatro bloques copiados. Lo que cambia de uno a otro es la chatarra, el
+tamaño de las ruedas y a qué altura queda el jinete; todo lo demás —colgar de
+`playerGroup` y no del cuerpo, girar las ruedas con el mundo, levantar el morro
+en el aire, no tumbarse ni estirarse al agacharse— se escribe una vez.
+
+- **El cilindro de las ruedas es de radio 1 y se escala en cada una.** La de la
+  bici mide 0,64 y la de la patineta 0,15: con una geometría fija por vehículo
+  habría cuatro cilindros donde basta uno.
+- **Y giran según su propio radio.** A la misma velocidad, la rueda pequeña tiene
+  que dar cuatro vueltas por cada una de la grande; con una tasa fija, las
+  ruedas de la patineta se veían patinando. Medido: 59,5 contra 13,5 a la misma
+  distancia recorrida.
+- **En la patineta y el monopatín el jinete va DE PIE encima**, así que el cuerpo
+  entero sube a la altura de la tabla. Es lo primero que no se podía resolver
+  con la postura sola.
+- **La bici pedalea de verdad**, y con `player.run`, o sea con la distancia
+  recorrida: parado, los pies se paran. Es lo único que separa a una bici de una
+  moto sin motor.
+- **La patineta lleva los brazos abiertos y desiguales** —que es como se mantiene
+  el equilibrio— y el monopatín justo lo contrario, agarrado al manubrio. A la
+  distancia a la que se ve al jugador, eso es lo que los distingue.
+- **La vibración del motor es sólo de la moto.** Una bici no vibra.
+
+**Y el tocado maya se apaga con los cuatro.** Sólo lo lleva el principal: un
+patinador con penacho de plumas de quetzal es el mismo fallo de montaje que las
+plumas saliendo por debajo de un integral. La condición miraba sólo a la moto y
+al runner, así que los tres vehículos nuevos salían emplumados.
+
+**El casco sigue siendo exclusivo de la moto**, que es la única con ventaja
+mecánica y por eso la más cara. Los otros tres cambian cómo se ve y cómo se
+mueve el jugador, no las reglas.
 
 ### El runner
 
