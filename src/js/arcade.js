@@ -202,7 +202,7 @@ const BOOST_POOL = 8;
 // metros, que a la velocidad de ahora son menos de treinta segundos por lugar.
 // Un sitio que se abandona antes de haberlo mirado no es un sitio, es un color.
 // Con 950 cada punto de la ruta dura casi dos kilometros.
-const CROSS_EVERY = 950;
+const CROSS_EVERY = 1150;
 const CROSS_SIGN_AHEAD = 62;        // el rotulo, adelantado a la isleta
 // El divisor. Es lo unico que impide cruzar de un ramal al otro mientras los
 // dos siguen pegados, asi que mide lo que mide por eso y no por estetica.
@@ -1042,39 +1042,42 @@ const svg = body => '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">' + 
 // La UNICA pieza nueva es la bomba volcanica, que es la que el suceso de
 // Tajumulco necesitaba de verdad. Todo lo demas recombina lo que ya hay.
 //
-// n es la cuenta a dureza maxima; la de verdad sale de lo avanzada que este la
-// ruta. Y esta MEDIDA en tiempo, no elegida a ojo: el hueco entre piezas es
-// ZONE_LEN / n unidades, que a la velocidad de crucero de esa zona tiene que
-// dar entre seis decimas y segundo y medio. Los primeros numeros que puse
-// daban un autobus de frente cada media decima en la capital, que no es
-// dificil: es imposible.
+// n es el numero de OLEADAS, no de piezas. Cada oleada suelta algo en todos
+// los carriles menos el libre, de golpe: eso es lo que se lee como un suceso.
+//
+// La primera version soltaba una pieza por hueco y salia MENOS densa que el
+// ruido de fondo del camino: cinco murcielagos repartidos en 380 unidades son
+// uno cada 76, y los sueltos de siempre salen cada 35. Se armaba, sonaba el
+// rotulo, caia el tinte... y no habia nada que ver, porque un suceso mas flojo
+// que lo normal no es un suceso. En oleadas, con el hueco libre moviendose, se
+// pide lo mismo que antes -leer y moverse- pero se ve.
 const ZONES = {
     tikal:       { name: 'Vuelo de camazotz',   kind: 'enjambre', what: CAMAZOTZ, n: 7,
-                   warn: 'animal',   tint: 0x1d3326, spark: 0x14776a },
-    flores:      { name: 'El lago se la traga', kind: 'pasillo',  what: CENOTE,   n: 6,
-                   warn: 'hueco',    tint: 0x2f6b8a, spark: 0x7fd4e6 },
+                   warn: 'animal',   tint: 0x0d2a1e, spark: 0x2ec4a0 },
+    flores:      { name: 'El lago se la traga', kind: 'pasillo',  what: CENOTE,   n: 7,
+                   warn: 'hueco',    tint: 0x1f5f8a, spark: 0x7fd4e6 },
     semuc:       { name: 'Desprendimiento',     kind: 'lluvia',   what: RODANTE,  n: 8,
-                   warn: 'derrumbe', tint: 0x3f6a52, spark: 0x9fb08a },
-    riodulce:    { name: 'Troncos del río',     kind: 'pasillo',  what: TRONCO,   n: 5,
-                   warn: 'derrumbe', tint: 0x2f7a4e, spark: 0x6f4f2f },
-    esquipulas:  { name: 'Caravana de romería', kind: 'enjambre', what: BUS,      n: 5,
-                   warn: 'parada',   tint: 0x6a5030, spark: 0xd4a63a },
-    monterrico:  { name: 'Marejada',            kind: 'pasillo',  what: TRONCO,   n: 6,
-                   warn: 'derrumbe', tint: 0x2f6f8a, spark: 0x9fd8e6 },
+                   warn: 'derrumbe', tint: 0x24503a, spark: 0xcfe0b8 },
+    riodulce:    { name: 'Troncos del río',     kind: 'pasillo',  what: TRONCO,   n: 7,
+                   warn: 'derrumbe', tint: 0x1d5e3a, spark: 0xb08a52 },
+    esquipulas:  { name: 'Caravana de romería', kind: 'enjambre', what: BUS,      n: 7,
+                   warn: 'parada',   tint: 0x7a4a18, spark: 0xf0c34a },
+    monterrico:  { name: 'Marejada',            kind: 'pasillo',  what: TRONCO,   n: 7,
+                   warn: 'derrumbe', tint: 0x1a5f7a, spark: 0xcfeef6 },
     tajumulco:   { name: 'Erupción',            kind: 'lluvia',   what: BOMBA,    n: 9,
                    warn: 'derrumbe', tint: 0xd4451f, spark: 0xff8a4a },
     todossantos: { name: 'Ventisca',            kind: 'viento',   what: 0,        n: 0,
-                   warn: 'viento',   tint: 0xcfe0ea, spark: 0xffffff },
-    chichi:      { name: 'Camino del mercado',  kind: 'cruce',    what: VACA,     n: 4,
-                   warn: 'animal',   tint: 0x4a3f63, spark: 0xf0c34a },
+                   warn: 'viento',   tint: 0xdfeaf4, spark: 0xffffff },
+    chichi:      { name: 'Camino del mercado',  kind: 'cruce',    what: VACA,     n: 6,
+                   warn: 'animal',   tint: 0x5a2f52, spark: 0xf0c34a },
     atitlan:     { name: 'Xocomil',             kind: 'viento',   what: 0,        n: 0,
-                   warn: 'viento',   tint: 0x3a5a7a, spark: 0xcfe4ef },
-    fuego:       { name: 'El Fuego escupe',     kind: 'lluvia',   what: BOMBA,    n: 11,
-                   warn: 'derrumbe', tint: 0xff5a1f, spark: 0xffb04a },
-    antigua:     { name: 'Temblor',             kind: 'temblor',  what: RODANTE,  n: 9,
-                   warn: 'derrumbe', tint: 0x8a7a5c, spark: 0xd8c8a8 },
-    guate:       { name: 'Hora pico',           kind: 'enjambre', what: BUS,      n: 6,
-                   warn: 'parada',   tint: 0x2a3550, spark: 0xf0c34a }
+                   warn: 'viento',   tint: 0x2a4f8a, spark: 0xcfe4ef },
+    fuego:       { name: 'El Fuego escupe',     kind: 'lluvia',   what: BOMBA,    n: 8,
+                   warn: 'derrumbe', tint: 0xff4a10, spark: 0xffb04a },
+    antigua:     { name: 'Temblor',             kind: 'temblor',  what: RODANTE,  n: 8,
+                   warn: 'derrumbe', tint: 0x9a8250, spark: 0xe8dcc0 },
+    guate:       { name: 'Hora pico',           kind: 'enjambre', what: BUS,      n: 7,
+                   warn: 'parada',   tint: 0x1a2440, spark: 0xf0c34a }
 };
 
 // Cuanto dura el suceso, en unidades de trazado, y cuando se arma.
@@ -1089,8 +1092,14 @@ const ZONES = {
 //
 // Con los 1.350 que tenia primero no cabia en ningun sitio: la comprobacion lo
 // rechazaba compas tras compas hasta que era demasiado tarde.
-const ZONE_AFTER = 950;
-const ZONE_LEN = 380;
+const ZONE_AFTER = 1100;
+
+// Cuanto antes del cruce se planta el arco de fin de zona. Sumadas las 170 que
+// tarda en llegar desde el punto de aparicion, se pasa por debajo unas 400
+// unidades antes del distribuidor: lo bastante para que el arco asome en la
+// bruma, se acerque y quede atras antes de que aparezca el rotulo verde.
+const GATE_AHEAD = 300;
+const ZONE_LEN = 460;
 const ZONE_WIND = 2.6;              // unidades que llega a apartar la ventisca
 
 // Los trajes no llevan glifo sino un muñeco pintado con SUS colores: es a la
@@ -1773,6 +1782,7 @@ const crossings = [];
 const warns = [];
 const hazards = [];
 const particles = [];
+let gate = null;                    // el arco de fin de zona, uno solo
 
 // Geometria unica compartida por todo el escenario
 const BOX = new THREE.BoxGeometry(1, 1, 1);
@@ -3933,6 +3943,56 @@ function makeWarn() {
     return { group, face, z: 0, curve: 0, rise: 0, active: false };
 }
 
+// --- El arco de fin de zona ------------------------------------------------
+// Un portico de piedra que cruza la calzada entera y se ve emerger de la bruma
+// mucho antes de llegar. No golpea, no se esquiva y no pide nada: se pasa por
+// debajo. Lo unico que hace es DECIR algo, y lo que dice es "este sitio se
+// acaba aqui" —trescientas y pico unidades despues viene el distribuidor que
+// cambia de zona—. Antes, el tramo se terminaba sin ceremonia: aparecia el
+// rotulo verde y ya estabas eligiendo.
+//
+// Va con los materiales tematizados de la region, asi que es de caliza en
+// Tikal, de adoquin en Antigua y de hormigon en la capital sin una sola linea
+// de mas.
+function makeGate() {
+    const group = new THREE.Group();
+    const put = (m, sx, sy, sz, x, y, z) => {
+        const q = new THREE.Mesh(BOX, m);
+        q.scale.set(sx, sy, sz);
+        q.position.set(x, y, z);
+        group.add(q);
+    };
+    const off = ROAD_WIDTH / 2 + 1.9;
+    for (const s of [-1, 1]) {
+        // Pilar escalonado: tres cuerpos que se van estrechando.
+        put(mat.stone, 3.4, 5.2, 3.4, s * off, 2.6, 0);
+        put(mat.stone, 2.8, 3.4, 2.8, s * off, 6.9, 0);
+        put(mat.accent, 3.1, 0.5, 3.1, s * off, 8.9, 0);
+        // Y una jamba hacia dentro, que es lo que forma el vano.
+        put(mat.stone, 1.1, 6.4, 2.2, s * (off - 2.0), 3.2, 0);
+    }
+    // Dintel de lado a lado, bien alto: por debajo se pasa volando incluso.
+    put(mat.stone, off * 2 + 3.4, 1.6, 2.6, 0, 10.0, 0);
+    put(mat.accent, off * 2 + 4.0, 0.55, 3.0, 0, 11.1, 0);
+    // Cresteria: tres remates que rompen la linea recta de arriba.
+    for (const s of [-1, 0, 1]) {
+        put(mat.stone, 1.6, 1.9, 1.6, s * (off - 1.2), 12.3, 0);
+    }
+
+    group.visible = false;
+    scene.add(group);
+    return { group, z: 0, curve: 0, rise: 0, active: false };
+}
+
+function spawnGate(z) {
+    gate.z = z;
+    gate.curve = trackCurve(z);
+    gate.rise = trackRise(z);
+    gate.active = true;
+    gate.group.visible = true;
+    gate.group.position.set(curveOf(gate), riseOf(gate), z);
+}
+
 function freeWarn() {
     let best = null;
     for (const w of warns) {
@@ -4114,6 +4174,9 @@ function buildPools() {
                          swapLane: 0, target: 0, blocked: 0, kind: 0,
                          z: 0, active: false, done: false });
     }
+    // Uno solo: el arco pasa cuatrocientas unidades antes que su cruce y los
+    // cruces van a mas de mil, asi que nunca hay dos a la vez.
+    gate = makeGate();
 }
 
 // ---------------------------------------------------------------------------
@@ -4512,6 +4575,7 @@ function resetWorld() {
         c.island.active = false;
         c.island.group.visible = false;
     });
+    if (gate) { gate.active = false; gate.group.visible = false; }
     pending.length = 0;
     game.nextSpawnZ = SPAWN_Z + 40;   // margen inicial para orientarse
 }
@@ -4974,7 +5038,12 @@ function updateZone(dt) {
     // Se va soltando segun el punto de aparicion alcanza cada hueco, en vez de
     // programarse entero al armar: asi la cadencia sale en unidades de calzada
     // y se ve igual a cualquier velocidad.
-    const n = Math.max(2, Math.round(spec.n * (0.5 + 0.5 * Z.dur)));
+    // Oleadas de verdad, entre cinco y ocho. El hueco entre ellas es
+    // ZONE_LEN / n unidades, o sea entre nueve decimas y algo mas de dos
+    // segundos a la velocidad de crucero de esa zona: el tiempo justo para
+    // leer donde esta el hueco libre y llegar. Con el reparto anterior a Tikal
+    // le tocaban cuatro oleadas para catorce segundos de tramo.
+    const n = Math.max(4, Math.round(spec.n * (0.6 + 0.4 * Z.dur)));
     if (spec.kind !== 'viento') {
         const paso = ZONE_LEN / n;
         while (Z.k < n && d - (Z.s0 + Z.k * paso) >= SPAWN_Z) {
@@ -5017,31 +5086,44 @@ function updateZone(dt) {
     }
 }
 
-// Una pieza del suceso, en la coordenada de trazado dada.
+// Una OLEADA del suceso, en la coordenada de trazado dada. Todo lo que sale
+// aqui sale a la vez y por todos los carriles menos el libre: es lo que
+// convierte "van cayendo piedras" en "esta cayendo el volcan encima".
 function emitZone(spec, sc) {
     const z = game.distance - sc;
     const Z = game.zone;
     zoneShift();
-    switch (spec.kind) {
-        case 'lluvia':
-        case 'temblor':
-            // Cae del cielo y despues rueda. La altura se escalona para que no
-            // aterricen todas a la vez, que es lo que hace que suene a lluvia y
-            // no a un solo golpe.
-            spawnHazard(spec.what, zoneLane(), z, 0, 20 + (Z.k % 4) * 6);
-            break;
-        case 'enjambre':
-            spawnHazard(spec.what, zoneLane(), z);
-            break;
-        case 'cruce':
-            spawnHazard(spec.what, 1, z, Math.random() < 0.5 ? -1 : 1);
-            break;
-        case 'pasillo':
-            // El tronco cruza la calzada entera y solo se salta, asi que el
-            // carril libre no pinta nada: lo que dosifica es el hueco entre
-            // uno y el siguiente, que ya sale de la cuenta.
-            spawnObstacle(spec.what, spec.what === TRONCO ? 1 : zoneLane(), z, 0);
-            break;
+
+    // Los que cruzan la calzada entera no tienen carril: uno por oleada y ya.
+    if (spec.kind === 'pasillo' && spec.what === TRONCO) {
+        spawnObstacle(TRONCO, 1, z, 0);
+        return;
+    }
+    if (spec.kind === 'cruce') {
+        spawnHazard(spec.what, 1, z, Math.random() < 0.5 ? -1 : 1);
+        return;
+    }
+
+    for (let l = 0; l < 3; l++) {
+        if (l === Z.libre) continue;
+        // Un poco de desorden en la profundidad: una fila perfectamente
+        // alineada se lee como una reja y no como algo que esta pasando.
+        const dz = ((l * 7 + Z.k * 3) % 5 - 2) * 3.5;
+        switch (spec.kind) {
+            case 'lluvia':
+            case 'temblor':
+                // Cae del cielo y despues rueda. La altura se escalona para
+                // que no aterricen todas a la vez: eso suena a lluvia y no a
+                // un solo golpe.
+                spawnHazard(spec.what, l, z + dz, 0, 20 + ((l + Z.k) % 4) * 6);
+                break;
+            case 'enjambre':
+                spawnHazard(spec.what, l, z + dz);
+                break;
+            case 'pasillo':
+                spawnObstacle(spec.what, l, z + dz, 0);
+                break;
+        }
     }
 }
 
@@ -6448,6 +6530,16 @@ function scrollWorld(dt) {
         if (p.z > DESPAWN_Z) { p.active = false; p.mesh.visible = false; }
     }
 
+    // El arco viaja como cualquier otra cosa del mundo
+    if (gate && gate.active) {
+        gate.z += dz;
+        gate.group.position.set(curveOf(gate), riseOf(gate), gate.z);
+        if (gate.z > DESPAWN_Z + 14) {
+            gate.active = false;
+            gate.group.visible = false;
+        }
+    }
+
     updateCrossings(dt);
     updateTrackSystems(dt);
     updateZone(dt);
@@ -6459,6 +6551,18 @@ function scrollWorld(dt) {
     // --- Distribuidor vial ---
     // Se dispara por distancia y no dentro de un compas: tiene que aparecer
     // donde toca, no cuando le venga bien al generador.
+    // --- El arco de fin de zona ---
+    // Se planta GATE_AHEAD antes que el cruce, y solo antes del que cambia de
+    // sitio: los cruces alternan destino y cortada, asi que el proximo sera el
+    // contrario del ultimo. Pasa por debajo unas cuatrocientas unidades antes
+    // del distribuidor, que es el tiempo que hace falta para verlo venir desde
+    // que asoma en la bruma.
+    if (gate && !gate.active && game.finishS < 0 &&
+        game.distance > game.nextCross - GATE_AHEAD &&
+        (1 - game.crossKind) === 0) {
+        spawnGate(SPAWN_Z);
+    }
+
     // Con la llegada ya tomada no se planta ninguno mas: el ultimo tramo de
     // ciudad es de una sola pieza, sin nada que elegir.
     if (game.finishS < 0 && game.distance > game.nextCross) {
@@ -6950,24 +7054,32 @@ function applyBlend(pos) {
     sunLight.color.copy(mixHex(A.sun, B.sun, e, _cMix));
     sunLight.intensity = lerp(A.sunI, B.sunI, e);
 
-    // Y encima, el suceso de zona. Va DESPUES de la mezcla de departamento y no
-    // dentro: es un estado pasajero, no un sitio, y tiene que poder tenirlo
-    // todo sin ensuciar la region a la que pertenece. Es la mitad de lo que
-    // hace que una erupcion se lea como una erupcion: sin el aire rojo, las
-    // bombas volcanicas serian piedras naranjas cayendo en un dia normal.
+    hemiLight.color.copy(mixHex(A.hemi, B.hemi, e, _cMix));
+    hemiLight.intensity = lerp(A.hemiI, B.hemiI, e);
+    hemiLight.groundColor.copy(mixHex(A.ground, B.ground, e, _cMix));
+
+    // Y encima de todo, el suceso de zona. Va DESPUES de la mezcla de
+    // departamento y no dentro: es un estado pasajero, no un sitio, y tiene que
+    // poder tenirlo todo sin ensuciar la region a la que pertenece. Es la mitad
+    // de lo que hace que una erupcion se lea como una erupcion: sin el aire
+    // rojo, las bombas volcanicas serian piedras naranjas en un dia normal.
+    //
+    // Y va DESPUES DE LAS CUATRO LUCES, no en medio. Estaba entre el sol y el
+    // hemisferico, asi que la linea siguiente le pisaba el tinte del segundo:
+    // la escena se tenia a medias y con las luces peleandose.
     const zg = zoneGrip(game.distance);
     if (zg > 0) {
         const zs = ZONES[REGIONS[game.zone.i].id];
         if (zs) {
             _cZ.setHex(zs.tint);
-            scene.fog.color.lerp(_cZ, zg * 0.72);
-            sunLight.color.lerp(_cZ, zg * 0.4);
-            sunLight.intensity *= 1 - zg * 0.28;
+            scene.fog.color.lerp(_cZ, zg * 0.88);
+            groundMesh.material.color.lerp(_cZ, zg * 0.5);
+            sunLight.color.lerp(_cZ, zg * 0.55);
+            sunLight.intensity *= 1 - zg * 0.4;
+            hemiLight.color.lerp(_cZ, zg * 0.5);
+            hemiLight.groundColor.lerp(_cZ, zg * 0.5);
         }
     }
-    hemiLight.color.copy(mixHex(A.hemi, B.hemi, e, _cMix));
-    hemiLight.intensity = lerp(A.hemiI, B.hemiI, e);
-    hemiLight.groundColor.copy(mixHex(A.ground, B.ground, e, _cMix));
 
     // --- Lo caro: solo cuando la mezcla cambia de verdad ---
     // Durante el 62 % del tramo e vale exactamente 0, asi que la clave no se

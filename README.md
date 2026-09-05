@@ -235,12 +235,29 @@ es la que el suceso de Tajumulco necesitaba de verdad; todo lo demás recombina
 lo que ya había. El tinte de la escena hace la mitad del trabajo: sin el aire
 rojo, las bombas serían piedras naranjas cayendo en un día normal.
 
+**Y viene en OLEADAS, no goteando.** Cada oleada suelta algo en todos los
+carriles menos el libre, de golpe, y llegan cada ~1 a 2 s según la zona. La
+primera versión soltaba una pieza por hueco y salía **menos densa que el ruido
+de fondo del camino**: cinco murciélagos repartidos en 380 unidades son uno cada
+76, y los sueltos de siempre salen cada 35. Se armaba, sonaba el rótulo, caía el
+tinte… y no había nada que ver, porque un suceso más flojo que lo normal no es
+un suceso.
+
 **Aprieta según lo avanzada que esté la ruta.** No hay contador de dificultad
 aparte: la ruta va de Tikal a la capital, así que *lo avanzado del recorrido es*
-la dificultad. En Petén el suceso sale a un tercio de intensidad; en la capital,
-entero.
+la dificultad. En Petén el suceso sale a cinco oleadas espaciadas; en la
+capital, a ocho y encima.
 
-**Las bifurcaciones.** Cada 950 m la calzada se parte de verdad, y no se abre:
+**Y cada zona se despide con un arco.** Un pórtico de piedra que cruza la
+calzada entera y se ve emerger de la bruma mucho antes de llegar. No golpea, no
+se esquiva y no pide nada: se pasa por debajo. Lo único que hace es decir *este
+sitio se acaba aquí*, y 400 m después aparece el distribuidor que cambia de
+zona. Antes el tramo se terminaba sin ceremonia: aparecía el rótulo verde y ya
+estabas eligiendo. Va con los materiales tematizados de la región, así que es de
+caliza en Tikal, de adoquín en Antigua y de hormigón en la capital sin una sola
+línea de más.
+
+**Las bifurcaciones.** Cada 1.150 m la calzada se parte de verdad, y no se abre:
 **se desvía, a 45° clavados**. Desde la cola del divisor los dos ramales salen
 en aspa y en 24 unidades ya están a 32 uno de otro, casi cuatro veces lo que
 miden de ancho:
@@ -611,9 +628,9 @@ Lo que importa mantener si se toca:
   camazotz sonaba ya en Flores con el rótulo de Tikal puesto. Cada zona dura
   1.900 y solo tiene dos huecos limpios entre bifurcaciones —`(+129, +845)` y
   `(+1079, +1795)`—; el suceso ocupa 380 más 90 de margen y se arma 215 por
-  delante, así que a **+950** cae en `[+1165, +1545]`, dentro del segundo hueco
-  y con 250 de sobra por cada lado. Tikal es aparte: no se entra por un cruce,
-  dura 1.197 y solo tiene un hueco, así que va a **+200**.
+  delante, así que cae dentro del segundo hueco y con margen por los dos lados.
+  Tikal es aparte: no se entra por un cruce, dura menos y solo tiene un hueco,
+  así que su turno va a **+200**.
 - **Tres cosas más que hacían falta para que saliera de verdad.** El suceso se
   arma **antes** que los tramos especiales y los aparta 400 m mientras espera su
   turno —de tramos salen varios por zona y de suceso hay uno, y medido, el
@@ -621,6 +638,18 @@ Lo que importa mantener si se toca:
   Tikal—; y si aun así no cabe entero antes del próximo cruce, **renuncia** en
   vez de armarse tarde. Verificado simulando 26 km: 13 de 13, cada uno dentro de
   su zona.
+- **Y aun con el reparto arreglado, el suceso seguía sin verse.** Cargado
+  `arcade.js` en un arnés con THREE y el DOM apuntalados, el sistema hacía
+  exactamente lo que tenía que hacer: armaba en D=224, sonaba el rótulo en 416,
+  soltaba sus piezas. El fallo era de **diseño**, no de código: en Tikal el
+  suceso son murciélagos —los mismos que ya salen sueltos—, repartidos más
+  espaciados que el ruido de fondo, con un tinte verde oscuro sobre una escena ya
+  verde. Todo ocurría. No había nada que ver. De ahí las oleadas, los tintes
+  reelegidos para contrastar con su región y el tinte aplicado a las cuatro
+  luces en vez de a dos.
+- **El tinte se pisaba a sí mismo.** Iba entre el sol y el hemisférico, así que
+  la línea siguiente —`hemiLight.color.copy(...)`— le borraba la mitad del
+  trabajo. Ahora va después de las cuatro luces.
 - **La cadencia del suceso de zona está medida en tiempo, no elegida a ojo.** El
   hueco entre piezas es `ZONE_LEN / n` unidades, y a la velocidad de crucero de
   esa zona tiene que dar entre seis décimas y segundo y medio. Los primeros
@@ -652,14 +681,15 @@ Lo que importa mantener si se toca:
   cada tramo especial— ya no reinician el reloj de los 95 m. Lo reiniciaban, y
   como son unas cuantas y van seguidas, los sucesos anunciados se quedaban sin
   plantar una y otra vez: esa era la otra mitad de por qué no aparecían.
-- **Y para eso hubo que separar las bifurcaciones, primero a 780 m y luego a
-  950.** Entre una y la siguiente tienen que caber las dos zonas limpias más un
-  tramo especial entero con sus márgenes; con 620 no cabía, el hueco libre era
-  de poco más de cien unidades y casi nunca coincidía con un compás. Los 950
-  son por otra razón: los cruces alternan destino y cortada, así que solo uno de
-  cada dos cambia de sitio, y con 780 se pasaba de departamento cada 1.560 m
-  —menos de treinta segundos por lugar a la velocidad de ahora—. Un sitio que se
-  abandona antes de haberlo mirado no es un sitio, es un color.
+- **Y para eso hubo que separar las bifurcaciones: 620 → 780 → 950 → 1.150.**
+  Entre una y la siguiente tienen que caber las dos zonas limpias más un tramo
+  especial entero con sus márgenes; con 620 no cabía, el hueco libre era de poco
+  más de cien unidades y casi nunca coincidía con un compás. Los saltos
+  posteriores son por otra razón: los cruces alternan destino y cortada, así que
+  solo uno de cada dos cambia de sitio, y con 780 se pasaba de departamento cada
+  1.560 m —menos de treinta segundos por lugar—. Un sitio que se abandona antes
+  de haberlo mirado no es un sitio, es un color. Con 1.150 cada punto de la ruta
+  dura 2.300 y le caben el suceso de zona **y** su despedida.
 - **La zona limpia se calcula por delante, no cuando el cruce ya existe.** Un
   compás suelta cosas que no llegan al jugador hasta 170 unidades después, así
   que para cuando el cruce nace ya sería tarde para no ponerlas: la posición de
