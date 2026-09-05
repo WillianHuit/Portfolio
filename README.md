@@ -176,9 +176,41 @@ horizonte —templo escalonado, isla, karst, palmera, basílica, arco colonial,
 volcán, mercado, pico nevado y, al final, un skyline con las coronaciones
 encendidas sobre el único asfalto del recorrido—.
 
+### Repaso zona por zona: Petén
+
+Con las zonas ya en doce minutos, cada sitio se mira mucho rato y los defectos
+que en una carrera de dos minutos no daba tiempo a ver ahora se ven doce
+minutos seguidos. Petén es el primer repaso, y salieron cuatro:
+
+- **El templo de Tikal no parecía Tikal.** Eran cinco gradas anchas que
+  encogían y nada encima: exactamente la misma receta —cajas que menguan— que el
+  pico de Tajumulco y el cono de Atitlán, con otro color. Lo que hace
+  inconfundible al Templo I son tres cosas y no había ninguna: es **alto y
+  estrecho**, lleva la **escalinata** partiéndole la cara de arriba abajo, y
+  remata en **crestería**, ese muro vertical sobre el templete que no sostiene
+  nada. Con cuatro gradas más empinadas, la escalinata y el templete coronado
+  pasa de 9 a 12,8 de alto con una proporción de 1,49 a 1, y cabe en los ocho
+  huecos que tiene asignados cada hito.
+- **La selva era un seto de altura constante.** Una pared verde plana a los dos
+  lados, igual de alta cada dos metros durante doce minutos. Ahora **una de cada
+  tres ranuras es una ceiba emergente** —doce de cuarenta y cuatro—: el mismo
+  presupuesto de tres cubos, más del doble de alta, tronco de madera y copa
+  plana por encima del dosel. La cuneta pasa a tener fondo.
+- **El suelo de Flores era verde monte, y Flores es una ISLA.** Lo que hay a los
+  dos lados de la calzada es el lago Petén Itzá. Con el suelo verde, el muelle
+  de madera del final de zona, los juncos de la cuneta y los peces saltando de
+  un margen al otro estaban los cuatro contando algo que la escena desmentía.
+- **El tinte del camazotz era verde oscuro sobre una selva verde.** El suceso se
+  anunciaba, caía el tinte… y la escena se quedaba igual. El camazotz es el
+  murciélago del inframundo, así que lo que tiene que caer sobre la selva es la
+  **noche**: violeta, que es lo que más lejos está del ocre del amanecer de
+  Petén. Y las guacamayas, rojas.
+
 **El juego.** Tres vidas (hasta cinco con mejoras), escudo que absorbe un
-golpe, multiplicador por racha de jade, hitos cada 250 m, jaguar que se acerca
-conforme pierdes vidas y quetzal de acompañante.
+golpe, multiplicador por racha de jade, hitos cada 2.000 m, jaguar que se acerca
+conforme pierdes vidas y quetzal de acompañante. Al morir se ofrece volver
+mientras quede con qué: **hasta cuatro vueltas por carrera**, tres con ángeles
+comprados y una con el anuncio del patrocinador.
 
 **Las señales.** Rombos amarillos, un ceda el paso y un disco rojo de
 prohibición al borde de la calzada, dibujados en canvas. **No son decorado ni
@@ -289,7 +321,42 @@ alto. Y siempre caen motas del color del sitio. Un sitio en el que no se mueve
 nada más que lo que te quiere matar no es un sitio, es un decorado. La regla que
 los mantiene fuera del juego: **el pez cruza siempre por delante y a ras, y el
 ave va a más de doce de altura**, así que ninguno comparte sitio con nada que
-golpee y no hay forma de confundirlos con una amenaza.
+golpee y no hay forma de confundirlos con una amenaza. **Y cada bicho va del
+color de su sitio**: las aves eran gris pizarra en las trece zonas, así que la
+bandada de guacamayas de Petén y las gaviotas de Monterrico eran la misma
+silueta oscura. El color es lo único que las separa a la distancia a la que se
+ven.
+
+### Un rótulo para cada cosa
+
+El mismo rótulo servía para dos cosas que no se parecen en nada: *has llegado a
+un sitio nuevo* y *está pasando algo aquí*. Y como el suceso de la zona se
+repite unas ocho veces por visita, el jugador veía **«Vuelo de camazotz /
+Tikal»** en verde jade —exactamente igual que «Tikal / Petén»— y ocho veces por
+zona creía haber cambiado de departamento. Ahora el suceso sale **en ocre y con
+la palabra PELIGRO debajo** en vez del nombre del sitio: dos rótulos que no se
+confunden ni de reojo.
+
+### Cuánto falta para cambiar de zona
+
+Con zonas de doce minutos y un cruce cada veinte segundos, la pregunta que el
+jugador se hace todo el rato es *«¿este cruce me saca de aquí?»*. Sin respuesta,
+los treinta y pico cruces de una zona se leen todos igual y la única forma de
+enterarse es tomar uno y ver qué pasa. **El minimapa lleva ahora dos barras
+porque son dos relojes distintos**: la de arriba, en jade, dice cuándo toca
+elegir camino; la de abajo, en ocre, cuándo esa elección te saca del
+departamento, con el nombre del siguiente punto y los metros que faltan. Cumplido
+el tiempo de la zona, el texto cambia a **«en el próximo cruce»** y se enciende:
+es la única vez en doce minutos que elegir salida importa.
+
+Y lo que cuenta no es *cuánto falta para que se cumpla el tiempo*, sino **las
+unidades hasta el cruce concreto que cierra la zona**, que es el primero
+posterior a que se cumpla. Con un detalle que costó un fallo: `nextCross` salta
+a la siguiente en el mismo momento en que una se planta, así que durante las 247
+unidades en las que el distribuidor viene de frente —justo cuando el dato
+importa, porque es cuando hay que decidir carril— mirar sólo a `nextCross` se
+saltaba el cruce que se tiene delante y anunciaba 1.250 unidades de más. El
+rótulo decía «faltan 1 400» con el cambio de departamento a cuatro segundos.
 
 **Las bifurcaciones.** Cada 1.150 m la calzada se parte de verdad, y no se abre:
 **se desvía, a 45° clavados**. Desde la cola del divisor los dos ramales salen
@@ -918,6 +985,26 @@ Lo que importa mantener si se toca:
 - **Y el mundo frena hasta pararse mientras dura.** Seguir corriendo a toda
   velocidad mientras el cuerpo da vueltas por el aire se leía como que el juego
   continuaba sin el jugador. Frenando, la carrera se acaba **donde** se acaba.
+- **Volver también tiene su animación, y es la caída del revés.** Morir la tenía
+  desde hace dos versiones; volver, no: se cerraba el panel y el corredor
+  aparecía de golpe corriendo, como si no hubiera pasado nada. Eso hacía que
+  revivir se leyese como un menú y no como un suceso, y con cuatro vueltas por
+  carrera es algo que se ve cuatro veces. Ahora el cuerpo **baja desde quince
+  unidades de altura girando sobre sí mismo dentro de una columna de luz**, que
+  se estrecha y se apaga conforme baja, con plumas doradas cayendo con él y un
+  golpe de polvo al tocar el suelo. La altura va con el cuadrado del reloj, así
+  que la bajada frena sola al acercarse al suelo en vez de estrellarse contra
+  él; durante ese segundo y medio no se controla nada, porque aceptar un cambio
+  de carril ahí dejaría al corredor aterrizando de lado con la animación a
+  medias. **Y el mundo arranca desde parado**, que es el frenado de la muerte
+  aplicado del derecho: sin eso se volvía a la calzada a setenta por hora con la
+  animación todavía en el aire y la vuelta no se veía, sólo se notaba que el
+  paisaje ya iba disparado. El sonido del escudo suena **al tocar el suelo**, no
+  al pulsar el botón: es cuando el jugador recupera el mando.
+- **La columna de luz es un cubo con material aditivo y sin `depthWrite`.**
+  Aditivo para que sume luz sobre lo que tenga detrás en vez de taparlo —que es
+  lo que hace que se lea como luz y no como una caja amarilla— y sin escritura
+  de profundidad para que no recorte al propio corredor cuando lo atraviesa.
 - **La piedra que aún cae no golpea, y eso salió gratis.** La franja de daño se
   mide desde el ancla de la amenaza, y el ancla de una piedra en el aire va
   alta. Medido: caen desde y=30, 25 y 20 escalonadas y solo pegan al tocar.
@@ -973,6 +1060,26 @@ Lo que importa mantener si se toca:
   «seguir» no se puede verificar desde el navegador, así que premiarlo sería
   premiar el clic; y las tres plataformas desaconsejan el seguimiento
   incentivado. Los enlaces sociales están, pero no dan nada a cambio.
+- **O comprando un ángel, que es la otra moneda.** Hasta ahora morir ofrecía
+  *una* salida —el anuncio— y sólo una vez por carrera. En carreras de dos
+  minutos bastaba; en una ruta de dos horas y media, morir en la zona once y que
+  la única alternativa sea empezar otra vez desde Tikal no es dificultad, es
+  tirar hora y pico. El **ángel de la guarda** se compra en el taller por 240 de
+  jade, se llevan hasta tres, viaja en el zurrón entre carreras y se gasta al
+  usarlo, así que **una carrera admite cuatro vueltas: tres compradas y una del
+  patrocinador**. Y el jade deja de servir sólo para trajes.
+- **El ángel NO pasa por el anuncio ni por el reloj.** Ése es exactamente el
+  trato —el jade compra tu tiempo—, y si además pidiera el vídeo no sería nada.
+  Por lo mismo, gastado el anuncio el panel deja de ser un anuncio: plantar otro
+  vídeo de treinta segundos delante de alguien que ya lo vio esta carrera y que
+  encima trae su propio ángel es cobrarle dos veces por lo mismo.
+- **Es lo único de la tienda que se GASTA**, así que no cabe en la tabla de
+  mejoras —donde el nivel sólo sube— y lleva su propio contador. Va en ocre en
+  toda la tarjeta y **primero de la pestaña**: enterrado entre ocho mejoras
+  permanentes no se encuentra, y es justo lo que se viene a comprar después de
+  morir en la zona diez.
+- **Rechazar cierra la carrera aunque queden ángeles.** El jugador acaba de
+  decir que no quiere seguir; volver a preguntárselo con otro botón es insistir.
 - **La cuenta atrás del anuncio corre por reloj propio**, no por el estado del
   reproductor: si un bloqueador tumba el iframe, el jugador revive igual.
   Cobrarle el fallo de otro sería injusto, y además le dejaría sin salida.

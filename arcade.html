@@ -170,6 +170,19 @@
             filter: brightness(1.08);
         }
 
+        /* El ángel va en ocre y no en jade: es la salida que se PAGA, y tiene
+           que distinguirse del botón del anuncio, que es la que se mira. */
+        .btn-angel {
+            background: linear-gradient(180deg, #ffd98a, var(--ochre));
+            color: #2a1a05;
+        }
+
+        .btn-angel:hover, .btn-angel:focus-visible {
+            box-shadow: 0 12px 24px -10px rgba(255, 217, 138, 0.8);
+        }
+
+        .btn-angel[hidden] { display: none !important; }
+
         .btn-ghost {
             background: none;
             color: var(--limestone);
@@ -359,6 +372,39 @@
 
         .mm-bar i { display: block; height: 100%; width: 0; background: var(--jade); }
 
+        /* La de la zona va en ocre y algo más fina: son dos cuentas distintas
+           y tienen que distinguirse de un vistazo, sin leer nada. */
+        .mm-bar.zone { height: 2px; margin-top: 0.22rem; }
+        .mm-bar.zone i { background: var(--ochre); }
+
+        .mm-goal {
+            display: block;
+            font-size: 0.58rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            opacity: 0.62;
+            margin-top: 0.25rem;
+        }
+
+        /* Cumplido el tiempo de la zona, el próximo cruce ES el que cambia de
+           departamento. Es la única vez en doce minutos que elegir salida
+           importa, así que deja de ser un dato y se enciende. */
+        .mm-goal.listo {
+            opacity: 1;
+            color: var(--ochre);
+            font-weight: 700;
+            animation: goalPulse 1.4s ease-in-out infinite;
+        }
+
+        @keyframes goalPulse {
+            0%, 100% { opacity: 0.7; }
+            50%      { opacity: 1; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .mm-goal.listo { animation: none; }
+        }
+
         /* ===== Poderes activos =====
            Los cinco huecos existen siempre y se ocultan con [hidden]: crear y
            destruir nodos en mitad de la partida provoca reflow justo cuando
@@ -452,6 +498,16 @@
             color: var(--jade);
             margin-top: 0.45rem;
         }
+
+        /* El mismo rótulo servía para "has llegado a un sitio nuevo" y para
+           "está pasando algo aquí", y como el suceso de la zona se repite unas
+           ocho veces por visita, el jugador veía "Vuelo de camazotz / Tikal" en
+           verde jade —igual que "Tikal / Petén"— y ocho veces por zona creía
+           haber cambiado de departamento. El suceso va en ocre y con la palabra
+           PELIGRO debajo: dos rótulos que no se confunden ni de reojo. */
+        .banner.evento b { color: var(--ochre); }
+
+        .banner.evento span { color: #ff8a4a; }
 
         @keyframes bannerPop {
             0%   { opacity: 0; transform: translate(-50%, 26px); }
@@ -716,6 +772,15 @@
         }
 
         .card-lvl i.full { background: var(--jade); }
+
+        /* El ángel es lo único de la tienda que se GASTA, así que va en ocre en
+           toda la tarjeta: las barritas de las mejoras suben y no bajan nunca,
+           y éstas se vacían al usarlas. */
+        .card.angel { border-color: rgba(200, 134, 47, 0.35); }
+        .card.angel.on { border-color: var(--ochre); background: rgba(200, 134, 47, 0.12); }
+        .card.angel .card-ic { color: var(--ochre); }
+        .card.angel .card-lvl i.full { background: var(--ochre); }
+        .card.angel button { border-color: rgba(200, 134, 47, 0.5); background: rgba(200, 134, 47, 0.16); color: #f0c34a; }
 
         .card button {
             font: inherit;
@@ -1063,16 +1128,25 @@
                 con una vida y el escudo puesto. Solo una vez por carrera.
             </p>
 
-            <div class="short-host" id="shortHost">
-                <div class="short-fallback" id="shortFallback">
-                    <b>Cefas Panadería</b>
-                    <span>Pan de todos los días, hecho en Guatemala.</span>
+            <!-- El bloque del anuncio entero se oculta cuando ya se gastó esta
+                 carrera: volver a plantar un vídeo delante de alguien que ya lo
+                 vio y que además trae su propio ángel es cobrarle dos veces. -->
+            <div id="reviveAd">
+                <div class="short-host" id="shortHost">
+                    <div class="short-fallback" id="shortFallback">
+                        <b>Cefas Panadería</b>
+                        <span>Pan de todos los días, hecho en Guatemala.</span>
+                    </div>
                 </div>
             </div>
 
             <p class="revive-timer" id="reviveTimer"></p>
 
             <div class="actions">
+                <!-- El ángel primero y sin reloj: se pagó con jade, y hacer
+                     esperar diez segundos a quien ya compró la salida sería
+                     cobrarle el precio y encima el tiempo. -->
+                <button class="btn btn-angel" id="angelBtn" type="button" hidden>Usar ángel</button>
                 <button class="btn" id="reviveBtn" type="button" disabled>Continuar</button>
                 <button class="btn btn-ghost" id="reviveSkip" type="button">No, gracias</button>
             </div>
@@ -1195,6 +1269,13 @@
                 <b class="mm-name" id="mmName">Tikal</b>
                 <span class="mm-dept" id="mmDept">Petén</span>
                 <div class="mm-bar"><i id="mmFill"></i></div>
+                <!-- Dos relojes distintos, dos barras. La de arriba dice
+                     cuándo toca elegir camino; ésta, cuándo esa elección te
+                     saca de la zona. Con zonas de doce minutos y un cruce cada
+                     veinte segundos, sin la segunda no había forma de saber si
+                     el cruce que viene es el que cambia de departamento. -->
+                <div class="mm-bar zone"><i id="mmZone"></i></div>
+                <span class="mm-goal" id="mmGoal">Flores · 48 960 m</span>
             </div>
 
             <div class="powers" id="powers">

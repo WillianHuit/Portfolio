@@ -430,6 +430,20 @@ const DEATH_TIME = 1.5;             // lo que dura la muerte antes del final
 const DEATH_UP = 12;                // impulso hacia arriba del cuerpo
 const DEATH_BACK = 11;              // ...y hacia la camara
 
+// --- Y la vuelta ------------------------------------------------------------
+// Morir tenia su animacion desde hace dos versiones; volver, no: se cerraba el
+// panel y el corredor aparecia de golpe corriendo, como si nada hubiera pasado.
+// Eso hacia que revivir se leyese como un menu, no como un suceso, y con cuatro
+// vueltas por carrera es algo que se va a ver cuatro veces.
+//
+// La vuelta es una caida al reves: el cuerpo baja desde lo alto girando sobre
+// si mismo dentro de una columna de luz, y el mundo arranca desde parado en vez
+// de estar ya a toda velocidad cuando se toca el suelo. Es lo mismo que hace el
+// frenado de la muerte, del derecho.
+const REZ_TIME = 1.45;              // lo que dura la bajada
+const REZ_UP = 15;                  // desde que altura baja
+const REZ_GOLD = 0xffd98a;          // el oro de la columna y de las plumas
+
 // --- Senalizacion de aviso -------------------------------------------------
 // Las senales no son decorado: cada una se planta porque VIENE lo que anuncia.
 // Se colocan por delante de aquello que avisan, de modo que el jugador lee el
@@ -641,7 +655,12 @@ const REGIONS = [
     },
     {
         id: 'flores', name: 'Flores', dept: 'Petén', mm: [62.4, 29.1],
-        skyTop: 0x2f7fc4, skyBot: 0xbfe3ea, fog: 0x7fb9c4, ground: 0x2f6b52,
+        // El suelo de Flores era verde monte, y Flores es una ISLA: lo que hay
+        // a los dos lados de la calzada es el lago Petén Itzá. Con el suelo
+        // verde, el muelle de madera del final de zona, los juncos de la cuneta
+        // y los peces saltando de un margen al otro estaban los cuatro
+        // contando algo que la escena desmentia.
+        skyTop: 0x2f7fc4, skyBot: 0xbfe3ea, fog: 0x7fb9c4, ground: 0x1d6273,
         sun: 0xfff4de, sunI: 2.15, hemi: 0xdff0f4, hemiI: 2.35,
         roadA: 0xe8dfc8, roadB: 0xd0c4a6, kerb: 0xc0644a,
         stone: 0xf0e8d8, accent: 0xc0472f, hazard: 0x1f88b8, pit: 0x06222e,
@@ -981,6 +1000,27 @@ const UPGRADES = [
 ];
 
 // ===========================================================================
+// El ángel de la guarda
+// ===========================================================================
+// La unica cosa de la tienda que se GASTA. Todo lo demas se compra una vez y se
+// queda para siempre; el angel se compra, viaja en el zurron y desaparece al
+// usarlo, y por eso no cabe en UPGRADES —donde el nivel solo sube— y lleva su
+// propio contador.
+//
+// Y por eso hace falta: hasta ahora morir ofrecia UNA salida, ver el anuncio, y
+// solo una vez por carrera. En carreras de dos minutos eso bastaba; en una ruta
+// de dos horas y media, morir en la zona once y que la unica alternativa sea
+// empezar otra vez desde Tikal no es dificultad, es tirar hora y pico. Con tres
+// angeles comprados mas el del patrocinador salen cuatro vueltas por carrera, y
+// el jade deja de servir solo para trajes.
+//
+// El angel NO pasa por el anuncio: se paga con jade y devuelve al jugador a la
+// calzada en el sitio, sin reloj y sin esperar. Ese es exactamente el trato
+// —el jade compra tu tiempo—, y si ademas pidiera el video no seria nada.
+const ANGEL_MAX = 3;
+const ANGEL_COST = 240;
+
+// ===========================================================================
 // Iconos del taller
 // ===========================================================================
 // SVG en linea y no glifos Unicode: el HUD ya enseño el problema, porque la
@@ -995,7 +1035,10 @@ const ICON_PATHS = {
     value:   '<path d="M12 2l6 6-6 14-6-14z"/>',
     agility: '<path d="M4 7l7 5-7 5z"/><path d="M13 7l7 5-7 5z"/>',
     djump:   '<path d="M12 4l3 5 7 2-7 2-3 5-3-5-7-2 7-2z"/>',
-    luck:    '<path d="M12 2l2.6 6.6L21 11l-6.4 2.4L12 20l-2.6-6.6L3 11l6.4-2.4z"/>'
+    luck:    '<path d="M12 2l2.6 6.6L21 11l-6.4 2.4L12 20l-2.6-6.6L3 11l6.4-2.4z"/>',
+    // Dos alas abiertas y una aureola: se lee a dieciseis pixeles, que es el
+    // tamano al que se va a ver de verdad en la tarjeta del taller.
+    angel:   '<circle cx="12" cy="4.4" r="2"/><path d="M12 8c2 0 3.4 1.5 3.4 3.6V20h-6.8v-8.4C8.6 9.5 10 8 12 8z"/><path d="M8.4 10.4C6 9.4 3.4 9.8 1.6 11.6c2.6.4 4.6 1.8 6.8 3.4zM15.6 10.4c2.4-1 5-.6 6.8 1.2-2.6.4-4.6 1.8-6.8 3.4z"/>'
 };
 
 // Un glifo por sitio: piramide, isla, karst, palmera, basilica, arco,
@@ -1067,47 +1110,56 @@ const GATE_CLEAR = 11;
 // gate  - por que estructura se sale de la zona.
 // vida  - que se ve moverse ahi todo el rato, sin tocar nada: 'pez' salta de un
 //         margen al otro donde hay agua, 'ave' cruza por lo alto.
+// bicho - de que color es ESE bicho aqui. Las aves eran gris pizarra en las
+//         trece zonas, asi que la bandada de guacamayas de Peten y las gaviotas
+//         de Monterrico eran la misma silueta oscura. El color es lo unico que
+//         separa una cosa de la otra a la distancia a la que se ven.
 // polvo - motas de ambiente que caen siempre, del color del sitio.
 const ZONES = {
+    // El tinte de Tikal era 0x0d2a1e, verde oscuro, sobre una selva verde al
+    // amanecer: el suceso se anunciaba, caia el tinte... y la escena se quedaba
+    // igual. El camazotz es el murcielago del inframundo, asi que lo que tiene
+    // que caer sobre la selva es la NOCHE, y el violeta es lo que mas lejos
+    // esta del ocre del amanecer de Peten.
     tikal:       { name: 'Vuelo de camazotz',   kind: 'enjambre', what: CAMAZOTZ, n: 7,
-                   warn: 'animal',   tint: 0x0d2a1e, spark: 0x2ec4a0,
-                   gate: GATE_PIRAMIDE, vida: 'ave', polvo: 0x9fd8a0 },
+                   warn: 'animal',   tint: 0x241a3a, spark: 0x9f7ad9,
+                   gate: GATE_PIRAMIDE, vida: 'ave', bicho: 0xd8484a, polvo: 0xe8d8a0 },
     flores:      { name: 'El lago se la traga', kind: 'pasillo',  what: CENOTE,   n: 7,
                    warn: 'hueco',    tint: 0x1f5f8a, spark: 0x7fd4e6,
-                   gate: GATE_MUELLE, vida: 'pez', polvo: 0xbfe3ea },
+                   gate: GATE_MUELLE, vida: 'pez', bicho: 0xdfe8d8, polvo: 0xbfe3ea },
     semuc:       { name: 'Desprendimiento',     kind: 'lluvia',   what: RODANTE,  n: 8,
                    warn: 'derrumbe', tint: 0x24503a, spark: 0xcfe0b8,
-                   gate: GATE_TUNEL, vida: 'pez', polvo: 0x8fd4c0 },
+                   gate: GATE_TUNEL, vida: 'pez', bicho: 0xa8d8c0, polvo: 0x8fd4c0 },
     riodulce:    { name: 'Troncos del río',     kind: 'pasillo',  what: TRONCO,   n: 7,
                    warn: 'derrumbe', tint: 0x1d5e3a, spark: 0xb08a52,
-                   gate: GATE_MUELLE, vida: 'pez', polvo: 0x8fe0c0 },
+                   gate: GATE_MUELLE, vida: 'pez', bicho: 0xc8b078, polvo: 0x8fe0c0 },
     esquipulas:  { name: 'Caravana de romería', kind: 'enjambre', what: BUS,      n: 7,
                    warn: 'parada',   tint: 0x7a4a18, spark: 0xf0c34a,
-                   gate: GATE_ARCO, vida: 'ave', polvo: 0xe8c896 },
+                   gate: GATE_ARCO, vida: 'ave', bicho: 0x2b3138, polvo: 0xe8c896 },
     monterrico:  { name: 'Marejada',            kind: 'pasillo',  what: TRONCO,   n: 7,
                    warn: 'derrumbe', tint: 0x1a5f7a, spark: 0xcfeef6,
-                   gate: GATE_MUELLE, vida: 'pez', polvo: 0xffd9b0 },
+                   gate: GATE_MUELLE, vida: 'pez', bicho: 0xc0c8b0, polvo: 0xffd9b0 },
     tajumulco:   { name: 'Erupción',            kind: 'lluvia',   what: BOMBA,    n: 9,
                    warn: 'derrumbe', tint: 0xd4451f, spark: 0xff8a4a,
-                   gate: GATE_TUNEL, vida: 'ave', polvo: 0xa8c6e6 },
+                   gate: GATE_TUNEL, vida: 'ave', bicho: 0x4a3a2a, polvo: 0xa8c6e6 },
     todossantos: { name: 'Ventisca',            kind: 'viento',   what: 0,        n: 0,
                    warn: 'viento',   tint: 0xdfeaf4, spark: 0xffffff,
-                   gate: GATE_TUNEL, vida: 'ave', polvo: 0xffffff },
+                   gate: GATE_TUNEL, vida: 'ave', bicho: 0x3a3a44, polvo: 0xffffff },
     chichi:      { name: 'Camino del mercado',  kind: 'cruce',    what: VACA,     n: 6,
                    warn: 'animal',   tint: 0x5a2f52, spark: 0xf0c34a,
-                   gate: GATE_ARCO, vida: 'ave', polvo: 0xdfe6ff },
+                   gate: GATE_ARCO, vida: 'ave', bicho: 0x2ec4a0, polvo: 0xdfe6ff },
     atitlan:     { name: 'Xocomil',             kind: 'viento',   what: 0,        n: 0,
                    warn: 'viento',   tint: 0x2a4f8a, spark: 0xcfe4ef,
-                   gate: GATE_MUELLE, vida: 'pez', polvo: 0xf0a483 },
+                   gate: GATE_MUELLE, vida: 'pez', bicho: 0xa8c0d0, polvo: 0xf0a483 },
     fuego:       { name: 'El Fuego escupe',     kind: 'lluvia',   what: BOMBA,    n: 8,
                    warn: 'derrumbe', tint: 0xff4a10, spark: 0xffb04a,
-                   gate: GATE_TUNEL, vida: 'none', polvo: 0xff8a4a },
+                   gate: GATE_TUNEL, vida: 'none', bicho: 0x2b3138, polvo: 0xff8a4a },
     antigua:     { name: 'Temblor',             kind: 'temblor',  what: RODANTE,  n: 8,
                    warn: 'derrumbe', tint: 0x9a8250, spark: 0xe8dcc0,
-                   gate: GATE_ARCO, vida: 'ave', polvo: 0xe0c9a6 },
+                   gate: GATE_ARCO, vida: 'ave', bicho: 0x1f2a20, polvo: 0xe0c9a6 },
     guate:       { name: 'Hora pico',           kind: 'enjambre', what: BUS,      n: 7,
                    warn: 'parada',   tint: 0x1a2440, spark: 0xf0c34a,
-                   gate: GATE_PASO, vida: 'ave', polvo: 0x8f9298 }
+                   gate: GATE_PASO, vida: 'ave', bicho: 0x2b3138, polvo: 0x8f9298 }
 };
 
 // Cuanto dura el suceso, en unidades de trazado, y cuando se arma.
@@ -1259,7 +1311,10 @@ const game = {
     nextCross: CROSS_EVERY,
     crossTaken: 0,
     lastWarn: -999,      // distancia a la que se planto la ultima senal
-    revived: false,      // el revivir del patrocinador ya se gasto en esta carrera
+    // El revivir del patrocinador ya se gasto en esta carrera. Los angeles no
+    // se cuentan aqui: viven en el zurron (save.angels), se compran entre
+    // carreras y sobreviven a la partida.
+    adUsed: false,
     curveBase: 0,        // desplazamiento de la curva justo donde esta el jugador
     riseBase: 0,         // altura de la ondulacion en ese mismo punto
     slopeBase: 0,        // lo que ha bajado la cuesta bajo los pies del jugador
@@ -1276,6 +1331,7 @@ const player = {
     vy: 0,
     grounded: true,
     sliding: 0,
+    rez: 0,              // segundos que quedan de la vuelta a la vida, 0 = normal
     out: 0,              // segundos que quedan de la animacion final, 0 = vivo
     outMax: 1,           // lo que duraba entera, para el frenado del mundo
     outKind: 0,          // 0 = se salio de la calzada, 1 = murio de un golpe
@@ -1319,7 +1375,9 @@ const dom = {
     minimap: $('minimap'), mmDots: $('mmDots'), mmRoute: $('mmRoute'),
     mmYou: $('mmYou'),
     mmName: $('mmName'), mmDept: $('mmDept'), mmFill: $('mmFill'),
+    mmZone: $('mmZone'), mmGoal: $('mmGoal'),
     revive: $('revive'), reviveBtn: $('reviveBtn'), reviveSkip: $('reviveSkip'),
+    angelBtn: $('angelBtn'), reviveAd: $('reviveAd'),
     reviveTimer: $('reviveTimer'), reviveSub: $('reviveSub'),
     shortHost: $('shortHost'), shortFallback: $('shortFallback'),
     sponsorMenu: $('sponsorMenu'), sponsorOver: $('sponsorOver'),
@@ -1349,6 +1407,7 @@ const save = {
     skin: 'ajaw',
     skins: ['ajaw'],    // trajes comprados
     regions: ['tikal'], // tramos alcanzados
+    angels: 0,          // angeles de la guarda en el zurron, 0..ANGEL_MAX
     // Ya no se guarda la salida: la ruta es una y empieza en Tikal. Elegir por
     // donde entrar rompia lo unico que el mapa tenia que decir, que es cuanto
     // te falta para la capital.
@@ -1363,6 +1422,10 @@ function loadSave() {
     save.skin = store.get('sacbe-skin', 'ajaw');
     save.skins = store.json('sacbe-skins', ['ajaw']) || ['ajaw'];
     save.regions = store.json('sacbe-regions', ['tikal']) || ['tikal'];
+    // Con tope y suelo: es un contador de consumibles, y un localStorage
+    // retocado a mano no debe poder regalar cien vidas ni dejarlo en -3.
+    save.angels = Math.max(0, Math.min(ANGEL_MAX,
+        parseInt(store.get('sacbe-angels', '0'), 10) || 0));
     const s = store.get('sacbe-sound', null);
     save.sound = s === null ? true : s === '1';
     const m = store.get('sacbe-music', null);
@@ -1383,6 +1446,7 @@ function persist() {
     store.set('sacbe-skin', save.skin);
     store.set('sacbe-skins', JSON.stringify(save.skins));
     store.set('sacbe-regions', JSON.stringify(save.regions));
+    store.set('sacbe-angels', String(save.angels));
 }
 
 // --- Lo que cada mejora hace, en un solo sitio ---
@@ -1827,6 +1891,7 @@ const hazards = [];
 const particles = [];
 const fauna = [];                   // peces y aves: adorno, no golpean
 let gate = null;                    // la estructura de fin de zona, una sola
+let rezBeam = null;                 // la columna de luz de la vuelta a la vida
 
 // Geometria unica compartida por todo el escenario
 const BOX = new THREE.BoxGeometry(1, 1, 1);
@@ -1932,6 +1997,7 @@ function buildScene() {
     buildPlayer();
     buildJaguar();
     buildQuetzal();
+    rezBeam = makeRezBeam();
     applyBlend(0);
 }
 
@@ -2964,6 +3030,18 @@ function propSpec(kind, k, out) {
     };
     switch (kind) {
         case 'jungle':
+            // Una de cada tres ranuras es una CEIBA EMERGENTE: mismo
+            // presupuesto de tres cubos, mas del doble de alta. La selva de
+            // Peten no es un seto de altura constante, y eso era justo lo que
+            // se veia desde la calzada: una pared verde plana a los dos lados,
+            // igual de alta cada dos metros durante doce minutos. Rota por
+            // arboles que se salen del dosel, la cuneta pasa a tener fondo.
+            if (v > 0.66) {
+                put(0, 0, 3.6 * t, 0, 0.62, 7.2 * t, 0.62, 0, 1);           // tronco
+                put(1, 0, 7.5 * t, 0, 4.8 * t, 0.95 * t, 4.8 * t, 0, 0);    // copa plana
+                put(2, 0.8 * t, 1.5 * t, -0.4, 2.4 * t, 3.0 * t, 2.4 * t, 0, 0);
+                break;
+            }
             put(0, 0, 0.9 * t, 0, 0.5, 1.8 * t, 0.5, 0, 1);
             put(1, 0, 2.2 * t, 0, 2.6 * t, 1.5 * t, 2.6 * t, 0, 0);
             put(2, 0.7 * t, 3.1 * t, -0.4, 1.8 * t, 1.1 * t, 1.8 * t, 0, 0);
@@ -3193,12 +3271,26 @@ function silhouette(kind, s, R) {
 
     switch (kind) {
         case 'temple': {                                  // Tikal
-            const base = 9 * s, th = 2 * s;
-            for (let t = 0; t < 5; t++) {
-                const w = base * (1 - t * 0.16);
-                put(0, th * t + th / 2 - 1, 0, w, th, w, t === 4 ? R.landB : R.landA);
+            // Cinco gradas anchas y nada encima daban exactamente la misma
+            // receta que el pico de Tajumulco y el cono de Atitlán —cajas que
+            // encogen— con otro color, asi que el horizonte de Tikal no se
+            // reconocia como Tikal. Lo que hace inconfundible al Templo I son
+            // tres cosas, y ninguna estaba: es ALTO Y ESTRECHO, lleva la
+            // escalinata partiendole la cara de arriba abajo, y remata en
+            // CRESTERIA, ese muro vertical sobre el templete que no sostiene
+            // nada y que es la firma del sitio.
+            const base = 8.6 * s, th = 2.1 * s;
+            for (let t = 0; t < 4; t++) {
+                const w = base * (1 - t * 0.17);
+                put(0, th * t + th / 2 - 1, 0, w, th, w, R.landA);
             }
-            put(0, 0.9 * s, -2.7 * s, 1.6 * s, 2.2 * s, 0.6 * s, 0x1a1410);   // vano
+            const top = th * 4 - 1;
+            // Escalinata: una banda clara que baja por la cara delantera. Va
+            // ligeramente por fuera del cuerpo para que se lea como resalte.
+            put(0, top / 2 - 0.5, base * 0.46, base * 0.24, th * 4, base * 0.14, R.landB);
+            put(0, top + 1.4 * s, 0, 3.4 * s, 2.8 * s, 3.2 * s, R.landA);   // templete
+            put(0, top + 4.1 * s, -0.6 * s, 2.8 * s, 2.6 * s, 0.7 * s, R.landB); // cresteria
+            put(0, top + 1.1 * s, 1.7 * s, 1.1 * s, 1.9 * s, 0.5 * s, 0x1a1410); // vano
             break;
         }
         case 'karst': {                                   // Semuc Champey
@@ -4155,10 +4247,18 @@ function makeFauna() {
     };
 }
 
-function spawnFauna(kind, z) {
+function spawnFauna(kind, z, color) {
     let f = null;
     for (const c of fauna) if (!c.active) { f = c; break; }
     if (!f) return;
+    // El bicho se pinta del color de SU sitio. Los materiales son compartidos
+    // por todo el pozo, asi que se tinen al soltar y no por instancia: una
+    // bandada dura tres segundos y las zonas doce minutos, de modo que dos
+    // bichos de zonas distintas no llegan a coincidir nunca en pantalla.
+    if (color) {
+        if (kind === 'pez') mat.fishBody.color.setHex(color);
+        else mat.bird.color.setHex(color);
+    }
     const lado = Math.random() < 0.5 ? -1 : 1;
     f.kind = kind;
     f.z = z;
@@ -4217,6 +4317,95 @@ function updateFauna(dt, dz) {
                 f.alas[k][1].rotation.z = -bat;
             }
         }
+    }
+}
+
+// ===========================================================================
+// La vuelta a la vida
+// ===========================================================================
+// Una columna de luz y el cuerpo bajando por dentro. La columna es UN cubo con
+// material aditivo y sin escritura de profundidad: aditivo para que sume luz
+// sobre lo que tenga detras en vez de taparlo —que es lo que hace que se lea
+// como luz y no como una caja amarilla—, y sin depthWrite para que no recorte
+// al propio corredor cuando lo atraviesa.
+function makeRezBeam() {
+    const m = new THREE.MeshBasicMaterial({
+        color: REZ_GOLD, transparent: true, opacity: 0,
+        blending: THREE.AdditiveBlending, depthWrite: false, fog: false
+    });
+    const beam = new THREE.Mesh(BOX, m);
+    beam.scale.set(2.6, REZ_UP * 2, 2.6);
+    beam.visible = false;
+    beam.renderOrder = 3;
+    scene.add(beam);
+    return beam;
+}
+
+function startRez() {
+    player.rez = REZ_TIME;
+    player.y = player.groundY + REZ_UP;
+    player.vy = 0;
+    player.grounded = false;
+    if (rezBeam) {
+        rezBeam.visible = true;
+        rezBeam.material.opacity = 0.85;
+    }
+    // La columna cae ANTES que el cuerpo: se ve de donde va a salir.
+    burstParticles(player.x, player.groundY + 1, PLAYER_Z, 18, 1.6, REZ_GOLD);
+    sfx.region();
+}
+
+function updateRez(dt) {
+    player.rez -= dt;
+    // k va de 1 a 0. La altura con k al cuadrado, asi que la bajada frena
+    // sola al acercarse al suelo en vez de estrellarse contra el.
+    const k = Math.max(0, player.rez / REZ_TIME);
+    player.y = player.groundY + REZ_UP * k * k;
+    player.vy = 0;
+
+    // La posicion la escribe updatePlayer, y aqui se sale antes de llegar,
+    // asi que hay que ponerla: sin esto el cuerpo se quedaba clavado donde
+    // murio y solo se movia la columna de luz.
+    playerGroup.position.set(player.x, player.y, PLAYER_Z);
+    playerGroup.rotation.set(0, k * Math.PI * 5, 0);
+    shadowMesh.position.set(player.x, player.groundY + 0.03, PLAYER_Z);
+    shadowMesh.material.opacity = 0.4 * (1 - k);
+
+    if (rezBeam) {
+        // Sin curveBase ni riseBase: en la zona cercana la mascara de la curva
+        // vale cero y el jugador se dibuja en su x tal cual. Sumarlos aqui
+        // habria dejado la columna desplazada respecto al cuerpo que envuelve.
+        rezBeam.position.set(player.x, player.groundY + REZ_UP * 0.6, PLAYER_Z);
+        rezBeam.material.opacity = 0.85 * k;
+        const w = 1.0 + 2.4 * k;
+        rezBeam.scale.set(w, REZ_UP * 2, w);
+    }
+
+    // Plumas cayendo con el, no cada frame: esto corre sesenta veces por
+    // segundo y el pozo de particulas lo comparte con todo lo demas.
+    if (Math.random() < 0.5) {
+        burstParticles(
+            player.x + (Math.random() - 0.5) * 3.2,
+            player.y + 1 + Math.random() * 2.5,
+            PLAYER_Z - 1 + Math.random() * 2,
+            2, 1.1, REZ_GOLD
+        );
+    }
+
+    if (player.rez <= 0) {
+        player.rez = 0;
+        player.y = player.groundY;
+        player.grounded = true;
+        playerGroup.position.set(player.x, player.y, PLAYER_Z);
+        playerGroup.rotation.set(0, 0, 0);
+        shadowMesh.material.opacity = 0.4;
+        if (rezBeam) { rezBeam.visible = false; rezBeam.material.opacity = 0; }
+        // El golpe de aterrizaje: es lo que convierte la bajada en una llegada.
+        // Por encima de 0.4, que es donde el temblor empieza a verse: entra al
+        // cuadrado en la camara, asi que 0.3 son cinco centesimas de nada.
+        burstParticles(player.x, player.groundY + 0.5, PLAYER_Z, 26, 2.2, REZ_GOLD);
+        shake = Math.max(shake, 0.55);
+        sfx.shield();
     }
 }
 
@@ -5268,7 +5457,7 @@ function updateZone(dt) {
     // unidades por delante y el nombre saldria sobre una recta vacia.
     if (!Z.dicho && d > Z.s0 - 40) {
         Z.dicho = true;
-        showBanner(spec.name, REGIONS[Z.i].name);
+        showBanner(spec.name, 'Peligro', true);
     }
 
     const grip = zoneGrip(d);
@@ -6373,6 +6562,10 @@ function updateAuras() {
 
 function updatePlayer(dt) {
     if (player.out > 0) { updateFall(dt); return; }
+    // Durante la vuelta no se controla nada: el cuerpo esta cayendo del cielo
+    // dentro de una columna de luz, y aceptar un cambio de carril ahi dejaria
+    // al corredor aterrizando de lado con la animacion a medias.
+    if (player.rez > 0) { updateRez(dt); return; }
 
     // --- Carril: tween con final garantizado ---
     // El lerp exponencial anterior nunca llegaba del todo al carril, asi que
@@ -6785,7 +6978,7 @@ function scrollWorld(dt) {
         if (zr.vida !== 'none') {
             spawnFauna(zr.vida, zr.vida === 'pez'
                 ? -40 - Math.random() * 80          // cruza por delante, a la vista
-                : -60 - Math.random() * 90);
+                : -60 - Math.random() * 90, zr.bicho);
         }
     }
     updateFauna(dt, dz);
@@ -6860,7 +7053,7 @@ function scrollWorld(dt) {
 }
 
 function checkCollisions() {
-    if (player.out > 0) return;
+    if (player.out > 0 || player.rez > 0) return;
     const flying = game.powers.flight > 0;
     // Volando el jugador va muy por encima de la calzada: con la tolerancia
     // de a pie el jade le pasaria por debajo sin poder recogerlo.
@@ -7157,11 +7350,19 @@ function checkMilestone() {
     dom.milestone.classList.add('show');
 }
 
-function showBanner(titulo, sub) {
+// El mismo rotulo servia para dos cosas que no se parecen en nada: "has
+// llegado a un sitio nuevo" y "esta pasando algo aqui". Y como el suceso de la
+// zona se repite unas ocho veces por visita, el jugador veia "Vuelo de
+// camazotz / Tikal" en verde jade, igual que "Tikal / Petén", y ocho veces por
+// zona creia haber cambiado de departamento. Ahora el suceso sale en ocre, con
+// la palabra PELIGRO debajo en vez del nombre del sitio: dos rotulos que no se
+// pueden confundir ni de reojo.
+function showBanner(titulo, sub, peligro) {
     dom.banner.firstElementChild.textContent = titulo;
     dom.banner.lastElementChild.textContent = sub;
     dom.banner.hidden = false;
     dom.banner.classList.remove('show');
+    dom.banner.classList.toggle('evento', !!peligro);
     void dom.banner.offsetWidth;         // reinicia la animacion
     dom.banner.classList.add('show');
 }
@@ -7294,6 +7495,46 @@ function crossProgress() {
         ? 1 - (game.finishS - game.distance) / FINISH_RUN
         : 1 - (game.nextCross - game.distance) / CROSS_EVERY;
     return Math.max(0, Math.min(1, t));
+}
+
+// ---------------------------------------------------------------------------
+// Cuanto falta para cambiar de sitio
+// ---------------------------------------------------------------------------
+// Con zonas de doce minutos y un cruce cada veinte segundos, la pregunta que el
+// jugador se hace todo el rato es "¿este cruce me saca de aqui?". Sin
+// respuesta, los treinta y pico cruces de una zona se leen todos igual, y la
+// unica forma de enterarse es tomar uno y ver que pasa.
+//
+// La respuesta no es "cuanto falta para que se cumpla el tiempo": la zona se
+// cierra en el primer CRUCE posterior a que se cumpla, asi que lo que hay que
+// contar son las unidades hasta ese cruce concreto. Ni una menos, o el rotulo
+// llegaria a cero con el cambio todavia a un cruce de distancia.
+function zoneProgress() {
+    return Math.min(1, (game.distance - game.zoneFrom) / ZONE_SPAN);
+}
+
+function zoneAhead() {
+    if (game.finishS >= 0) return Math.max(0, game.finishS - game.distance);
+
+    // El cruce QUE YA VIENE DE FRENTE cuenta primero. nextCross salta a la
+    // siguiente en el mismo momento en que se planta una, asi que durante las
+    // 247 unidades en las que el distribuidor se acerca —que es justo cuando el
+    // dato importa, porque es cuando hay que decidir carril— mirar solo a
+    // nextCross se saltaba el cruce que se tiene delante y anunciaba mil
+    // doscientas unidades de mas. El rotulo decia "faltan 1 400" con el cambio
+    // de departamento a cuatro segundos.
+    const vivo = game.nextCross - CROSS_EVERY + CROSS_ISLAND_AT;
+    if (game.crossKind === 0 && vivo > game.distance) return vivo - game.distance;
+
+    let c = game.nextCross;
+    while (c - game.zoneFrom <= ZONE_SPAN) c += CROSS_EVERY;
+    return Math.max(0, c + CROSS_ISLAND_AT - game.distance);
+}
+
+// Miles con espacio fino. A doce minutos por zona los numeros llegan a cinco
+// cifras y "48960" en un HUD de tres milimetros no se lee, se descifra.
+function milesDe(n) {
+    return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 }
 
 function applyBlend(pos) {
@@ -7443,6 +7684,7 @@ function refreshMinimapDots() {
 
 let mmLastName = '';
 let mmLastLeg = -1;
+let mmLastLeft = -1;
 
 // Los caminos recorridos EN ESTA CARRERA, no los de siempre. Los puntos si
 // recuerdan lo alcanzado alguna vez —son el mapa de lo descubierto—, pero el
@@ -7472,6 +7714,32 @@ function renderMinimap(i, j, raw, e) {
     // unico que puede cambiarlo. Y en el ultimo tramo, lo que falta para la
     // meta.
     dom.mmFill.style.width = (raw * 100).toFixed(0) + '%';
+
+    // Y debajo, la otra cuenta: la de la ZONA. Son dos relojes distintos y por
+    // eso son dos barras: la de arriba dice cuando toca elegir y la de abajo
+    // cuando esa eleccion te saca de aqui.
+    const zp = zoneProgress();
+    dom.mmZone.style.width = (zp * 100).toFixed(0) + '%';
+
+    // El texto en decenas de metro: a cero coma cinco segundos por unidad,
+    // repintar cada metro es reescribir el DOM sesenta veces por segundo para
+    // mover una cifra que nadie mira a esa resolucion.
+    const falta = zoneAhead();
+    const paso = Math.round(falta / 10);
+    if (paso !== mmLastLeft) {
+        mmLastLeft = paso;
+        if (game.finishS >= 0) {
+            dom.mmGoal.textContent = 'Meta · ' + milesDe(falta) + ' m';
+        } else if (zp >= 1) {
+            // Cumplida: el proximo cruce ES el que cambia de sitio, y eso hay
+            // que decirlo con todas las letras porque es la unica vez en doce
+            // minutos que elegir salida importa.
+            dom.mmGoal.textContent = REGIONS[j].name + ' · en el próximo cruce';
+        } else {
+            dom.mmGoal.textContent = REGIONS[j].name + ' · ' + milesDe(falta) + ' m';
+        }
+        dom.mmGoal.classList.toggle('listo', zp >= 1 && game.finishS < 0);
+    }
 }
 
 // ===========================================================================
@@ -7606,7 +7874,7 @@ function startGame() {
     game.crossTaken = 0;
     game.lastWarn = -999;
     game.slopeS0 = -1;
-    game.revived = false;
+    game.adUsed = false;
     game.curveBase = curveX(0);
     game.riseBase = curveY(0);
     game.slopeBase = 0;
@@ -7624,6 +7892,7 @@ function startGame() {
     player.sliding = 0;
     player.wantSlide = false;
     player.out = 0;
+    player.rez = 0;
     player.outVX = 0;
     player.outVZ = 0;
     player.outZ = 0;
@@ -7632,6 +7901,7 @@ function startGame() {
     playerGroup.position.z = PLAYER_Z;
     playerGroup.rotation.set(0, 0, 0);
     shadowMesh.material.opacity = 0.4;
+    if (rezBeam) { rezBeam.visible = false; rezBeam.material.opacity = 0; }
     player.jumps = 0;
     player.holding = false;
     player.coyote = COYOTE_TIME;
@@ -7657,6 +7927,7 @@ function startGame() {
     resetHudCache();
     resetRoadColors();
     mmLastName = '';
+    mmLastLeft = -1;
     lastBlendKey = -1;
     hudDirty = true;
     renderHud();
@@ -7678,10 +7949,12 @@ function startGame() {
     dom.milestone.classList.remove('show');
 }
 
-// Morir ya no cierra la carrera directamente: la primera vez se ofrece el
-// anuncio del patrocinador. Solo si se rechaza (o si ya se gasto) se cierra.
+// Morir ya no cierra la carrera directamente: se ofrece volver mientras quede
+// con que. Hay dos monedas y son independientes —el anuncio del patrocinador,
+// una vez por carrera, y los angeles comprados, hasta tres—, asi que una
+// carrera admite cuatro vueltas. Solo cuando no queda ninguna se cierra.
 function endGame() {
-    if (!game.revived) { offerRevive(); return; }
+    if (!game.adUsed || save.angels > 0) { offerRevive(); return; }
     finishGame();
 }
 
@@ -7730,6 +8003,32 @@ function offerRevive() {
 
     // Silencio: dos musicas a la vez no es un anuncio, es ruido.
     if (music.gain) music.gain.gain.value = 0;
+
+    // El boton del angel, si queda alguno. Va SIEMPRE arriba del todo y sin
+    // reloj: quien ha pagado por el no tiene que esperar diez segundos a que
+    // se le permita usar lo que ya compro.
+    const conAngel = save.angels > 0;
+    dom.angelBtn.hidden = !conAngel;
+    dom.angelBtn.textContent = 'Usar ángel · quedan ' + save.angels;
+
+    // Gastado el anuncio, el panel deja de ser un anuncio. Volver a plantar un
+    // video de treinta segundos delante de alguien que ya lo vio esta carrera y
+    // que ademas trae su propio angel es cobrarle dos veces por lo mismo.
+    if (game.adUsed) {
+        dom.reviveAd.hidden = true;
+        dom.reviveTimer.hidden = true;
+        dom.reviveSub.textContent = save.angels > 1
+            ? 'Te quedan ' + save.angels + ' ángeles. Uno te levanta aquí mismo, ' +
+              'con una vida y el escudo puesto.'
+            : 'Te queda un ángel. Te levanta aquí mismo, con una vida y el ' +
+              'escudo puesto.';
+        dom.reviveBtn.hidden = true;
+        dom.revive.hidden = false;
+        return;
+    }
+    dom.reviveAd.hidden = false;
+    dom.reviveTimer.hidden = false;
+    dom.reviveBtn.hidden = false;
 
     // Uno de cada veinte lleva video; el resto, cartel. El video pide un
     // iframe a un tercero, arranca solo y tarda; el cartel es una imagen del
@@ -7817,7 +8116,19 @@ function tickRevive() {
 
 function doRevive() {
     if (dom.reviveBtn.disabled) return;
-    game.revived = true;
+    game.adUsed = true;
+    reviveNow();
+}
+
+// El angel no espera: se compro con jade y esa es toda la transaccion.
+function doAngel() {
+    if (save.angels <= 0) return;
+    save.angels--;
+    persist();
+    reviveNow();
+}
+
+function reviveNow() {
     teardownRevive();
     dom.revive.hidden = true;
 
@@ -7850,6 +8161,7 @@ function doRevive() {
     // Se sale de la caida de pie y en el carril del medio: si se revive fuera
     // de la calzada, el primer paso vuelve a ser caerse.
     player.out = 0;
+    player.rez = 0;
     player.outVX = 0;
     player.outVZ = 0;
     player.outZ = 0;
@@ -7880,11 +8192,16 @@ function doRevive() {
     dom.pauseBtn.textContent = 'II';
     hudDirty = true;
     renderHud();
-    sfx.shield();
+    // Y ahora la vuelta se VE. El sonido del escudo ya no suena aqui: suena al
+    // tocar el suelo, que es cuando el jugador vuelve a tener el mando.
+    startRez();
+    showBanner('DE PIE', 'Vuelves a la calzada');
 }
 
+// Rechazar cierra la carrera aunque queden angeles: el jugador acaba de decir
+// que no quiere seguir, y volver a preguntarle con otro boton seria insistir.
 function declineRevive() {
-    game.revived = true;
+    game.adUsed = true;
     teardownRevive();
     dom.revive.hidden = true;
     finishGame();
@@ -8007,7 +8324,25 @@ function renderShop() {
     }).join('');
 
     // --- Mejoras ---
-    dom.tabUpg.innerHTML = UPGRADES.map(u => {
+    // El angel va PRIMERO y no al final de la lista: es lo unico de esta
+    // pestana que se gasta, y es lo que se viene a comprar despues de morir en
+    // la zona diez. Enterrado entre ocho mejoras permanentes no se encuentra.
+    const ang = save.angels;
+    const angFull = ang >= ANGEL_MAX;
+    const angPips = Array.from({ length: ANGEL_MAX }, (_, k) =>
+        '<i class="' + (k < ang ? 'full' : '') + '"></i>').join('');
+    dom.tabUpg.innerHTML =
+        '<div class="card angel' + (ang > 0 ? ' on' : '') + '">' +
+        '<span class="card-ic">' + svg(ICON_PATHS.angel) + '</span>' +
+        '<b>Ángel de la guarda</b>' +
+        '<p>Te levanta donde caíste, sin anuncio y sin esperar. Se gasta al ' +
+        'usarlo y llevas hasta ' + ANGEL_MAX + '.</p>' +
+        '<span class="card-lvl">' + angPips + '</span>' +
+        '<button type="button" data-angel="1"' +
+        (angFull || save.bank < ANGEL_COST ? ' disabled' : '') + '>' +
+        (angFull ? 'Zurrón lleno' : ANGEL_COST + ' jade') + '</button>' +
+        '</div>' +
+        UPGRADES.map(u => {
         const l = lvl(u.id);
         const full = l >= u.max;
         const price = full ? 0 : u.cost(l);
@@ -8096,6 +8431,17 @@ function initShop() {
             return;
         }
 
+        if (btn.dataset.angel) {
+            if (save.angels >= ANGEL_MAX) return;
+            if (save.bank < ANGEL_COST) { sfx.deny(); return; }
+            save.bank -= ANGEL_COST;
+            save.angels++;
+            sfx.buy();
+            persist();
+            renderShop();
+            return;
+        }
+
         if (btn.dataset.upg) {
             const u = UPGRADES.find(x => x.id === btn.dataset.upg);
             const l = lvl(u.id);
@@ -8172,6 +8518,11 @@ function frame(now) {
             // da vueltas por el aire se leia como que el juego continuaba sin
             // el jugador; frenando, la carrera se acaba DONDE se acaba.
             if (player.out > 0) game.speed *= player.out / player.outMax;
+            // Y al revivir, el mundo arranca desde parado mientras el cuerpo
+            // baja. Sin esto se volvia a la calzada a setenta por hora con la
+            // animacion todavia en el aire, y la vuelta no se veia: solo se
+            // notaba que el paisaje ya iba disparado.
+            if (player.rez > 0) game.speed *= 1 - player.rez / REZ_TIME;
             // Y el tope absoluto, el ultimo de todos: ningun encadenado de
             // multiplicadores puede dejar que un obstaculo se cuele entre dos
             // pasos de simulacion.
@@ -8364,6 +8715,7 @@ function boot() {
     dom.soundBtn.addEventListener('click', () => setSound(!audio.on));
     dom.pauseBtn.addEventListener('click', togglePause);
     dom.reviveBtn.addEventListener('click', doRevive);
+    dom.angelBtn.addEventListener('click', doAngel);
     dom.reviveSkip.addEventListener('click', declineRevive);
     paintSponsors();
 
