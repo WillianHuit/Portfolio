@@ -281,11 +281,24 @@ const FORK_CULL = 13;
 const FORK_SINK = 40;               // unidades que dura el hundimiento
 const FORK_SINK_DEEP = 4.5;         // cuanto baja: de sobra para pasar el suelo
 
-// Ultimo tramo, ya dentro de la capital, entre tomar el desvio que lleva a
-// ella y el final de la carrera. Acabar en el propio cruce habria cerrado la
-// partida en el mismo frame en el que aparece el rotulo; asi da tiempo a ver
-// la ciudad, que es el premio.
-const FINISH_RUN = 420;
+// Ultimo tramo, ya dentro de la capital, entre tomar el desvio que lleva a ella
+// y el final de la carrera. Acabar en el propio cruce habria cerrado la partida
+// en el mismo frame en el que aparece el rotulo; asi da tiempo a ver la ciudad,
+// que es el premio.
+//
+// 420 estaba bien cuando una carrera duraba dos minutos. Con la ruta en
+// cuarenta, el premio por llegar eran SEIS SEGUNDOS de ciudad: la capital
+// duraba el 3 % de lo que dura cualquier otra parada. Y arrastraba un fallo
+// peor, porque el suceso de cada zona se arma a 9.040 de haber entrado y aqui
+// la carrera se acababa a las 420: "Hora pico" era el unico suceso del juego
+// que no se podia ver JAMAS. A 4.200 la capital dura un minuto largo, que es
+// lo que hace falta para entrar, que te pase por encima la hora pico y llegar.
+const FINISH_RUN = 4200;
+// Y donde cae su suceso, contado desde que se entra. La capital es la unica
+// zona que no cierra un cruce sino la meta, asi que su suceso no puede colgar
+// de ZONE_SPAN como el de las demas: va al primer cuarto del tramo final, y
+// deja el resto para la entrada a la ciudad.
+const FINISH_ZONE_AT = 0.25;
 
 // Cuanto tarda el paisaje en pasar de un departamento al otro al tomar el
 // desvio. Antes se cambiaba de golpe, en un frame, y se leia como un fallo de
@@ -649,7 +662,10 @@ const REGIONS = [
         roadA: 0xefe6d2, roadB: 0xd9cdb2, kerb: 0xb9a888,
         stone: 0xa1937f, accent: 0xc8862f, hazard: 0x14776a, pit: 0x040d0b,
         land: 'temple', landA: 0xa1937f, landB: 0xc8862f,
-        ridge: 0x6e5c46, sky: 'cloud', skyC: 0xf3d3ae,
+        // Petén es llano de punta a punta: la cordillera que habia aqui estaba
+        // inventada. Queda una linea baja en la bruma, que es lo que de verdad
+        // se ve por encima del dosel.
+        ridge: 0x6e5c46, ridgeH: 0.3, sky: 'cloud', skyC: 0xf3d3ae,
         road: [1, 1, 0.94, 0], prop: 'jungle', propA: 0x2f6b4a, propB: 0x8a6a3f,
         ob: [1.0, 1.0, 1.0]
     },
@@ -665,7 +681,7 @@ const REGIONS = [
         roadA: 0xe8dfc8, roadB: 0xd0c4a6, kerb: 0xc0644a,
         stone: 0xf0e8d8, accent: 0xc0472f, hazard: 0x1f88b8, pit: 0x06222e,
         land: 'town', landA: 0xf0e6d2, landB: 0xc0472f,
-        ridge: 0x4f7f86, sky: 'cloud', skyC: 0xffffff,
+        ridge: 0x4f7f86, ridgeH: 0.3, sky: 'cloud', skyC: 0xffffff,
         road: [3, 2, 0.9, 0.02], prop: 'reed', propA: 0x3f8f6a, propB: 0xe0b25c,
         ob: [0.95, 1.05, 0.95]
     },
@@ -722,7 +738,9 @@ const REGIONS = [
         roadA: 0x5a544f, roadB: 0x484340, kerb: 0x7a6a55,
         stone: 0x6f5a3f, accent: 0xe8c98a, hazard: 0x2f6f8a, pit: 0x07202b,
         land: 'palm', landA: 0x4a3a26, landB: 0x2f7a4e,
-        ridge: 0x6a5a54, sky: 'cloud', skyC: 0xffd9b0,
+        // Llanura costera: la cadena volcanica queda tierra adentro y muy lejos,
+        // asi que se ve, pero baja. Es la misma correccion que en Petén.
+        ridge: 0x6a5a54, ridgeH: 0.35, sky: 'cloud', skyC: 0xffd9b0,
         // Arena negra: sin cortes y sin junta, para que se lea como superficie
         // continua y no como losas.
         road: [1, 1, 1.0, 0.02], prop: 'palm', propA: 0x4a3a26, propB: 0x2f7a4e,
@@ -735,7 +753,8 @@ const REGIONS = [
         roadA: 0x8c9aa0, roadB: 0x717e87, kerb: 0x5a666b,
         stone: 0x4a5560, accent: 0xcfe4ef, hazard: 0xd4451f, pit: 0x2a0e06,
         land: 'peak', landA: 0x2b3540, landB: 0xe8f2f7,
-        ridge: 0x1e2b34, sky: 'star', skyC: 0xdfeaff,
+        // A cuatro mil metros el horizonte es sierra por todos lados.
+        ridge: 0x1e2b34, ridgeH: 1.4, sky: 'star', skyC: 0xdfeaff,
         road: [3, 2, 0.93, 0.06], prop: 'rock', propA: 0x3a4550, propB: 0xcfe4ef,
         ob: [1.0, 1.1, 0.9]
     },
@@ -749,7 +768,7 @@ const REGIONS = [
         // tres mil, y el verde que tenia landA aqui lo hacia parecer un cerro
         // arbolado mas.
         land: 'mesa', landA: 0x8a8f7e, landB: 0xdfe8ee,
-        ridge: 0x51707a, sky: 'cloud', skyC: 0xffffff,
+        ridge: 0x51707a, ridgeH: 1.3, sky: 'cloud', skyC: 0xffffff,
         road: [2, 1, 0.89, 0.07], prop: 'pine', propA: 0x2f5a3f, propB: 0xd93a3a,
         ob: [1.0, 1.05, 1.0]
     },
@@ -801,7 +820,11 @@ const REGIONS = [
         roadA: 0x9c8f80, roadB: 0x857868, kerb: 0xb5a08a,
         stone: 0xe8d9b8, accent: 0xd4762f, hazard: 0x3b3128, pit: 0x18120c,
         land: 'colonial', landA: 0xe0c9a6, landB: 0xc0472f,
-        ridge: 0x5a6a52, sky: 'cloud', skyC: 0xf7dcbe,
+        // Antigua sin el Agua detras no es Antigua: es un pueblo colonial
+        // cualquiera. Es la unica parada del recorrido que esta METIDA en un
+        // valle, con tres volcanes alrededor y uno encima, y el horizonte tiene
+        // que decirlo. La sierra sube y una cumbre se levanta sobre las demas.
+        ridge: 0x5a6a52, ridgeH: 1.45, ridgeBig: 1, sky: 'cloud', skyC: 0xf7dcbe,
         // El adoquin: seis cortes a lo ancho y tres a lo largo, junta marcada
         // y piedras desigualadas. Es la calle de Antigua, y no se parece a
         // ninguna otra del recorrido.
@@ -3338,9 +3361,23 @@ function updateScenery(A, B, e) {
     mixHex(A.ridge, B.ridge, e, _sA);
     mixHex(A.fog, B.fog, e, _sB);
     _sc.copy(_sA).lerp(_sB, 0.45);          // medio velada por la bruma
+    // La sierra tenia UNA sola forma para las trece paradas: cambiaba el color y
+    // nada mas. O sea que habia cordillera en Petén, que es llano de punta a
+    // punta, y en la playa de Monterrico; y en Antigua, que esta metida en un
+    // valle con el Agua encima, el horizonte era el mismo teloncito que en la
+    // selva. Dos numeros por region lo arreglan sin tocar la malla: ridgeH es lo
+    // alta que va la sierra —0,3 la deja en una linea lejana, 1,45 la hace
+    // asomarse— y ridgeBig levanta UNA cumbre por encima de las demas.
+    const rh = lerp(A.ridgeH === undefined ? 1 : A.ridgeH,
+                    B.ridgeH === undefined ? 1 : B.ridgeH, e);
+    const rb = lerp(A.ridgeBig || 0, B.ridgeBig || 0, e);
     for (let k = 0; k < RIDGE_COUNT; k++) {
-        const w = 26 + ((k * 23) % 44);
-        const h = 12 + ((k * 29) % 46);
+        // Una de cada once es la que manda. Se estrecha mientras crece, porque
+        // una caja que solo sube sigue leyendose como muro y lo que hace falta
+        // es que se lea como pico.
+        const jefa = (k % 11) === 3 ? rb : 0;
+        const w = (26 + ((k * 23) % 44)) * (1 - 0.42 * jefa);
+        const h = (12 + ((k * 29) % 46)) * rh * (1 + 1.7 * jefa);
         const zk = -400 + ((k * 41) % 130);
         const x = ((k * 97 + ridgeOff) % RIDGE_PERIOD) - RIDGE_PERIOD / 2;
         // Tapa inclinada, alterna a un lado y a otro: con la caja recta el
@@ -5630,10 +5667,19 @@ function armZone() {
     // suceso que no encontraba sitio se acababa armando encima del
     // distribuidor y sonaba pasado el: el jugador veia el vuelo de camazotz de
     // Tikal con el rotulo de Tikal puesto... estando ya en Flores.
-    const cruce = game.nextCross + CROSS_ISLAND_AT;
-    if (game.distance + ARM_AHEAD + ZONE_LEN + 60 > cruce) {
-        game.nextZone = cruce + 140;
-        return false;
+    // Salvo en la capital: ahi ya no se arma ningun cruce mas —lo que cierra el
+    // tramo es la meta— y nextCross se quedo con el valor que tuviera, casi
+    // siempre POR DETRAS del jugador. Sin esta salvedad la comprobacion daba
+    // siempre que "no cabe", y el aplazamiento apuntaba a un sitio ya pasado,
+    // asi que se reintentaba y se volvia a aplazar al mismo punto en cada
+    // compas: "Hora pico" no llegaba a armarse nunca por un segundo motivo,
+    // independiente del tramo corto.
+    if (game.finishS < 0) {
+        const cruce = game.nextCross + CROSS_ISLAND_AT;
+        if (game.distance + ARM_AHEAD + ZONE_LEN + 60 > cruce) {
+            game.nextZone = cruce + 140;
+            return false;
+        }
     }
     if (trackBusy(ZONE_LEN)) return false;
 
@@ -6407,7 +6453,13 @@ function takeExit(c, lane) {
 
         // Y si lo que se acaba de tomar es el desvio a la capital, la carrera
         // tiene final: un ultimo tramo de ciudad y se cierra.
-        if (destino === REGION_N - 1) game.finishS = game.distance + FINISH_RUN;
+        if (destino === REGION_N - 1) {
+            game.finishS = game.distance + FINISH_RUN;
+            // Y se reapunta el suceso DENTRO del tramo final. El bloque de
+            // arriba acaba de dejarlo a 9.040 como en cualquier zona, y aqui
+            // eso cae mas alla de la meta.
+            game.nextZone = game.distance + FINISH_RUN * FINISH_ZONE_AT;
+        }
     } else {
         // El retorno deja al jugador donde estaba. El rotulo lo dice con todas
         // las letras para que no se lea como un fallo del juego.

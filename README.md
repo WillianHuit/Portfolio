@@ -361,6 +361,47 @@ nuevo**, el mismo accidente que le pasó a Flores. Ahora es gris plomo, porque e
 Xocomil es el viento de la tarde que pone el lago picado y **lo que tiene que
 hacer el tinte es justo lo contrario de tener color: quitárselo a la escena**.
 
+### Repaso zona por zona: Antigua y la capital
+
+Las dos pasaban la auditoría entera, así que aquí tocaba mirar **lo que la
+medida no ve**. Salieron las dos cosas más gordas de todo el repaso.
+
+**Antigua sin el Agua detrás no es Antigua, es un pueblo colonial cualquiera.**
+Y resultó que el problema no era de Antigua: **la sierra del fondo tenía UNA
+sola forma para las trece paradas** —34 cajas inclinadas, siempre las mismas— y
+lo único que cambiaba era el color. O sea que había cordillera en Petén, que es
+llano de punta a punta, y en la playa de Monterrico; y en Antigua, que es la
+única parada metida en un valle con tres volcanes alrededor, el horizonte era el
+mismo telón que en la selva.
+
+Dos números por región lo arreglan sin tocar la malla: `ridgeH` es lo alta que
+va la sierra —**0,3** la deja en una línea lejana, **1,45** la hace asomarse— y
+`ridgeBig` levanta **una** cumbre por encima de las demás, que se estrecha
+mientras crece, porque una caja que sólo sube se sigue leyendo como muro y lo que
+hace falta es que se lea como pico. Antigua es la única que la lleva: el Agua no
+se repite en ningún otro horizonte. Y Petén, Flores y Monterrico pierden la
+cordillera que tenían inventada.
+
+**Y la capital tenía un fallo, no un defecto de acabado.** El último tramo eran
+**420 unidades: seis segundos**. Estaba bien dimensionado cuando una carrera
+duraba dos minutos, pero con la ruta en cuarenta, el premio por llegar era el 3 %
+de lo que dura cualquier otra parada. Y arrastraba algo peor: **el suceso de cada
+zona se arma a 9.040 de haber entrado, y aquí la carrera se acababa a las 420**,
+así que «Hora pico» era **el único suceso del juego que no se podía ver jamás**.
+
+A **4.200** la capital dura un minuto largo, que es lo que hace falta para
+entrar, que te pase por encima la hora pico y llegar. Su suceso no puede colgar
+de `ZONE_SPAN` como el de las demás —es la única zona que no cierra un cruce sino
+la meta—, así que va al primer cuarto del tramo final y deja el resto para la
+entrada a la ciudad.
+
+**Y había un segundo motivo, independiente del primero.** En la capital ya no se
+arma ningún cruce más, pero `armZone` seguía midiendo contra `nextCross`, que se
+queda con el valor que tuviera y casi siempre **por detrás** del jugador. La
+comprobación daba siempre «no cabe» y el aplazamiento apuntaba a un sitio ya
+pasado, así que se reintentaba y se volvía a aplazar al mismo punto en cada
+compás. Alargar el tramo solo no habría bastado: hacían falta las dos cosas.
+
 **De aquí salió una métrica, y con ella una cola de trabajo.** El tinte de un
 suceso hay que medirlo **en tono contra el SUELO de su región**, no contra la
 niebla: el suelo es el plano grande que el jugador tiene a los dos lados de la
@@ -382,9 +423,15 @@ mismo suelo, la misma silueta o el mismo matorral son un sitio contado dos
 veces, aunque por separado los dos estén bien. La cola que queda, por orden de
 ruta:
 
-Con las cinco del altiplano cerradas, **las trece pasan**: cada parada tiene su
-silueta, ninguna pareja seguida repite suelo ni matorral, ninguna cuneta baja de
-3 y todos los tintes se separan de lo que tiñen.
+Con las trece repasadas, **las trece pasan**: cada parada tiene su silueta,
+ninguna pareja seguida repite suelo ni matorral, ninguna cuneta baja de 3 y
+todos los tintes se separan de lo que tiñen.
+
+Y una advertencia que dejó el repaso: **la auditoría encuentra lo que sabe
+medir, y nada más.** Las dos últimas paradas la pasaban limpias y traían entre
+las dos el fallo más grave de todos —un suceso que no se podía ver nunca— y el
+defecto más extendido —un horizonte igual en las trece—. Sirve para no dejar
+pasar lo que ya conoce; no sirve para dar una zona por buena.
 
 **Y la métrica del tinte tiene tres dimensiones, no una.** Se fue construyendo a
 golpes, y cada zona enseñó una:
