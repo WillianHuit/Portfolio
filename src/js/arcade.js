@@ -1174,16 +1174,28 @@ const ZONES = {
 // sitio no aparece hasta que se cumplen: hasta entonces todos son cortadas. Y
 // si se toma el retorno, el contador sigue vencido, asi que el siguiente cruce
 // vuelve a ser de destino y equivocarse cuesta un cruce, no una zona entera.
-const ZONE_MINUTES = 12;
+const ZONE_MINUTES = 3;
 const ZONE_SPAN = ZONE_MINUTES * 60 * SPEED_MAX;
 
-// Cada cuanto se repite el suceso propio de la zona DENTRO de ella. Con doce
-// minutos por sitio, uno solo se pierde: salen unos ocho por visita, que a
-// velocidad de crucero es uno cada minuto y medio.
-const ZONE_EVERY = 6000;
-// Y el primero, contado desde que se entra: lo bastante pronto para que la
-// zona se presente con lo suyo y no con una recta.
-const ZONE_AFTER = 1100;
+// --- Cuando pasa el suceso de la zona ---------------------------------------
+// UNA vez por visita, y al FINAL. Antes se repetia cada 6.000 unidades —unas
+// ocho veces por zona— y eso lo estropeaba dos veces: de tanto verlo dejaba de
+// ser el suceso del sitio y pasaba a ser ruido de fondo con rotulo, y ademas
+// caia en cualquier punto del tramo, asi que no significaba nada. Ocurriendo
+// una sola vez y cerca del final, la zona tiene forma: se entra, se corre, y lo
+// gordo pasa justo antes de la estructura de despedida y la bifurcacion.
+//
+// Se cuenta desde el FINAL de la zona y no como fraccion, para que siga
+// significando lo mismo si ZONE_MINUTES cambia: son las unidades que quedan de
+// zona cuando el suceso se arma. El suceso ocupa ARM_AHEAD + ZONE_LEN, unas
+// 675, asi que despues quedan todavia unos treinta y cinco segundos de carrera
+// hasta que la zona cumple, y ahi entra la estructura y luego el cruce.
+//
+// El maximo con un tercio del tramo es la red de seguridad: con zonas muy
+// cortas, restar 3.200 daria un numero negativo y el suceso saldria antes de
+// haber entrado.
+const ZONE_CLIMAX = 3200;
+const zoneClimaxAt = () => Math.max(ZONE_SPAN * 0.35, ZONE_SPAN - ZONE_CLIMAX);
 
 // Cuanto antes del cruce se planta el arco de fin de zona. Sumadas las 170 que
 // tarda en llegar desde el punto de aparicion, se pasa por debajo unas 400
@@ -1376,6 +1388,7 @@ const dom = {
     mmYou: $('mmYou'),
     mmName: $('mmName'), mmDept: $('mmDept'), mmFill: $('mmFill'),
     mmZone: $('mmZone'), mmGoal: $('mmGoal'),
+    dbg: $('dbg'), dbgInfo: $('dbgInfo'), dbgGod: $('dbgGod'), dbgSlow: $('dbgSlow'),
     revive: $('revive'), reviveBtn: $('reviveBtn'), reviveSkip: $('reviveSkip'),
     angelBtn: $('angelBtn'), reviveAd: $('reviveAd'),
     reviveTimer: $('reviveTimer'), reviveSub: $('reviveSub'),
@@ -5665,8 +5678,11 @@ function generateChunk(z) {
     // al reves y el resultado medido era que el primer tramo especial de la
     // partida, armado a los 260 m, ocupaba la unica ventana que le quedaba al
     // suceso de Tikal antes del cruce. No salia nunca.
+    // Armado, no vuelve a haber turno hasta cambiar de zona: es UNO por visita.
+    // Infinity y no un numero grande porque asi tampoco entra en la ventana de
+    // preferencia de abajo, que mira a nextZone - 400.
     if (!game.zone.active && game.distance > game.nextZone) {
-        if (armZone()) game.nextZone = game.distance + ZONE_EVERY;
+        if (armZone()) game.nextZone = Infinity;
     }
 
     // El suceso tiene preferencia sobre el reparto de tramos: cuatrocientas
@@ -6130,9 +6146,10 @@ function takeExit(c, lane) {
 
     if (cambio) {
         showRegionBanner(destino);
-        // Zona nueva: empieza a contar su tiempo y se apunta su primer suceso.
+        // Zona nueva: empieza a contar su tiempo y se apunta SU suceso, que es
+        // uno y va al final del tramo.
         game.zoneFrom = game.distance;
-        game.nextZone = game.distance + ZONE_AFTER;
+        game.nextZone = game.distance + zoneClimaxAt();
         const id = REGIONS[destino].id;
         if (!save.regions.includes(id)) {
             save.regions.push(id);
@@ -6319,6 +6336,15 @@ function slide() {
 function initInput() {
     window.addEventListener('keydown', (e) => {
         if (e.repeat) return;
+
+        // El panel de pruebas, antes que nada y en cualquier estado. Ctrl+Shift
+        // porque no lo pisa ningun control del juego —que usa flechas, WASD,
+        // espacio, P, Esc, M y N a secas— y porque nadie lo pulsa sin querer.
+        if (e.ctrlKey && e.shiftKey && e.code === 'KeyD') {
+            e.preventDefault();
+            toggleDebug();
+            return;
+        }
 
         if (game.state === State.REVIVE) {
             if (e.code === 'Enter' || e.code === 'Space') { e.preventDefault(); doRevive(); }
@@ -7288,6 +7314,11 @@ function updateHurt(dt) {
 }
 
 function takeHit() {
+    // El modo invulnerable del panel de pruebas. Se come el golpe ENTERO —ni
+    // vida, ni escudo, ni destello— porque su unico proposito es poder llegar
+    // andando hasta el final de una zona a mirar el paisaje.
+    if (dbg.god) { game.invuln = INVULN_TIME; return; }
+
     game.invuln = INVULN_TIME;
     game.combo = 0;
     jadeStreak = 0;
@@ -7840,15 +7871,11 @@ function startGame() {
     game.lastTramo = -1;
     game.nextEvento = 0;
     game.lastEvento = -1;
-    // Tikal tambien tiene el suyo, y es el primero que se ve en la vida: se
-    // apunta desde la salida, porque a Tikal no se entra por ningun cruce.
-    //
-    // A los 200 y no mas tarde. A Tikal no se entra por un cruce, asi que dura
-    // 1.197 en vez de 1.900 y solo tiene UN hueco, el de antes del primer
-    // distribuidor. Apuntandolo a 700 el suceso ya no cabia —se arma 215 por
-    // delante y mide 380— y se quedaba sin salir: el jugador se iba de Tikal
-    // sin haber visto nada. A 200 suena en [415, 795], en mitad del tramo.
-    game.nextZone = 200;
+    // Tikal tambien tiene el suyo, y es el primero que se ve en la vida. Va en
+    // el mismo sitio que en cualquier otra zona —al final del tramo— porque a
+    // Tikal se entra por la salida en vez de por un cruce, pero su tramo dura
+    // exactamente lo mismo que los demas.
+    game.nextZone = zoneClimaxAt();
     game.zoneFrom = 0;
     game.nextFauna = 120;
     game.zone.active = false;
@@ -8281,6 +8308,128 @@ function togglePause() {
 }
 
 // ===========================================================================
+// Panel de pruebas
+// ===========================================================================
+// Ctrl+Shift+D. No aparece por ningun otro sitio, no hay boton que lo llame y
+// con el cerrado no cuesta ni una linea por frame: todo lo que hace esta detras
+// de banderas que nacen apagadas.
+//
+// Existe por una razon muy concreta: con una zona por cada tres minutos, mirar
+// como queda el final de Semuc o el muelle de Atitlán costaba media hora de
+// partida y no morirse por el camino. Un repaso visual zona por zona no se
+// puede hacer asi, y "juegalo otra vez a ver si esta vez llegas" no es una
+// forma de trabajar.
+const dbg = {
+    on: false,      // el panel esta abierto
+    god: false,     // los golpes no hacen nada
+    slow: false     // el mundo va a un tercio, para poder mirar
+};
+let dbgLast = -1e9;   // distancia del ultimo repintado del panel
+
+function toggleDebug() {
+    dbg.on = !dbg.on;
+    dom.dbg.hidden = !dbg.on;
+    if (dbg.on) renderDebug();
+}
+
+// Lo que el panel enseña. Se repinta al abrirlo y despues de cada boton, no en
+// cada frame: son cifras para leer, no un telemetro.
+function renderDebug() {
+    if (!dbg.on) return;
+    const ri = Math.floor(routePos()) % REGION_N;
+    const dentro = game.distance - game.zoneFrom;
+    const pct = Math.round(Math.min(1, dentro / ZONE_SPAN) * 100);
+    const suceso = game.zone.active
+        ? 'EN CURSO'
+        : game.nextZone === Infinity
+            ? 'ya pasó'
+            : 'en ' + milesDe(Math.max(0, game.nextZone - game.distance)) + ' m';
+    dom.dbgInfo.innerHTML =
+        '<b>' + REGIONS[ri].name + '</b> · ' + (ri + 1) + ' de ' + REGION_N + '<br>' +
+        'zona: ' + pct + ' % (' + milesDe(dentro) + ' de ' + milesDe(ZONE_SPAN) + ')<br>' +
+        'suceso: ' + suceso + '<br>' +
+        'cambio: ' + milesDe(zoneAhead()) + ' m<br>' +
+        'jade ' + save.bank + ' · ángeles ' + save.angels;
+    dom.dbgGod.setAttribute('aria-pressed', String(dbg.god));
+    dom.dbgSlow.setAttribute('aria-pressed', String(dbg.slow));
+}
+
+// Deja la zona a punto de soltar su suceso. No se dispara a mano: se mueve el
+// contador y se deja que lo arme el reparto de siempre, para que lo que se ve
+// probando sea EXACTAMENTE lo que va a ver el jugador —con su ventana limpia,
+// su cartel forzado y su hueco antes del cruce— y no una version de laboratorio.
+function dbgAlSuceso() {
+    game.zone.active = false;
+    game.zoneFrom = game.distance - zoneClimaxAt();
+    game.nextZone = game.distance;
+    renderDebug();
+}
+
+// Y esto deja la zona a punto de acabarse: el tiempo cumplido, asi que el
+// proximo cruce ya es el de destino, con la estructura de despedida por delante.
+// Se dejan 900 unidades —unos trece segundos— para que dé tiempo a verla venir.
+function dbgAlFinal() {
+    game.zoneFrom = game.distance - (ZONE_SPAN - 900);
+    if (game.nextZone !== Infinity) game.nextZone = Infinity;  // el suceso, por visto
+    renderDebug();
+}
+
+// Cambiar de sitio sin pasar por el cruce. Hace lo mismo que hace tomar la
+// salida buena, menos cobrar el jade: mover la ruta, cambiar el firme en una
+// linea que se ve venir, arrancar el cruce de paisaje y reiniciar los contadores
+// de la zona.
+function dbgZonaSiguiente() {
+    const desde = Math.floor(routePos()) % REGION_N;
+    const destino = Math.min(desde + 1, REGION_N - 1);
+    if (destino === desde) return;
+
+    game.routePos = destino + 0.02;
+    game.roadFrom = desde;
+    game.roadS0 = game.distance + 60;
+    game.snapFrom = desde;
+    game.snapT = 0;
+
+    game.zoneFrom = game.distance;
+    game.nextZone = game.distance + zoneClimaxAt();
+    game.zone.active = false;
+    game.zone.k = 0;
+    player.push = 0;
+
+    lastBlendKey = -1;
+    mmLastName = '';
+    mmLastLeft = -1;
+    resetRoadColors();
+    if (!save.regions.includes(REGIONS[destino].id)) {
+        save.regions.push(REGIONS[destino].id);
+        persist();
+        refreshMinimapDots();
+    }
+    showRegionBanner(destino);
+    renderDebug();
+}
+
+function initDebug() {
+    dom.dbg.addEventListener('click', (ev) => {
+        const btn = ev.target.closest('button');
+        if (!btn) return;
+        switch (btn.dataset.dbg) {
+            case 'suceso': dbgAlSuceso(); break;
+            case 'final':  dbgAlFinal(); break;
+            case 'zona':   dbgZonaSiguiente(); break;
+            case 'god':    dbg.god = !dbg.god; renderDebug(); break;
+            case 'slow':   dbg.slow = !dbg.slow; renderDebug(); break;
+            case 'jade':
+                save.bank += 1000;
+                save.angels = ANGEL_MAX;
+                persist();
+                renderDebug();
+                break;
+            case 'cerrar': toggleDebug(); break;
+        }
+    });
+}
+
+// ===========================================================================
 // Taller: trajes, mejoras y punto de salida
 // ===========================================================================
 let shopTab = 'skins';
@@ -8523,6 +8672,10 @@ function frame(now) {
             // animacion todavia en el aire, y la vuelta no se veia: solo se
             // notaba que el paisaje ya iba disparado.
             if (player.rez > 0) game.speed *= 1 - player.rez / REZ_TIME;
+            // Y el freno del panel de pruebas, para poder mirar el paisaje en
+            // vez de esquivarlo. Va aqui y no en el tope porque es un
+            // multiplicador mas, y solo puede BAJAR la velocidad.
+            if (dbg.slow) game.speed *= 0.34;
             // Y el tope absoluto, el ultimo de todos: ningun encadenado de
             // multiplicadores puede dejar que un obstaculo se cuele entre dos
             // pasos de simulacion.
@@ -8551,6 +8704,14 @@ function frame(now) {
 
         if (hudDirty) { renderHud(); hudDirty = false; }
         renderDistance();
+
+        // El panel de pruebas se refresca cada cincuenta unidades, no cada
+        // frame: son cifras para leer y no un telemetro, y con el cerrado la
+        // comprobacion es una bandera.
+        if (dbg.on && game.distance - dbgLast > 50) {
+            dbgLast = game.distance;
+            renderDebug();
+        }
 
         // Calzada y escenografia se recomponen una vez por FRAME, no una por
         // paso de simulacion: son trabajo de dibujo, no de simulacion.
@@ -8693,6 +8854,7 @@ function boot() {
     buildMinimap();
     initInput();
     initShop();
+    initDebug();
     setSound(save.sound);
     setMusic(save.music);
     refreshMenu();

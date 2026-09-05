@@ -1054,6 +1054,91 @@
             box-shadow: none;
         }
 
+        /* ===== Panel de pruebas =====
+           Abajo a la izquierda, que es la única esquina que el HUD deja libre:
+           arriba a la izquierda están las vidas y el minimapa, y a la derecha
+           la distancia y el jade. Y en gris pizarra en vez de en jade, para que
+           ni de reojo se confunda con algo del juego. */
+        .dbg {
+            position: fixed;
+            left: 0.8rem;
+            bottom: 0.8rem;
+            z-index: 9;
+            width: 12.5rem;
+            padding: 0.6rem 0.7rem 0.5rem;
+            border-radius: 0.6rem;
+            background: rgba(10, 14, 18, 0.92);
+            border: 1px solid rgba(239, 230, 210, 0.22);
+            box-shadow: 0 10px 30px -12px #000;
+            font-size: 0.68rem;
+            line-height: 1.45;
+            color: var(--limestone);
+        }
+
+        .dbg[hidden] { display: none !important; }
+
+        .dbg-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            font-size: 0.6rem;
+            opacity: 0.7;
+        }
+
+        .dbg-head button {
+            font: inherit;
+            font-size: 0.9rem;
+            line-height: 1;
+            background: none;
+            border: 0;
+            color: inherit;
+            opacity: 0.7;
+            cursor: pointer;
+            padding: 0 0.2rem;
+        }
+
+        .dbg-info {
+            margin: 0.4rem 0 0.5rem;
+            font-variant-numeric: tabular-nums;
+            opacity: 0.85;
+        }
+
+        .dbg-info b { color: var(--ochre); }
+
+        .dbg-btns { display: grid; gap: 0.28rem; }
+
+        .dbg-btns button {
+            font: inherit;
+            font-size: 0.66rem;
+            text-align: left;
+            padding: 0.34rem 0.5rem;
+            border-radius: 0.32rem;
+            border: 1px solid rgba(239, 230, 210, 0.22);
+            background: rgba(239, 230, 210, 0.06);
+            color: var(--limestone);
+            cursor: pointer;
+        }
+
+        .dbg-btns button:hover { background: rgba(239, 230, 210, 0.14); }
+
+        /* Los dos interruptores dicen si están puestos sin necesitar otro
+           color: aria-pressed ya lo sabe, así que se pinta desde ahí. */
+        .dbg-btns button[aria-pressed="true"] {
+            border-color: var(--ochre);
+            background: rgba(200, 134, 47, 0.2);
+            color: #f0c34a;
+        }
+
+        .dbg-key {
+            display: block;
+            margin-top: 0.45rem;
+            font-size: 0.56rem;
+            letter-spacing: 0.12em;
+            opacity: 0.35;
+        }
+
         @media (max-width: 560px) {
             .hud-box { font-size: 0.72rem; padding: 0.4rem 0.6rem; }
             .hud-value { font-size: 1rem; }
@@ -1319,6 +1404,29 @@
 
     <button class="sound-toggle" id="soundBtn" type="button" hidden
             aria-label="Silenciar sonido">♪</button>
+
+    <!-- ===== Panel de pruebas ===== -->
+    <!-- Ctrl+Shift+D. No hay botón que lo llame ni pista de que exista: es
+         para trabajar, no para jugar. Con una zona cada tres minutos, ir a ver
+         cómo queda el muelle de Atitlán costaba media hora de partida y no
+         morirse por el camino, y un repaso visual zona por zona no se puede
+         hacer así. -->
+    <div class="dbg" id="dbg" hidden>
+        <div class="dbg-head">
+            <b>Pruebas</b>
+            <button type="button" data-dbg="cerrar" aria-label="Cerrar">×</button>
+        </div>
+        <p class="dbg-info" id="dbgInfo"></p>
+        <div class="dbg-btns">
+            <button type="button" data-dbg="suceso">Al suceso de la zona</button>
+            <button type="button" data-dbg="final">Al final de la zona</button>
+            <button type="button" data-dbg="zona">Zona siguiente</button>
+            <button type="button" data-dbg="god" id="dbgGod" aria-pressed="false">Invulnerable</button>
+            <button type="button" data-dbg="slow" id="dbgSlow" aria-pressed="false">Ir despacio</button>
+            <button type="button" data-dbg="jade">+1000 jade y 3 ángeles</button>
+        </div>
+        <span class="dbg-key">Ctrl + Shift + D</span>
+    </div>
 
     <script type="module" src="src/js/arcade.js"></script>
 </body>

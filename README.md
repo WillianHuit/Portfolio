@@ -178,9 +178,9 @@ encendidas sobre el único asfalto del recorrido—.
 
 ### Repaso zona por zona: Petén
 
-Con las zonas ya en doce minutos, cada sitio se mira mucho rato y los defectos
-que en una carrera de dos minutos no daba tiempo a ver ahora se ven doce
-minutos seguidos. Petén es el primer repaso, y salieron cuatro:
+Con las zonas midiendo tres minutos, cada sitio se mira seguido mucho más rato
+que en las carreras de dos minutos de antes, y los defectos que no daba tiempo
+a ver ahora se ven enteros. Petén es el primer repaso, y salieron cuatro:
 
 - **El templo de Tikal no parecía Tikal.** Eran cinco gradas anchas que
   encogían y nada encima: exactamente la misma receta —cajas que menguan— que el
@@ -192,7 +192,7 @@ minutos seguidos. Petén es el primer repaso, y salieron cuatro:
   pasa de 9 a 12,8 de alto con una proporción de 1,49 a 1, y cabe en los ocho
   huecos que tiene asignados cada hito.
 - **La selva era un seto de altura constante.** Una pared verde plana a los dos
-  lados, igual de alta cada dos metros durante doce minutos. Ahora **una de cada
+  lados, igual de alta cada dos metros de principio a fin. Ahora **una de cada
   tres ranuras es una ceiba emergente** —doce de cuarenta y cuatro—: el mismo
   presupuesto de tres cubos, más del doble de alta, tronco de madera y copa
   plana por encima del dosel. La cuneta pasa a tener fondo.
@@ -237,7 +237,7 @@ fondo del camino, y ponerles cartel llenaría el margen de rombos hasta que
 dejaran de mirarse los que sí anuncian algo gordo.
 
 **El suceso de cada zona.** Cada punto de la ruta tiene **una cosa que solo
-pasa ahí**, y pasa una vez por visita, cerca del final del tramo. Antes las
+pasa ahí**, y pasa **una vez por visita, al final del tramo**. Antes las
 trece zonas se distinguían por el color del cielo y por lo que crecía en la
 cuneta: distintas de mirar, idénticas de **jugar** —la misma piedra rodante y
 el mismo murciélago en la selva, en la playa y en la cumbre nevada—.
@@ -282,18 +282,29 @@ capital, a ocho y encima.
 
 **Cuánto dura una zona es UNA constante, y ya no la decide el ritmo de los
 cruces.** `ZONE_MINUTES` son los minutos de carrera a velocidad de crucero que
-se está en un sitio: doce, o sea 48.960 unidades de calzada y unas dos horas y
-media de ruta entera. Antes lo decidía `CROSS_EVERY` —los cruces alternaban
+se está en un sitio: **tres**, o sea 12.240 unidades de calzada y unos cuarenta
+minutos de ruta entera. Antes lo decidía `CROSS_EVERY` —los cruces alternaban
 destino y cortada, así que la zona duraba exactamente dos cruces— y eso ataba
 dos cosas que no tienen nada que ver: cada cuánto se decide un camino y cuánto
-se está en un sitio. Con zonas de doce minutos, atados, habría un cruce cada
-seis. Ahora **el cruce de destino no aparece hasta que la zona cumple su
-tiempo**: dentro de una zona todos son cortadas, y el que cambia de sitio es el
-que la cierra. Y si se toma el retorno el contador sigue vencido, así que el
-siguiente cruce vuelve a ser de destino: equivocarse cuesta un cruce, no una
-zona entera. El suceso propio de la zona se repite cada 6.000 m, unas ocho veces
-por visita —medido simulando la ruta completa—, porque con doce minutos por
-sitio uno solo se pierde.
+se está en un sitio. Ahora **el cruce de destino no aparece hasta que la zona
+cumple su tiempo**: dentro de una zona todos son cortadas, y el que cambia de
+sitio es el que la cierra. Y si se toma el retorno el contador sigue vencido,
+así que el siguiente cruce vuelve a ser de destino: equivocarse cuesta un cruce,
+no una zona entera.
+
+**Y el suceso de la zona es UNO, y va al final.** Se repetía cada 6.000 m —unas
+ocho veces por zona— y eso lo estropeaba dos veces: de tanto verlo dejaba de ser
+*el suceso del sitio* y pasaba a ser ruido de fondo con rótulo, y encima caía en
+cualquier punto del tramo, así que no significaba nada. Ocurriendo **una sola
+vez y cerca del final**, la zona tiene forma: se entra, se corre, y lo gordo pasa
+justo antes de la estructura de despedida y la bifurcación.
+
+El momento se cuenta **desde el final de la zona y no como fracción**, para que
+siga significando lo mismo si `ZONE_MINUTES` cambia: `ZONE_CLIMAX` son las
+unidades que quedan de zona cuando el suceso se arma. Con tres minutos sale al
+74 % del tramo, y después quedan todavía unos treinta y cinco segundos hasta que
+la zona cumple. Medido simulando la ruta entera: **un suceso por zona, siempre al
+74 %, y ninguno pasado el tiempo de su zona**.
 
 **Y cada zona se despide con una estructura, distinta según el sitio.** Se ve
 emerger de la bruma mucho antes de llegar, no golpea, no se esquiva y no pide
@@ -330,24 +341,51 @@ ven.
 ### Un rótulo para cada cosa
 
 El mismo rótulo servía para dos cosas que no se parecen en nada: *has llegado a
-un sitio nuevo* y *está pasando algo aquí*. Y como el suceso de la zona se
-repite unas ocho veces por visita, el jugador veía **«Vuelo de camazotz /
-Tikal»** en verde jade —exactamente igual que «Tikal / Petén»— y ocho veces por
-zona creía haber cambiado de departamento. Ahora el suceso sale **en ocre y con
-la palabra PELIGRO debajo** en vez del nombre del sitio: dos rótulos que no se
-confunden ni de reojo.
+un sitio nuevo* y *está pasando algo aquí*. Y como el suceso de la zona salía
+ocho veces por visita, el jugador veía **«Vuelo de camazotz / Tikal»** en verde
+jade —exactamente igual que «Tikal / Petén»— y ocho veces por zona creía haber
+cambiado de departamento. Ahora el suceso sale **en ocre y con la palabra
+PELIGRO debajo** en vez del nombre del sitio: dos rótulos que no se confunden ni
+de reojo. Y sale **una sola vez por zona**, que era la otra mitad del problema:
+por muy bien pintado que esté un rótulo, uno que aparece cada minuto y medio
+deja de significar nada.
+
+### El panel de pruebas: `Ctrl` + `Shift` + `D`
+
+No hay botón que lo llame ni pista de que exista. Con una zona cada tres
+minutos, ir a ver cómo queda el muelle de Atitlán costaba media hora de partida
+**y no morirse por el camino**, y un repaso visual zona por zona no se puede
+hacer así: «juégalo otra vez a ver si esta vez llegas» no es una forma de
+trabajar. Lleva:
+
+| Botón | Qué hace |
+|---|---|
+| **Al suceso de la zona** | Deja el contador justo en el punto del clímax, para ver el suceso ya |
+| **Al final de la zona** | Deja 900 unidades de zona: entra la estructura de despedida y el cruce de destino |
+| **Zona siguiente** | Cambia de sitio sin pasar por el cruce |
+| **Invulnerable** | Los golpes no hacen nada |
+| **Ir despacio** | El mundo a un tercio, para poder mirar en vez de esquivar |
+| **+1000 jade y 3 ángeles** | Para probar la tienda y las cuatro vueltas |
+
+**«Al suceso» no dispara nada a mano: mueve el contador y deja que lo arme el
+reparto de siempre.** Así lo que se ve probando es exactamente lo que va a ver
+el jugador —con su ventana limpia, su cartel forzado y su hueco antes del
+cruce— y no una versión de laboratorio que funcione sólo desde el botón.
+
+Con el panel cerrado no cuesta ni una línea por frame: todo lo que hace está
+detrás de banderas que nacen apagadas.
 
 ### Cuánto falta para cambiar de zona
 
-Con zonas de doce minutos y un cruce cada veinte segundos, la pregunta que el
+Con un cruce cada veinte segundos, la pregunta que el
 jugador se hace todo el rato es *«¿este cruce me saca de aquí?»*. Sin respuesta,
-los treinta y pico cruces de una zona se leen todos igual y la única forma de
+los diez cruces de una zona se leen todos igual y la única forma de
 enterarse es tomar uno y ver qué pasa. **El minimapa lleva ahora dos barras
 porque son dos relojes distintos**: la de arriba, en jade, dice cuándo toca
 elegir camino; la de abajo, en ocre, cuándo esa elección te saca del
 departamento, con el nombre del siguiente punto y los metros que faltan. Cumplido
 el tiempo de la zona, el texto cambia a **«en el próximo cruce»** y se enciende:
-es la única vez en doce minutos que elegir salida importa.
+es la única vez en toda la zona que elegir salida importa.
 
 Y lo que cuenta no es *cuánto falta para que se cumpla el tiempo*, sino **las
 unidades hasta el cruce concreto que cierra la zona**, que es el primero
@@ -1062,9 +1100,9 @@ Lo que importa mantener si se toca:
   incentivado. Los enlaces sociales están, pero no dan nada a cambio.
 - **O comprando un ángel, que es la otra moneda.** Hasta ahora morir ofrecía
   *una* salida —el anuncio— y sólo una vez por carrera. En carreras de dos
-  minutos bastaba; en una ruta de dos horas y media, morir en la zona once y que
+  minutos bastaba; en una ruta de cuarenta minutos, morir en la zona once y que
   la única alternativa sea empezar otra vez desde Tikal no es dificultad, es
-  tirar hora y pico. El **ángel de la guarda** se compra en el taller por 240 de
+  tirar media hora. El **ángel de la guarda** se compra en el taller por 240 de
   jade, se llevan hasta tres, viaja en el zurrón entre carreras y se gasta al
   usarlo, así que **una carrera admite cuatro vueltas: tres compradas y una del
   patrocinador**. Y el jade deja de servir sólo para trajes.
