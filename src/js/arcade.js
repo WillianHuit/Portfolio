@@ -710,7 +710,7 @@ const REGIONS = [
         sun: 0xffe0b0, sunI: 2.0, hemi: 0xe4d2ba, hemiI: 1.9,
         roadA: 0xb8a684, roadB: 0x9e8b68, kerb: 0x8a7a5c,
         stone: 0xf2ece0, accent: 0xd4a63a, hazard: 0x3a2f24, pit: 0x1a140e,
-        land: 'colonial', landA: 0xf2ece0, landB: 0xd4a63a,
+        land: 'basilica', landA: 0xf2ece0, landB: 0xd4a63a,
         ridge: 0x7a7250, sky: 'cloud', skyC: 0xf6e2c2,
         road: [2, 2, 0.87, 0.06], prop: 'agave', propA: 0x5f7a44, propB: 0xb8a06a,
         ob: [0.95, 1.1, 0.95]
@@ -1160,8 +1160,14 @@ const ZONES = {
     riodulce:    { name: 'Troncos del río',     kind: 'pasillo',  what: TRONCO,   n: 7,
                    warn: 'derrumbe', tint: 0x8a6234, spark: 0xb08a52,
                    gate: GATE_MUELLE, vida: 'pez', bicho: 0xc8b078, polvo: 0x8fe0c0 },
+    // Este tinte pasaba la prueba del tono por los pelos —59 grados— pero
+    // suspendia la otra: tenia exactamente la MISMA LUZ que el suelo que tine,
+    // 0,315 contra 0,331. Un tinte que ni cambia de tono ni cambia de claro a
+    // oscuro no hace nada, y aqui ademas iba al reves de lo que deberia: el
+    // polvo que levanta una caravana en el corredor seco no oscurece la escena,
+    // la BLANQUEA, porque es polvo en el aire y el polvo en el aire coge luz.
     esquipulas:  { name: 'Caravana de romería', kind: 'enjambre', what: BUS,      n: 7,
-                   warn: 'parada',   tint: 0x7a4a18, spark: 0xf0c34a,
+                   warn: 'parada',   tint: 0xc9a05a, spark: 0xf0c34a,
                    gate: GATE_ARCO, vida: 'ave', bicho: 0x2b3138, polvo: 0xe8c896 },
     monterrico:  { name: 'Marejada',            kind: 'pasillo',  what: TRONCO,   n: 7,
                    warn: 'derrumbe', tint: 0x1a5f7a, spark: 0xcfeef6,
@@ -3125,6 +3131,17 @@ function propSpec(kind, k, out) {
             put(2, 0, 2.9 * t, 0, 3.4 * t, 1.9 * t, 3.0 * t, 0, 1);
             break;
         case 'agave':
+            // Una de cada tres es un CACTUS DE CANDELABRO. El agave es planta
+            // de suelo y no pasaba de 3,2 de alto, asi que el corredor seco de
+            // Chiquimula salia como una pradera rapada. Lo que sobresale de
+            // verdad ahi es el cactus columnar, que llega a los cinco o seis
+            // metros y no se parece a nada mas del recorrido.
+            if (v > 0.66) {
+                put(0, 0, 2.2 * t, 0, 0.62, 4.4 * t, 0.62, 0, 0);       // tronco
+                put(1, -0.85, 3.0 * t, 0, 0.5, 2.2 * t, 0.5, 0.22, 0);  // brazo
+                put(2, 0.85, 3.4 * t, 0.2, 0.5, 2.6 * t, 0.5, -0.2, 0); // brazo
+                break;
+            }
             put(0, 0, 0.9 * t, 0, 0.4, 1.8 * t, 1.4, 0.25, 0);
             put(1, 0.5, 0.8 * t, 0.3, 0.4, 1.6 * t, 1.2, -0.35, 0);
             put(2, -0.4, 1.2 * t, -0.2, 0.35, 2.2 * t, 0.9, 0.12, 1);
@@ -3408,6 +3425,30 @@ function silhouette(kind, s, R) {
             }
             put(3.4 * s, 2.2 * s - 1, 2 * s, 0.6 * s, 5.4 * s, 0.6 * s, R.landA);
             put(3.4 * s, 4.9 * s, 2 * s, 3.6 * s, 0.4 * s, 3.2 * s, R.landB);
+            break;
+        }
+        case 'basilica': {                                // Esquipulas
+            // La Basílica del Cristo Negro, que es la razón de que Esquipulas
+            // exista: fachada ancha, CUATRO torres con cúpula y el cimborrio en
+            // medio. Compartia la silueta 'colonial' con Antigua, asi que el
+            // mayor santuario de Centroamérica y la ciudad de las ruinas tenian
+            // el mismo perfil pintado de otro color —y el color no salva una
+            // silueta, porque a la distancia a la que vive el horizonte lo
+            // primero que llega es la forma—.
+            //
+            // Y va simetrica a proposito. El hito se refleja segun el lado de
+            // la calzada en el que caiga, asi que las siluetas asimetricas
+            // cambian de mano; esta es la unica del recorrido a la que eso le
+            // da igual, que es justo lo que se espera de una fachada de iglesia.
+            put(0, 2.2 * s - 1, 0, 7.6 * s, 4.4 * s, 4.6 * s, R.landA);   // cuerpo
+            const campanario = (x) => {
+                put(x, 5.0 * s - 1, 1.7 * s, 1.5 * s, 10.0 * s, 1.5 * s, R.landA);
+                put(x, 10.5 * s - 1, 1.7 * s, 1.8 * s, 1.0 * s, 1.8 * s, R.landB);
+            };
+            campanario(-3.1 * s);
+            campanario(3.1 * s);
+            put(0, 5.7 * s - 1, -0.8 * s, 3.2 * s, 2.6 * s, 3.2 * s, R.landB);  // cimborrio
+            put(0, 7.9 * s - 1, -0.8 * s, 0.3 * s, 1.8 * s, 0.3 * s, R.landB);  // cruz
             break;
         }
         case 'colonial': {                                // Antigua

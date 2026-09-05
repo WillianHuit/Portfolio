@@ -258,6 +258,31 @@ a ver ahora se ven enteros. Petén es el primer repaso, y salieron cuatro:
   metido en el cañón y lo que lo separa del turquesa claro de Semuc, dos paradas
   antes: mismo tono, pero 0,44 de luz contra 0,26.
 
+### Repaso zona por zona: Esquipulas
+
+- **La Basílica del Cristo Negro no estaba.** Esquipulas usaba la silueta
+  `colonial` de Antigua pintada de otro color, así que el mayor santuario de
+  Centroamérica y la ciudad de las ruinas tenían el mismo perfil. **Y el color
+  no salva una silueta**: a la distancia a la que vive el horizonte, lo primero
+  que llega es la forma. Ahora tiene la suya —fachada ancha, cuatro torres con
+  cúpula y el cimborrio en medio, con su cruz—, y pasa de 7,9 de alto y 0,99 a 1
+  a **10,0 y 1,32 a 1**. `colonial` vuelve a ser sólo de Antigua.
+- **Y va simétrica a propósito.** El hito se refleja según el lado de la calzada
+  en el que caiga, así que las siluetas asimétricas cambian de mano; ésta es la
+  única del recorrido a la que eso le da igual, que es justo lo que se espera de
+  una fachada de iglesia.
+- **El corredor seco era una pradera rapada.** El agave es planta de suelo y no
+  pasaba de 3,2 de alto. Una de cada tres ranuras pasa a ser **cactus de
+  candelabro** —el columnar que llega a los cinco o seis metros y no se parece a
+  nada más del recorrido—, y la cuneta sube a 6,3.
+- **Y un tinte que fallaba por donde no miraba la métrica.** Pasaba la prueba
+  del tono por los pelos (59°) pero tenía **exactamente la misma luz que el
+  suelo que tiñe**: 0,315 contra 0,331. Un tinte que ni cambia de tono ni cambia
+  de claro a oscuro no hace nada. Y aquí además iba al revés: el polvo que
+  levanta una caravana en el corredor seco no oscurece la escena, la
+  **blanquea**, porque es polvo en el aire y el polvo en el aire coge luz. Ahora
+  0,64 contra 0,33.
+
 **De aquí salió una métrica, y con ella una cola de trabajo.** El tinte de un
 suceso hay que medirlo **en tono contra el SUELO de su región**, no contra la
 niebla: el suelo es el plano grande que el jugador tiene a los dos lados de la
@@ -289,9 +314,10 @@ ruta:
 | Volcán de Fuego | Cuneta de 2,0 · la otra mitad de lo anterior |
 | Ciudad de Guatemala | Tinte a 4° de su suelo |
 
-Esquipulas y Antigua también comparten silueta (`colonial`), pero están a seis
-paradas de distancia y las dos son ciudad colonial: ahí la repetición dice algo
-en vez de restar.
+**Y la métrica del tinte tiene dos mitades, no una.** Esquipulas enseñó la
+segunda: su tinte pasaba el tono (59°) y aun así no hacía nada, porque tenía la
+misma luz que el suelo. Un tinte tiene que separarse **en tono o en claridad**,
+y lo honesto es mirar las dos columnas.
 
 **El juego.** Tres vidas (hasta cinco con mejoras), escudo que absorbe un
 golpe, multiplicador por racha de jade, hitos cada 2.000 m, jaguar que se acerca
