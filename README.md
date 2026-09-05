@@ -604,6 +604,23 @@ Lo que importa mantener si se toca:
   saldría con la zona limpia de alguna bifurcación?— y el reparto es firme: uno
   por ciclo, sin repetir el anterior. Medido: **1,3 tramos por km**, y las
   bifurcaciones alternando destino/cortada sin fallar una.
+- **Y CUÁNDO se arma también hubo que medirlo, y a la primera salió mal.** El
+  turno estaba puesto a ojo a 1.350 m de entrar en la zona. Simulado el reparto
+  completo, los trece sucesos caían **una zona tarde**: el de Tikal se
+  programaba en 1.399–1.779 y Tikal se acaba en 1.197, así que el vuelo de
+  camazotz sonaba ya en Flores con el rótulo de Tikal puesto. Cada zona dura
+  1.900 y solo tiene dos huecos limpios entre bifurcaciones —`(+129, +845)` y
+  `(+1079, +1795)`—; el suceso ocupa 380 más 90 de margen y se arma 215 por
+  delante, así que a **+950** cae en `[+1165, +1545]`, dentro del segundo hueco
+  y con 250 de sobra por cada lado. Tikal es aparte: no se entra por un cruce,
+  dura 1.197 y solo tiene un hueco, así que va a **+200**.
+- **Tres cosas más que hacían falta para que saliera de verdad.** El suceso se
+  arma **antes** que los tramos especiales y los aparta 400 m mientras espera su
+  turno —de tramos salen varios por zona y de suceso hay uno, y medido, el
+  primer tramo de la partida ocupaba la única ventana que le quedaba al de
+  Tikal—; y si aun así no cabe entero antes del próximo cruce, **renuncia** en
+  vez de armarse tarde. Verificado simulando 26 km: 13 de 13, cada uno dentro de
+  su zona.
 - **La cadencia del suceso de zona está medida en tiempo, no elegida a ojo.** El
   hueco entre piezas es `ZONE_LEN / n` unidades, y a la velocidad de crucero de
   esa zona tiene que dar entre seis décimas y segundo y medio. Los primeros

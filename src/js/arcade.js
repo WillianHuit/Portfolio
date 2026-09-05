@@ -1079,11 +1079,17 @@ const ZONES = {
 
 // Cuanto dura el suceso, en unidades de trazado, y cuando se arma.
 //
-// ZONE_AFTER se cuenta desde que se entra en la zona. Con cruces cada 950 y
-// uno de cada dos cambiando de sitio, cada zona dura 1.900: a 1.350 el suceso
-// cae holgadamente entre el cruce cortado de en medio y el distribuidor que
-// saca de la zona, que es "casi finalizando" sin pisar ninguno de los dos.
-const ZONE_AFTER = 1350;
+// ZONE_AFTER se cuenta desde que se entra en la zona, y esta MEDIDO contra los
+// huecos que dejan las bifurcaciones, no puesto a ojo. Con cruces cada 950 y
+// uno de cada dos cambiando de sitio, cada zona dura 1.900 y solo tiene dos
+// huecos limpios: (+129, +845) y (+1079, +1795). El suceso ocupa 380 mas 90 de
+// margen y se arma 215 por delante, asi que armandolo a +950 cae en [+1165,
+// +1545]: dentro del segundo hueco, con 250 de sobra por cada lado y sin rozar
+// ni el cruce cortado de en medio ni el distribuidor que saca de la zona.
+//
+// Con los 1.350 que tenia primero no cabia en ningun sitio: la comprobacion lo
+// rechazaba compas tras compas hasta que era demasiado tarde.
+const ZONE_AFTER = 950;
 const ZONE_LEN = 380;
 const ZONE_WIND = 2.6;              // unidades que llega a apartar la ventisca
 
@@ -4873,6 +4879,17 @@ function armZone() {
     const ri = Math.floor(routePos()) % REGION_N;
     const spec = ZONES[REGIONS[ri].id];
     if (!spec) return false;
+
+    // Si ya no da tiempo a que quepa ENTERO antes del proximo cruce, se
+    // renuncia y no se vuelve a intentar hasta la zona siguiente. Sin esta
+    // comprobacion, un suceso que no encontraba sitio se acababa armando tarde
+    // y sonaba pasado el distribuidor: el jugador veia el vuelo de camazotz de
+    // Tikal con el rotulo de Tikal puesto... estando ya en Flores.
+    const cruce = game.nextCross + CROSS_ISLAND_AT;
+    if (game.distance + ARM_AHEAD + ZONE_LEN + 60 > cruce) {
+        game.nextZone = Infinity;
+        return false;
+    }
     if (trackBusy(ZONE_LEN)) return false;
 
     // Cuanto aprieta: de un tercio en Peten a entero en la capital. La ruta va
@@ -5126,20 +5143,27 @@ function generateChunk(z) {
     // al 9 % por compas y salia uno cada dos mil metros: con una probabilidad
     // no se reparte nada, solo se deja al azar decidir si el jugador llega a
     // ver una mecanica entera del juego o no.
-    if (game.distance > 260 && game.distance > game.nextTramo) {
-        if (armTramo()) game.nextTramo = game.distance + 200;
-    }
-
     // --- El suceso de la zona ---
-    // Una vez por visita, cerca del final del tramo. Va DESPUES del armado de
-    // tramos especiales y comparte su comprobacion de sitio, de modo que nunca
-    // cae encima de una bajada, una curva ni una bifurcacion. Si no cabe, no se
-    // gasta el turno: se vuelve a intentar en el compas siguiente.
-    // Y una sola: armado, no vuelve a haber turno hasta que se cambie de zona.
-    // Con un reparto por distancia salian uno y medio por visita, y el segundo
-    // caia con el jugador ya leyendo el rotulo del distribuidor de salida.
+    // Una vez por visita. Comparte la comprobacion de sitio de los tramos
+    // especiales, de modo que nunca cae encima de una bajada, una curva ni una
+    // bifurcacion. Si no cabe, no se gasta el turno: se reintenta en el compas
+    // siguiente. Y armado, no vuelve a haber turno hasta cambiar de zona.
+    //
+    // Va ANTES del armado de tramos, y ademas los tramos se apartan cuando le
+    // toca —ver abajo—, porque el reparto no es simetrico: de tramos especiales
+    // salen varios por zona y de suceso hay UNO. La primera version los ponia
+    // al reves y el resultado medido era que el primer tramo especial de la
+    // partida, armado a los 260 m, ocupaba la unica ventana que le quedaba al
+    // suceso de Tikal antes del cruce. No salia nunca.
     if (!game.zone.active && game.distance > game.nextZone) {
         if (armZone()) game.nextZone = Infinity;
+    }
+
+    // El suceso tiene preferencia sobre el reparto de tramos: cuatrocientas
+    // unidades antes de su turno, y hasta que se arme, no se arma nada mas.
+    const zonaCerca = !game.zone.active && game.distance > game.nextZone - 400;
+    if (!zonaCerca && game.distance > 260 && game.distance > game.nextTramo) {
+        if (armTramo()) game.nextTramo = game.distance + 200;
     }
 
     // --- La zona limpia de la bifurcacion ---
@@ -7166,7 +7190,13 @@ function startGame() {
     game.lastEvento = -1;
     // Tikal tambien tiene el suyo, y es el primero que se ve en la vida: se
     // apunta desde la salida, porque a Tikal no se entra por ningun cruce.
-    game.nextZone = 700;
+    //
+    // A los 200 y no mas tarde. A Tikal no se entra por un cruce, asi que dura
+    // 1.197 en vez de 1.900 y solo tiene UN hueco, el de antes del primer
+    // distribuidor. Apuntandolo a 700 el suceso ya no cabia —se arma 215 por
+    // delante y mide 380— y se quedaba sin salir: el jugador se iba de Tikal
+    // sin haber visto nada. A 200 suena en [415, 795], en mitad del tramo.
+    game.nextZone = 200;
     game.zone.active = false;
     game.zone.k = 0;
     player.push = 0;
