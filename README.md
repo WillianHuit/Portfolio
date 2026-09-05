@@ -203,8 +203,49 @@ a ver ahora se ven enteros. Petén es el primer repaso, y salieron cuatro:
 - **El tinte del camazotz era verde oscuro sobre una selva verde.** El suceso se
   anunciaba, caía el tinte… y la escena se quedaba igual. El camazotz es el
   murciélago del inframundo, así que lo que tiene que caer sobre la selva es la
-  **noche**: violeta, que es lo que más lejos está del ocre del amanecer de
-  Petén. Y las guacamayas, rojas.
+  **noche**: violeta. Y las guacamayas, rojas.
+
+### Repaso zona por zona: Semuc Champey
+
+- **El karst no eran torres.** `karst` era un montón de cajas solapadas **más
+  ancho que alto** —8 de ancho por 7,75 de alto, 0,97 a 1— y eso no es un
+  mogote, es una loma: desde la calzada se leía igual que cualquier cerro del
+  resto de la ruta. Alta Verapaz es karst **de torre**: laderas casi verticales,
+  cima redondeada y siempre en grupo. Ahora son tres torres de alturas distintas
+  sobre una base común, la más alta a **2,62 a 1**, y cada una con su monte
+  encima —en el karst la roca se ve en la ladera y la vegetación se queda
+  arriba, que es lo que hace que se lean como piedra y no como árboles juntos—.
+- **La cuneta era una alfombra.** Los tres discos de `fern` no pasaban de **2,2
+  de alto**, cuando todo lo demás del juego anda entre 3 y 5, así que la calzada
+  parecía cruzar un prado abierto. Semuc es un **cañón**: una de cada tres
+  ranuras pasa a ser un paredón de caliza con monte encima y el helecho a su
+  pie, y la cuneta llega a 8,4.
+- **El suelo era verde monte, y Semuc ES el agua.** Las pozas turquesa son la
+  postal entera del sitio. Con el suelo verde, la boca de cueva del final de
+  zona —que es por donde el Cahabón se mete bajo el puente natural—, los peces
+  saltando de un margen al otro y el turquesa de sus propios obstáculos estaban
+  los cuatro contando algo que la escena desmentía. **Es el mismo fallo que
+  tenía Flores.**
+- **Y el mismo tinte invisible que tenía Tikal**: 0x24503a, verde oscuro, sobre
+  un cañón verde. Lo que llena el aire cuando se desploma media ladera de caliza
+  es **polvo de piedra**, y el gris cal es además lo que más lejos está del verde
+  de Alta Verapaz.
+
+**De aquí salió una métrica, y con ella una cola de trabajo.** El tinte de un
+suceso hay que medirlo **en tono contra el SUELO de su región**, no contra la
+niebla: el suelo es el plano grande que el jugador tiene a los dos lados de la
+calzada y el tinte se lo lleva al 50 %. Medido contra la niebla, el tinte viejo
+de Tikal aprobaba —la niebla de Tikal es ocre de amanecer— y aun así no se veía
+nada. Contra el suelo, los dos tintes viejos quedan a **4° y 2°**: el mismo
+verde, sólo que más oscuro, y oscurecer una escena verde se lee como que ha
+pasado una nube por delante, no como que está pasando algo.
+
+Pasada la métrica a las trece zonas, **el arreglo de Petén se había comido a sí
+mismo**: al poner el suelo de Flores del color del lago, su tinte azul se quedó
+a 12° de la superficie que tiñe. Ahora es color limo —lo que un cenote remueve
+al tragarse la calzada—, a 140°. Y quedan pendientes para sus repasos: Río Dulce
+(5°), Ciudad de Guatemala (4°), Monterrico (43°), y las cunetas de Tajumulco
+(2,6), Chichicastenango (2,8) y el Fuego (2,0).
 
 **El juego.** Tres vidas (hasta cinco con mejoras), escudo que absorbe un
 golpe, multiplicador por racha de jade, hitos cada 2.000 m, jaguar que se acerca

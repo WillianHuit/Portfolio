@@ -671,7 +671,13 @@ const REGIONS = [
     },
     {
         id: 'semuc', name: 'Semuc Champey', dept: 'Alta Verapaz', mm: [60.9, 64.1],
-        skyTop: 0x5d93b8, skyBot: 0xd7e6c4, fog: 0x8fb79a, ground: 0x1f4a33,
+        // El suelo era verde monte oscuro, y Semuc ES el agua: las pozas de
+        // caliza turquesa son la postal entera del sitio. Con el suelo verde,
+        // la boca de cueva del final de zona —que es por donde el Cahabón se
+        // mete bajo el puente natural—, los peces saltando de un margen al otro
+        // y el turquesa de sus propios obstáculos estaban los cuatro contando
+        // algo que la escena desmentia. Es el mismo fallo que tenia Flores.
+        skyTop: 0x5d93b8, skyBot: 0xd7e6c4, fog: 0x8fb79a, ground: 0x2b8477,
         sun: 0xfff0d2, sunI: 2.0, hemi: 0xdfeee0, hemiI: 2.2,
         roadA: 0xe4dcc0, roadB: 0xcdc2a2, kerb: 0x9aa87f,
         stone: 0x8fa08b, accent: 0x3fbfa6, hazard: 0x2fd0c4, pit: 0x07332f,
@@ -1124,12 +1130,23 @@ const ZONES = {
     tikal:       { name: 'Vuelo de camazotz',   kind: 'enjambre', what: CAMAZOTZ, n: 7,
                    warn: 'animal',   tint: 0x241a3a, spark: 0x9f7ad9,
                    gate: GATE_PIRAMIDE, vida: 'ave', bicho: 0xd8484a, polvo: 0xe8d8a0 },
+    // Este tinte era azul lago, y funcionaba mientras el suelo de Flores fue
+    // verde monte. Al poner el suelo del color del lago —que es lo que Flores
+    // es— el tinte se quedo a doce grados de tono de la superficie que tine, o
+    // sea invisible: se lo comio su propio arreglo. Lo que hace un cenote al
+    // tragarse la calzada es remover el fondo, asi que el agua se pone del color
+    // del limo, y eso ademas esta a ciento cuarenta grados del turquesa.
     flores:      { name: 'El lago se la traga', kind: 'pasillo',  what: CENOTE,   n: 7,
-                   warn: 'hueco',    tint: 0x1f5f8a, spark: 0x7fd4e6,
+                   warn: 'hueco',    tint: 0x6b6330, spark: 0xd8c98a,
                    gate: GATE_MUELLE, vida: 'pez', bicho: 0xdfe8d8, polvo: 0xbfe3ea },
+    // Mismo fallo que tenia Tikal: el tinte era 0x24503a, verde oscuro, sobre
+    // un canon verde. Se anunciaba el desprendimiento, caia el tinte... y la
+    // escena se quedaba igual. Lo que llena el aire cuando se desploma media
+    // ladera de caliza es POLVO DE PIEDRA, y el gris cal es ademas lo que mas
+    // lejos esta del verde de Alta Verapaz.
     semuc:       { name: 'Desprendimiento',     kind: 'lluvia',   what: RODANTE,  n: 8,
-                   warn: 'derrumbe', tint: 0x24503a, spark: 0xcfe0b8,
-                   gate: GATE_TUNEL, vida: 'pez', bicho: 0xa8d8c0, polvo: 0x8fd4c0 },
+                   warn: 'derrumbe', tint: 0xa89a7a, spark: 0xe8e0cc,
+                   gate: GATE_TUNEL, vida: 'pez', bicho: 0xd8e8e0, polvo: 0xd8f0ea },
     riodulce:    { name: 'Troncos del río',     kind: 'pasillo',  what: TRONCO,   n: 7,
                    warn: 'derrumbe', tint: 0x1d5e3a, spark: 0xb08a52,
                    gate: GATE_MUELLE, vida: 'pez', bicho: 0xc8b078, polvo: 0x8fe0c0 },
@@ -3065,6 +3082,18 @@ function propSpec(kind, k, out) {
             put(2, 0.7, 1.1 * t, -0.2, 0.3, 2.2 * t, 0.3, 0.18, 1);
             break;
         case 'fern':
+            // Una de cada tres es un PAREDON de caliza con monte encima. Los
+            // tres discos planos de siempre no pasaban de 2,2 de alto —cuando
+            // todo lo demas del juego anda entre 3 y 5— asi que la cuneta de
+            // Semuc era una alfombra y la calzada parecia cruzar un prado
+            // abierto. Semuc es un CANON: lo que tiene que haber a los lados es
+            // pared, y el helecho al pie de ella.
+            if (v > 0.66) {
+                put(0, 0, 2.9 * t, 0, 2.2 * t, 5.8 * t, 1.8 * t, 0.06, 1);
+                put(1, 0.3, 6.0 * t, 0.2, 2.0 * t, 0.5 * t, 1.6 * t, -0.1, 0);
+                put(2, -0.9, 0.5 * t, 0.4, 1.6 * t, 0.3, 1.6 * t, 0.14, 0);
+                break;
+            }
             put(0, 0, 0.5 * t, 0, 2.4 * t, 0.35, 2.4 * t, 0.1, 0);
             put(1, 0.4, 1.0 * t, 0.2, 1.8 * t, 0.3, 1.8 * t, -0.14, 0);
             put(2, -0.4, 1.4 * t, -0.3, 1.2 * t, 0.28, 1.2 * t, 0.2, 1);
@@ -3307,11 +3336,25 @@ function silhouette(kind, s, R) {
             break;
         }
         case 'karst': {                                   // Semuc Champey
-            put(0, 1.6 * s - 1, 0, 8 * s, 5 * s, 7 * s, R.landA);
-            put(1.7 * s, 3.7 * s, -1 * s, 6 * s, 4.2 * s, 5.4 * s, R.landA);
-            put(-1.9 * s, 2.9 * s, 1.2 * s, 4.6 * s, 3.2 * s, 4.4 * s, R.landA);
-            put(0.4 * s, 6.0 * s, 0, 7.4 * s, 2.2 * s, 6.6 * s, R.landB);
-            put(2.3 * s, 6.8 * s, -1 * s, 5 * s, 1.9 * s, 4.6 * s, R.landB);
+            // Alta Verapaz es karst de TORRE: mogotes de laderas casi
+            // verticales y cima redondeada, siempre en grupo. Lo que habia era
+            // un monton de cajas solapadas mas ANCHO que alto —8 de ancho por
+            // 7,75 de alto— y eso no es un mogote, es una loma: desde la
+            // calzada se leia igual que cualquier cerro del resto de la ruta.
+            // Tres torres de alturas distintas sobre una base comun, la mas
+            // alta a 2,6 de alto por 1 de ancho, y la silueta ya solo puede ser
+            // esta.
+            const torre = (x, z, w, h) => {
+                put(x, h / 2 - 1, z, w, h, w * 0.92, R.landA);
+                // Monte encima: en el karst la roca se ve en la ladera y la
+                // vegetacion se queda arriba, que es lo que hace que las torres
+                // se lean como roca y no como arboles muy juntos.
+                put(x, h - 0.7 * s, z, w * 0.86, 1.4 * s, w * 0.8, R.landB);
+            };
+            put(0, 0.7 * s - 1, 0, 11 * s, 1.6 * s, 8 * s, R.landA);   // base comun
+            torre(-2.6 * s, 1.4 * s, 4.2 * s, 11 * s);
+            torre(2.9 * s, -1.2 * s, 3.4 * s, 8.2 * s);
+            torre(0.6 * s, 3.6 * s, 2.6 * s, 5.4 * s);
             break;
         }
         case 'palm': {                                    // Río Dulce y Monterrico
