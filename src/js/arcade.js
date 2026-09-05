@@ -745,7 +745,10 @@ const REGIONS = [
         sun: 0xf2f8ff, sunI: 2.0, hemi: 0xd6e6f0, hemiI: 2.1,
         roadA: 0xa8a89c, roadB: 0x8f8f7d, kerb: 0x7a7a68,
         stone: 0x8a8f88, accent: 0xd93a3a, hazard: 0x2a3f4a, pit: 0x131c22,
-        land: 'peak', landA: 0x445a4a, landB: 0xdfe8ee,
+        // Caliza y no monte: los Cuchumatanes son roca desnuda por encima de los
+        // tres mil, y el verde que tenia landA aqui lo hacia parecer un cerro
+        // arbolado mas.
+        land: 'mesa', landA: 0x8a8f7e, landB: 0xdfe8ee,
         ridge: 0x51707a, sky: 'cloud', skyC: 0xffffff,
         road: [2, 1, 0.89, 0.07], prop: 'pine', propA: 0x2f5a3f, propB: 0xd93a3a,
         ob: [1.0, 1.05, 1.0]
@@ -763,11 +766,19 @@ const REGIONS = [
     },
     {
         id: 'atitlan', name: 'Lago de Atitlán', dept: 'Sololá', mm: [29.6, 85.2],
-        skyTop: 0x3a3a6d, skyBot: 0xe37a45, fog: 0xc2724a, ground: 0x2c4436,
+        // El suelo era verde monte, y ademas el MISMO verde que el de Chichi, la
+        // parada inmediatamente anterior: dos sitios seguidos con el suelo a
+        // cinco grados de tono son un sitio contado dos veces. Y Atitlán es un
+        // LAGO, con sus peces saltando y su muelle de fin de zona ya puestos.
+        // Azul de atardecer, que ademas lo separa del turquesa de Semuc, del
+        // lago de Flores y del jade del Río Dulce.
+        skyTop: 0x3a3a6d, skyBot: 0xe37a45, fog: 0xc2724a, ground: 0x24405e,
         sun: 0xffad6a, sunI: 1.9, hemi: 0xd9aea0, hemiI: 1.8,
         roadA: 0xc9b9a0, roadB: 0xb0a088, kerb: 0x8f6f5a,
         stone: 0x6d5a72, accent: 0xd94f6a, hazard: 0x1d4f7a, pit: 0x081c2c,
-        land: 'volcano', landA: 0x3f4a55, landB: 0x8d6a4f,
+        // landB pasa a ser el agua encendida por la puesta de sol: los tres
+        // conos van oscuros a contraluz y lo que brilla es el lago.
+        land: 'lake', landA: 0x3f4a55, landB: 0xe0956a,
         ridge: 0x46405f, sky: 'cloud', skyC: 0xf0a483,
         road: [3, 1, 0.9, 0.03], prop: 'maize', propA: 0x4f7a3f, propB: 0xd94f6a,
         ob: [0.95, 1.05, 1.0]
@@ -1181,8 +1192,14 @@ const ZONES = {
     chichi:      { name: 'Camino del mercado',  kind: 'cruce',    what: VACA,     n: 6,
                    warn: 'animal',   tint: 0x5a2f52, spark: 0xf0c34a,
                    gate: GATE_ARCO, vida: 'ave', bicho: 0x2ec4a0, polvo: 0xdfe6ff },
+    // Al poner el suelo de Atitlán del color del lago, este tinte azul se quedo
+    // a seis grados de la superficie que tine: el mismo accidente que le paso a
+    // Flores, y por eso ahora se comprueba antes de cambiar un suelo. El Xocomil
+    // es el viento de la tarde que pone el lago picado y plomizo, asi que lo que
+    // tiene que hacer el tinte es JUSTO LO CONTRARIO de tener color: quitarselo
+    // a la escena. Contra un azul saturado, un gris se separa por saturacion.
     atitlan:     { name: 'Xocomil',             kind: 'viento',   what: 0,        n: 0,
-                   warn: 'viento',   tint: 0x2a4f8a, spark: 0xcfe4ef,
+                   warn: 'viento',   tint: 0x6a6478, spark: 0xcfe4ef,
                    gate: GATE_MUELLE, vida: 'pez', bicho: 0xa8c0d0, polvo: 0xf0a483 },
     fuego:       { name: 'El Fuego escupe',     kind: 'lluvia',   what: BOMBA,    n: 8,
                    warn: 'derrumbe', tint: 0xff4a10, spark: 0xffb04a,
@@ -3152,6 +3169,17 @@ function propSpec(kind, k, out) {
             put(2, 0.8 * t, 4.7 * t, -0.5, 2.0 * t, 0.9 * t, 2.0 * t, 0, 1);
             break;
         case 'lava':
+            // Una de cada tres es un TRONCO QUEMADO de pie. La colada es baja
+            // por naturaleza —es roca derramada— y por eso la cuneta del Fuego
+            // era la mas rasa de la ruta, dos unidades. Lo que queda de pie
+            // despues de una erupcion son los arboles muertos, y ademas dicen
+            // lo que acaba de pasar ahi mejor que ninguna otra cosa.
+            if (v > 0.66) {
+                put(0, 0, 2.6 * t, 0, 0.44, 5.2 * t, 0.44, 0.05, 0);
+                put(1, 0.7 * t, 4.2 * t, 0.2, 1.5 * t, 0.22, 0.4, -0.25, 0);
+                put(2, -0.6 * t, 3.4 * t, -0.2, 1.2 * t, 0.2, 0.4, 0.3, 0);
+                break;
+            }
             put(0, 0, 0.6 * t, 0, 2.0 * t, 1.2 * t, 1.8 * t, 0.1, 0);
             put(1, 1.0, 0.4 * t, 0.6, 1.2 * t, 0.8 * t, 1.2 * t, -0.2, 0);
             put(2, 0.2, 1.35 * t, 0.1, 0.9 * t, 0.28, 0.9 * t, 0, 1);
@@ -3162,6 +3190,16 @@ function propSpec(kind, k, out) {
             put(2, 0, 3.2 * t, 0.1, 0.5, 0.7 * t, 0.5, 0.2, 1);
             break;
         case 'stall':
+            // Una de cada tres lleva el PALO CON EL TOLDO ALTO. Los puestos son
+            // bajos por naturaleza, pero el mercado de Chichi se arma con varas
+            // largas y lonas tendidas por encima de todo, y de noche eso es lo
+            // unico que se recorta contra el cielo.
+            if (v > 0.66) {
+                put(0, -1.0, 2.1 * t, 0, 0.22, 4.2 * t, 0.22, 0, 0);
+                put(1, 1.0, 2.1 * t, 0.2, 0.22, 4.2 * t, 0.22, 0, 0);
+                put(2, 0, 4.4 * t, 0.1, 3.4 * t, 0.34, 2.6 * t, 0.1, 1);
+                break;
+            }
             put(0, 0, 0.9 * t, 0, 0.28, 1.8 * t, 0.28, 0, 1);
             put(1, 0, 2.0 * t, 0, 2.8 * t, 0.3, 2.4 * t, 0.14, 0);
             put(2, 0.3, 0.5 * t, 0.4, 1.2 * t, 1.0 * t, 1.0 * t, 0, 1);
@@ -3180,6 +3218,17 @@ function propSpec(kind, k, out) {
             put(2, 0, 4.2 * t, 0, 1.4 * t, 1.6 * t, 1.4 * t, 0, 0);
             break;
         default:   // rock
+            // Una de cada tres es un RISCO de pie. Lo usa solo el Tajumulco, y
+            // a cuatro mil metros no crece nada: la unica forma de que esa
+            // cuneta tenga altura es la propia roca, que ademas es lo que hay de
+            // verdad por encima del limite del bosque. El remate va en propB,
+            // que ahi es el azul palido del hielo.
+            if (v > 0.66) {
+                put(0, 0, 2.3 * t, 0, 1.6 * t, 4.6 * t, 1.4 * t, 0.07, 0);
+                put(1, 0.9 * t, 0.8 * t, 0.5, 1.4 * t, 1.6 * t, 1.4 * t, -0.16, 0);
+                put(2, -0.3, 4.4 * t, -0.2, 1.0 * t, 0.9 * t, 1.0 * t, 0.2, 1);
+                break;
+            }
             put(0, 0, 0.7 * t, 0, 2.2 * t, 1.4 * t, 2.0 * t, 0.12, 0);
             put(1, 1.1, 0.45 * t, -0.5, 1.3 * t, 0.9 * t, 1.3 * t, -0.2, 0);
             put(2, -0.6, 1.5 * t, 0.3, 0.9 * t, 0.8 * t, 0.9 * t, 0.3, 1);
@@ -3477,19 +3526,68 @@ function silhouette(kind, s, R) {
             put(3.2 * s, 7.2 * s, -1.4 * s, 0.35 * s, 1.4 * s, 0.35 * s, R.landB);
             break;
         }
-        case 'volcano': {                                 // Atitlán
+        case 'volcano': {                                 // el Fuego
+            // El Fuego es EL QUE ESTA EN ERUPCION, y eso es lo unico que lo
+            // separa de los conos dormidos de Atitlán —con los que compartia
+            // silueta, y encima yendo seguidos en la ruta—. Asi que lo que
+            // tiene que dominar no es el cono sino la COLUMNA: tres bloques de
+            // ceniza que crecen y se ladean con el viento, y que suben mas alto
+            // que ninguna cumbre del recorrido, que es exactamente lo que hace
+            // una columna eruptiva de verdad.
+            const ceniza = 0x574e48;
             for (let t = 0; t < 4; t++) {
                 const w = 15 * s * (1 - t * 0.21);
                 put(0, 2.7 * s * t + 1.35 * s - 1, 0, w, 2.7 * s, w, R.landA);
             }
-            put(0, 2.7 * s * 4 - 0.4, 0, 3.4 * s, 1.0 * s, 3.4 * s, R.landB);
-            put(0.4 * s, 2.7 * s * 4 + 1.9 * s, 0, 2.4 * s, 2.2 * s, 2.4 * s, 0x8d97a0);
+            put(0, 10.6 * s - 1, 0, 3.4 * s, 1.0 * s, 3.4 * s, R.landB);   // crater al rojo
+            put(0.4 * s, 12.4 * s - 1, 0, 2.6 * s, 2.4 * s, 2.6 * s, ceniza);
+            put(1.2 * s, 15.0 * s - 1, -0.4 * s, 3.8 * s, 2.8 * s, 3.6 * s, ceniza);
+            put(2.2 * s, 17.6 * s - 1, -0.9 * s, 5.0 * s, 3.0 * s, 4.6 * s, ceniza);
+            break;
+        }
+        case 'lake': {                                    // Atitlán
+            // Atitlán no es UN volcan: son TRES vistos por encima del agua —el
+            // Atitlán, el Tolimán y el San Pedro, en fila—, y es lo unico del
+            // recorrido que se lee como panorama y no como bulto. Con un solo
+            // cono era el lago sin lago y sin dos de sus tres volcanes, y
+            // ademas era el mismo cono que el del Fuego, la parada siguiente.
+            //
+            // Los conos van en landA oscuro y el agua en landB claro: a
+            // contraluz de la puesta de sol los volcanes son siluetas negras y
+            // lo que brilla es el lago, que es como se ve Atitlán a esa hora.
+            const cono = (x, w, h) => {
+                put(x, h / 4 + 0.7 * s - 1, 0, w, h / 2, w, R.landA);
+                put(x, h * 0.75 + 0.7 * s - 1, 0, w * 0.52, h / 2, w * 0.52, R.landA);
+            };
+            put(0, -0.3 * s - 1, 2.6 * s, 14 * s, 1.4 * s, 4.2 * s, R.landB);  // el agua
+            cono(-4.2 * s, 5.6 * s, 8.6 * s);
+            cono(0.8 * s, 6.6 * s, 12.0 * s);
+            cono(5.4 * s, 4.6 * s, 7.2 * s);
+            break;
+        }
+        case 'mesa': {                                    // Todos Santos
+            // Los Cuchumatanes NO son volcanicos: son una meseta de caliza, el
+            // altiplano mas alto y mas LLANO de Centroamérica. Compartir el cono
+            // de Tajumulco no era solo repetirse yendo seguidos, era decir lo
+            // contrario de lo que ese sitio es. Es la silueta mas ancha que alta
+            // de la ruta a proposito —0,65 a 1, contra el 1,26 del Tajumulco—,
+            // porque eso es justo lo que la distingue.
+            put(0, 4.2 * s - 1, 0, 15 * s, 8.4 * s, 9 * s, R.landA);
+            put(0, 8.7 * s - 1, 0, 15.6 * s, 0.6 * s, 9.4 * s, R.landB);   // el borde
+            put(-4.6 * s, 9.6 * s - 1, 1.2 * s, 3.0 * s, 1.2 * s, 3.0 * s, R.landA);
+            put(5.0 * s, 9.9 * s - 1, -0.8 * s, 2.4 * s, 1.8 * s, 2.4 * s, R.landA);
+            put(5.0 * s, 11.0 * s - 1, -0.8 * s, 2.6 * s, 0.4 * s, 2.6 * s, R.landB);
             break;
         }
         case 'peak': {                                    // Tajumulco
-            for (let t = 0; t < 5; t++) {
-                const w = 16 * s * (1 - t * 0.185);
-                put(0, 3.0 * s * t + 1.5 * s - 1, 0, w, 3.0 * s, w, t >= 3 ? R.landB : R.landA);
+            // El punto mas alto de Centroamerica, y ahora que no comparte
+            // silueta puede parecerlo: seis gradas en vez de cinco, base mas
+            // estrecha y las dos ultimas nevadas. Pasa de 0,88 a 1 —mas ancho
+            // que alto, que para el techo del istmo era decir lo contrario— a
+            // 1,26, y es la cumbre mas alta del recorrido.
+            for (let t = 0; t < 6; t++) {
+                const w = 13 * s * (1 - t * 0.15);
+                put(0, 2.9 * s * t + 1.45 * s - 1, 0, w, 2.9 * s, w, t >= 4 ? R.landB : R.landA);
             }
             break;
         }

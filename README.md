@@ -310,6 +310,57 @@ métrica, no la zona.**
   estar vacío. Levantarlo para igualar a los demás sería inventarse una sierra
   en el Pacífico.
 
+### Repaso zona por zona: las cinco del altiplano, juntas
+
+Tajumulco, Todos Santos, Chichi, Atitlán y el Fuego había que mirarlas **de una
+vez**: dos parejas compartían silueta *yendo seguidas* y dos compartían suelo,
+así que arreglar una sin decidir a la vez qué hacía su vecina era medio arreglo.
+Y el problema de fondo no era «dar silueta propia» sino que **cuatro de las cinco
+son montaña**: cuatro conos distintos siguen siendo cuatro conos. Lo que hizo
+falta fue decidir qué dice cada una.
+
+| Parada | Qué es de verdad | Silueta |
+|---|---|---|
+| Tajumulco | El punto más alto de Centroamérica | `peak` — un cono, y la cumbre más alta de la ruta |
+| Todos Santos | Los Cuchumatanes **no son volcánicos**: meseta de caliza | `mesa` **(nueva)** |
+| Chichicastenango | Santo Tomás y sus gradas | `market` — ya la tenía |
+| Atitlán | **Tres** conos vistos por encima del agua | `lake` **(nueva)** |
+| Volcán de Fuego | El que está en erupción | `volcano` — con su columna |
+
+- **Todos Santos compartiendo cono con Tajumulco decía lo contrario de lo que
+  ese sitio es.** Los Cuchumatanes son el altiplano más alto y más **llano** de
+  Centroamérica. `mesa` es la silueta más ancha que alta del recorrido a
+  propósito —**0,65 a 1**—, porque eso es justo lo que la distingue.
+- **Tajumulco, ahora que no comparte, puede parecer lo que es.** Estaba a 0,88 a
+  1, *más ancho que alto*, que para el techo del istmo era decir lo contrario.
+  Seis gradas en vez de cinco, base más estrecha, las dos últimas nevadas:
+  **16,4 de alto y 1,26 a 1**, la cumbre más alta de la ruta.
+- **Atitlán no es UN volcán: son tres**, vistos por encima del agua. Con un solo
+  cono era el lago sin lago y sin dos de sus tres volcanes —y encima el mismo
+  cono que el del Fuego, la parada siguiente—. Los conos van oscuros y el agua
+  encendida: a contraluz del atardecer los volcanes son siluetas negras y lo que
+  brilla es el lago, que es como se ve Atitlán a esa hora.
+- **Del Fuego, lo que tiene que dominar es la columna, no el cono.** Es lo único
+  que lo separa de un volcán dormido. Tres bloques de ceniza que crecen y se
+  ladean con el viento y suben a 18,1 —más alto que ninguna cumbre—, que es
+  exactamente lo que hace una columna eruptiva.
+- **Y las tres cunetas rasas.** Tajumulco 2,6 → **6,5** (riscos: a cuatro mil
+  metros no crece nada, así que la única forma de que esa cuneta tenga altura es
+  la propia roca); Chichi 2,8 → **6,1** (las varas largas del mercado, que de
+  noche son lo único que se recorta contra el cielo); el Fuego 2,0 → **7,0**
+  (troncos quemados de pie, que además dicen lo que acaba de pasar ahí mejor que
+  ninguna otra cosa).
+
+**El suelo de Atitlán era el mismo verde que el de Chichi**, la parada
+inmediatamente anterior: a 5° de tono. Y Atitlán es un lago, con sus peces
+saltando y su muelle de fin de zona ya puestos. Azul de atardecer, a 61° de
+Chichi.
+
+Y eso arrastró una cosa: **el tinte del Xocomil se quedó a 6° de su suelo
+nuevo**, el mismo accidente que le pasó a Flores. Ahora es gris plomo, porque el
+Xocomil es el viento de la tarde que pone el lago picado y **lo que tiene que
+hacer el tinte es justo lo contrario de tener color: quitárselo a la escena**.
+
 **De aquí salió una métrica, y con ella una cola de trabajo.** El tinte de un
 suceso hay que medirlo **en tono contra el SUELO de su región**, no contra la
 niebla: el suelo es el plano grande que el jugador tiene a los dos lados de la
@@ -331,13 +382,9 @@ mismo suelo, la misma silueta o el mismo matorral son un sitio contado dos
 veces, aunque por separado los dos estén bien. La cola que queda, por orden de
 ruta:
 
-| Parada | Qué le falta |
-|---|---|
-| Tajumulco | Cuneta de 2,6 · **misma silueta que Todos Santos, y van seguidas** |
-| Todos Santos | La otra mitad de lo anterior |
-| Chichicastenango | Cuneta de 2,8 · **mismo suelo que Atitlán, y van seguidas** |
-| Atitlán | **Misma silueta que el Fuego, y van seguidas** |
-| Volcán de Fuego | Cuneta de 2,0 · la otra mitad de lo anterior |
+Con las cinco del altiplano cerradas, **las trece pasan**: cada parada tiene su
+silueta, ninguna pareja seguida repite suelo ni matorral, ninguna cuneta baja de
+3 y todos los tintes se separan de lo que tiñen.
 
 **Y la métrica del tinte tiene tres dimensiones, no una.** Se fue construyendo a
 golpes, y cada zona enseñó una:
