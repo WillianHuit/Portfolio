@@ -1509,6 +1509,73 @@ tres minutos que dura una zona, y las barras avanzan un uno por ciento cada
 varios segundos. Ahora se recuerda lo último escrito y se comparan cuatro
 cadenas, que sale mucho más barato que escribirlas.
 
+## Tres trajes, y cada uno juega distinto
+
+Eran ocho. Cinco de ellos —Tejedora, Guerrero Jaguar, Quetzal, Chapín y
+Ceniza— eran **el mismo muñeco con otros siete colores**: se compraban una vez,
+se miraban diez segundos y no cambiaban nada. Una lista corta en la que cada
+entrada es una forma de jugar vale más que una larga de recolores.
+
+| Traje | Qué es | Qué cambia |
+|---|---|---|
+| **Ajaw** | El corredor de la calzada | Nada: es el de referencia, y gratis |
+| **Runner** | Pantaloneta, playera y pachón | El jade se recoge como **agua**, y 100 gotas dan una vida |
+| **Moto** | Máquina y casco | El casco aguanta un golpe antes que el escudo |
+
+### El runner
+
+- **Gorra, dorsal y pachón.** El dorsal va a la **espalda** y no al pecho: en una
+  carrera de verdad va delante, pero al jugador se le ve por detrás todo el rato,
+  así que puesto donde no se ve sería un detalle que no existe.
+- **El jade se recoge como agua.** Es la misma pieza y el mismo valor —cambiarle
+  la moneda dejaría al runner sin poder comprar nada— pero se ve distinta: una
+  gota redonda y azul en vez de un rombo verde facetado. Redonda a propósito,
+  porque a la velocidad a la que se ve lo que tiene que decir es *esto no es lo
+  de antes*.
+- **Cien gotas llenan el pachón y valen una vida**, y el contador vuelve a cero.
+  Es una vida que se **gana corriendo bien**, no una que se compra, y por eso no
+  cuesta jade ni tiene tope de mejoras. Cien es lo que se recoge en unos dos
+  minutos de carrera limpia: algo menos de una vida por zona.
+- **Y el pachón se llena de verdad**: el bote es fijo y el agua de dentro sube.
+  Es el mismo dato que la barra del HUD, pero sin apartar la vista de la calzada.
+- Con las vidas al máximo el agua **se bebe igual** pero no añade: pasarse de ahí
+  desbordaría los rombos del HUD, que se dibujan contra `maxLives()`.
+
+## Publicidad en la calzada
+
+Vallas de borde de carretera, que en Guatemala están por todas partes. Dos
+formas: la **valla**, un panel sobre dos postes en el margen y girado hacia el
+jugador —una valla de perfil no es una valla, es un poste—, y la **pancarta**,
+una tira cruzada por encima de la calzada de lado a lado. Una de cada cuatro es
+pancarta, que es lo que rompe la fila de paneles siempre al mismo lado.
+
+**Ninguna de las dos toca a nadie**: la valla vive fuera del asfalto y la
+pancarta va a 11,6 de altura, por encima incluso del vuelo del quetzal. Y
+ninguna se planta sobre una bifurcación: ahí hay que leer el rótulo verde, y un
+anuncio al lado es exactamente lo que no debe haber.
+
+**Al runner le salen 2,6 veces más** —cada 240 unidades contra cada 620—. El
+runner corre una **carrera**, no un camino, y una carrera se reconoce porque el
+margen está forrado de anuncios.
+
+**Y la estructura que cierra cada zona lleva lona de patrocinador**, colgada del
+dintel. Va en el grupo y no dentro de cada forma: las cinco tienen el mismo vano
+libre, así que el mismo panel sirve para la pirámide, el arco, la cueva, el
+muelle y el paso elevado. Es lo que las convierte en un arco de meta. La lona se
+sortea en cada estructura: si fuera siempre la misma, cerrar doce zonas sería
+pasar doce veces por debajo del mismo cartel.
+
+**El confeti sale al pasar por debajo**, no al verla venir ni al dejarla atrás.
+Cerrar una zona es lo único que se consigue sin que te lo den, y en una carrera
+de verdad el confeti cae exactamente ahí. Seis colores en vez de uno, porque
+confeti de un solo color son chispas.
+
+**Y todo esto no añade un solo archivo.** Las telas son las seis tiras apaisadas
+que ya estaban en el repositorio para el menú y el fin de partida; se cargan una
+vez, la primera que hace falta, y se reparten entre el pozo. Si un archivo
+faltara, el panel se queda como una valla apagada: romper la partida porque no
+cargó un anuncio sería exactamente al revés de lo que debe pasar.
+
 ## El traje de moto
 
 El único traje que **no es sólo color**. Todos los demás cambian siete tonos

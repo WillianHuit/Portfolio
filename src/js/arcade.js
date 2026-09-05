@@ -607,8 +607,15 @@ const AMBER_SCALE = 0.62;           // cuanto frena el ambar el mundo
 // Solo lo que sobrevive al cambio de departamento: el jade, el jaguar y el
 // quetzal se ven igual en los ocho tramos. Todo lo demas (calzada, obstaculos,
 // cielo, horizonte) lo define la region, no esta paleta.
+// Cuantas gotas llenan el pachon del runner. Cien es un numero redondo y
+// ademas es lo que se recoge en unos dos minutos de carrera limpia, o sea algo
+// menos de una vida por zona: bastante para que corregir la linea y pasar por
+// encima del jade merezca la pena, y poco para que no sustituya a las mejoras.
+const GOTAS_VIDA = 100;
+
 const C = {
     jade: 0x2ec4a0,
+    agua: 0x8fd8ee,
     ochre: 0xc8862f,
     jaguarFur: 0xd9a24b,
     jaguarSpot: 0x3b2a14,
@@ -1002,26 +1009,16 @@ const SKINS = [
       desc: 'El corredor de la calzada, con tocado de jade.',
       cost: 0, cloth: 0xc0453a, skin: 0xd9a066, crest: 0x2ec4a0, legs: 0x10201c,
       trim: 0xc8862f, hair: 0x2a1a10, boot: 0x6b4a2a },
-    { id: 'tejedora', name: 'Tejedora', icon: '✦',
-      desc: 'Huipil de telar de cintura del altiplano.',
-      cost: 120, cloth: 0x7b2d8e, skin: 0xc98b58, crest: 0xe0483f, legs: 0x1b2b26,
-      trim: 0xf0c34a, hair: 0x1a1008, boot: 0x8a5a30 },
-    { id: 'jaguar', name: 'Guerrero Jaguar', icon: '◉',
-      desc: 'Piel moteada de la orden militar maya.',
-      cost: 260, cloth: 0xd9a24b, skin: 0xd9a066, crest: 0x3b2a14, legs: 0x3b2a14,
-      trim: 0x10201c, hair: 0x2a1a10, boot: 0x3b2a14 },
-    { id: 'quetzal', name: 'Quetzal', icon: '➤',
-      desc: 'Verde tornasol y pecho carmesí.',
-      cost: 420, cloth: 0x1fae7e, skin: 0xd8484a, crest: 0x2ec4a0, legs: 0x14776a,
-      trim: 0xd8484a, hair: 0x0f5a44, boot: 0xc8862f },
-    { id: 'chapin', name: 'Chapín', icon: '⚑',
-      desc: 'Azul y blanco, de un extremo al otro del país.',
-      cost: 620, cloth: 0x4a90d9, skin: 0xd9a066, crest: 0xf2f6fa, legs: 0xf2f6fa,
-      trim: 0x4a90d9, hair: 0x241810, boot: 0x2f5f96 },
-    { id: 'ceniza', name: 'Ceniza', icon: '▲',
-      desc: 'Lo que queda cuando el Fuego hace de las suyas.',
-      cost: 900, cloth: 0x33312f, skin: 0xb06a4a, crest: 0xff6b2c, legs: 0x1a1a1a,
-      trim: 0xff6b2c, hair: 0x141414, boot: 0x2a2a2a },
+    // Tres trajes y no ocho, y los tres hacen algo DISTINTO. Los cinco que
+    // habia en medio -Tejedora, Jaguar, Quetzal, Chapín y Ceniza- eran el mismo
+    // muneco con otros siete colores: se compraban una vez, se miraban diez
+    // segundos y no cambiaban nada. Una lista corta en la que cada entrada es
+    // una forma de jugar vale mas que una larga de recolores.
+    { id: 'runner', name: 'Runner', icon: '⏱', runner: true,
+      desc: 'Pantaloneta, playera y pachón. Recoge gotas: a las 100 se llena y ' +
+            'te da una vida. Y el camino se le llena de publicidad.',
+      cost: 500, cloth: 0x2ec4a0, skin: 0xd9a066, crest: 0xf2f6fa, legs: 0x2a3038,
+      trim: 0xf0c34a, hair: 0x241810, boot: 0xef4444 },
     // El unico traje que NO es solo color. Trae maquina debajo y casco encima, y
     // el casco es lo primero que se come un golpe: por eso cuesta lo que cuesta
     // y por eso va el ultimo de la lista.
@@ -1293,6 +1290,26 @@ function skinIcon(sk) {
     // El de la moto es otro dibujo, no el muneco con otros colores: es lo unico
     // que hay en la tienda que no es un traje, y la tarjeta tiene que decirlo
     // antes de leer una palabra.
+    if (sk.runner) {
+        // Gorra con visera, playera, pantaloneta y el pachon a la cintura. Es
+        // el mismo muneco que los demas trajes pero con OTRA ropa, asi que aqui
+        // el dibujo si es un muneco: lo que cambia de verdad es lo que lleva.
+        return svg(
+            '<rect x="1" y="0" width="22" height="24" rx="4" fill="#efe6d2" opacity=".16"/>' +
+            '<rect x="7.6" y="1.4" width="8.8" height="2.4" rx="1.1" fill="' + c(sk.crest) + '"/>' +
+            '<rect x="6" y="3.2" width="6" height="1.1" rx=".5" fill="' + c(sk.crest) + '"/>' +
+            '<rect x="8.6" y="4.2" width="6.8" height="4.6" rx="1.1" fill="' + c(sk.skin) + '"/>' +
+            '<rect x="6.6" y="9" width="10.8" height="6.2" rx="1.5" fill="' + c(sk.cloth) + '"/>' +
+            '<rect x="10.2" y="10.6" width="3.6" height="2.8" rx=".5" fill="' + c(sk.crest) + '"/>' +
+            '<rect x="3.8" y="9.6" width="2.2" height="5" rx="1.1" fill="' + c(sk.skin) + '"/>' +
+            '<rect x="18" y="9.6" width="2.2" height="5" rx="1.1" fill="' + c(sk.skin) + '"/>' +
+            '<rect x="17.4" y="12" width="2.4" height="4" rx=".9" fill="' + c(sk.trim) + '"/>' +
+            '<rect x="8" y="15.4" width="3.4" height="4" rx=".9" fill="' + c(sk.legs) + '"/>' +
+            '<rect x="12.6" y="15.4" width="3.4" height="4" rx=".9" fill="' + c(sk.legs) + '"/>' +
+            '<rect x="7.4" y="19.6" width="4.4" height="2" rx="1" fill="' + c(sk.boot) + '"/>' +
+            '<rect x="12.2" y="19.6" width="4.4" height="2" rx="1" fill="' + c(sk.boot) + '"/>'
+        );
+    }
     if (sk.moto) {
         return svg(
             '<rect x="1" y="0" width="22" height="24" rx="4" fill="#efe6d2" opacity=".16"/>' +
@@ -1363,6 +1380,7 @@ const game = {
     lives: START_LIVES,
     shield: false,
     casco: false,        // el casco de la moto, uno por carrera y antes que el escudo
+    gotas: 0,            // agua en el pachon del runner, 0..GOTAS_VIDA
     invuln: 0,
     elapsed: 0,
     nextSpawnZ: SPAWN_Z,
@@ -1412,6 +1430,7 @@ const game = {
     nextZone: 0,         // distancia a la que se puede armar el proximo suceso
     zoneFrom: 0,         // distancia a la que se entro en la zona actual
     nextFauna: 0,        // distancia a la que sale el proximo bicho de adorno
+    nextValla: 0,        // ...y el proximo anuncio al borde de la calzada
     // 0 = cruce de destino, 1 = bifurcacion cortada. Ya no se alterna: lo
     // decide si la zona ha cumplido su tiempo. Se guarda solo para consultarlo.
     crossKind: 1,
@@ -1481,6 +1500,7 @@ const dom = {
     finalRegion: $('finalRegion'), finalBank: $('finalBank'),
     bestScore: $('bestScore'), hudBest: $('hudBest'),
     combo: $('combo'), shield: $('shield'), casco: $('casco'),
+    pachon: $('pachon'), pachonN: $('pachonN'),
     milestone: $('milestone'), banner: $('banner'),
     speedVeil: $('speedVeil'), hitVeil: $('hitVeil'), pauseBtn: $('pauseBtn'),
     menuRoute: $('menuRoute'), menuBank: $('menuBank'), menuBest: $('menuBest'),
@@ -2014,6 +2034,11 @@ const dummy = new THREE.Object3D();
 // Geometrias de las recogidas, una por tipo
 const GEO = {
     jade:   new THREE.OctahedronGeometry(0.42),
+    // La gota del runner. Redonda a proposito: la piedra de jade es un rombo de
+    // aristas duras, y lo que tiene que decir esta a la velocidad a la que se
+    // ve es "esto NO es lo de antes". Redondo y azul no se confunde con
+    // facetado y verde ni de refilon.
+    gota:   new THREE.SphereGeometry(0.38, 9, 7),
     shield: new THREE.TorusGeometry(0.44, 0.15, 6, 12),
     magnet: new THREE.TorusGeometry(0.42, 0.14, 6, 10, Math.PI),
     double: new THREE.IcosahedronGeometry(0.44),
@@ -2184,6 +2209,7 @@ function buildMaterials() {
     // Emisivos de las recogidas: uno por tipo, para que el pulso de brillo se
     // anime una vez por frame en vez de una vez por pieza.
     mat.jade = lam(C.jade, { emissive: C.jade, emissiveIntensity: 0.35 });
+    mat.gota = lam(0x8fd8ee, { emissive: 0x3fa8d0, emissiveIntensity: 0.35 });
     for (const k of POWER_KEYS) {
         mat[k] = lam(POWERS[k].color, { emissive: POWERS[k].color, emissiveIntensity: 0.5 });
     }
@@ -4498,10 +4524,23 @@ function makeGate() {
         put(pas, mat.accent, 0.4, 0.9, 0.4, k * 4.5, GATE_CLEAR + 2.2, -3.9);
     }
 
+    // La lona del patrocinador, colgada del dintel. Va en el GRUPO y no dentro
+    // de cada forma: las cinco estructuras tienen el mismo vano libre, asi que
+    // el mismo panel sirve para la piramide, el arco, la cueva, el muelle y el
+    // paso elevado sin repetirlo cinco veces. Y es lo que las convierte en un
+    // arco de meta: en una carrera, el portico por el que se pasa lleva
+    // publicidad, siempre.
+    const lona = new THREE.Mesh(VALLA_GEO, new THREE.MeshBasicMaterial({
+        color: 0xffffff, side: THREE.DoubleSide, toneMapped: false
+    }));
+    lona.scale.set(ROAD_WIDTH + 1.6, 1.9, 1);
+    lona.position.set(0, GATE_CLEAR - 1.1, 0.6);
+    group.add(lona);
+
     group.visible = false;
     scene.add(group);
     return {
-        group, parts: [pir, arc, tun, mue, pas],
+        group, parts: [pir, arc, tun, mue, pas], lona,
         z: 0, curve: 0, rise: 0, active: false
     };
 }
@@ -4727,12 +4766,155 @@ function updateRez(dt) {
     }
 }
 
+// ===========================================================================
+// Publicidad en la calzada
+// ===========================================================================
+// Las vallas del borde de carretera, que en Guatemala estan por todas partes.
+// Dos formas: la VALLA, un panel sobre dos postes en el margen, y la PANCARTA,
+// una tira cruzada por encima de la calzada de lado a lado. Ninguna de las dos
+// toca a nadie: la valla vive fuera del asfalto y la pancarta va a mas de once
+// de altura, que es por encima incluso del vuelo del quetzal.
+//
+// Las telas son las seis tiras apaisadas que ya estaban en el repositorio para
+// el menu y el fin de partida, asi que esto no anade ni un archivo: se cargan
+// una vez, la primera que haga falta, y se reparten entre todo el pozo.
+const VALLA_POOL = 5;
+const VALLA_EVERY = 620;            // unidades entre anuncios, de serie
+const VALLA_RUNNER = 240;           // ...y con el runner puesto
+const VALLA_ALTA = 11.6;            // alto libre de la pancarta
+
+const vallas = [];
+let vallaTex = null;                // se cargan la primera vez que se pide una
+
+function loadVallaTex() {
+    if (vallaTex) return vallaTex;
+    const loader = new THREE.TextureLoader();
+    vallaTex = CEFAS.banners.map(src => {
+        // Sin onError: si un archivo falta, la textura se queda en negro y el
+        // panel sigue ahi como una valla apagada. Romper la partida porque no
+        // cargo un anuncio seria exactamente al reves de lo que debe pasar.
+        const t = loader.load(src);
+        t.colorSpace = THREE.SRGBColorSpace;
+        t.anisotropy = 4;
+        return t;
+    });
+    return vallaTex;
+}
+
+const VALLA_GEO = new THREE.PlaneGeometry(1, 1);
+
+function makeValla() {
+    const group = new THREE.Group();
+
+    // La valla del margen: dos patas y el panel encima.
+    const lado = new THREE.Group();
+    for (const sd of [-1, 1]) {
+        const pata = new THREE.Mesh(BOX, mat.signPost);
+        pata.scale.set(0.26, 4.2, 0.26);
+        pata.position.set(sd * 1.5, 2.1, 0);
+        lado.add(pata);
+    }
+    const panelL = new THREE.Mesh(VALLA_GEO, new THREE.MeshBasicMaterial({
+        color: 0xffffff, side: THREE.DoubleSide, toneMapped: false
+    }));
+    panelL.scale.set(4.6, 2.6, 1);
+    panelL.position.y = 5.4;
+    lado.add(panelL);
+    // Marco, para que el panel no flote recortado contra el cielo
+    const marco = new THREE.Mesh(BOX, mat.signPost);
+    marco.scale.set(5.0, 3.0, 0.12);
+    marco.position.set(0, 5.4, 0.09);
+    lado.add(marco);
+    group.add(lado);
+
+    // La pancarta: dos mastiles altos y la tela cruzando de lado a lado.
+    const alta = new THREE.Group();
+    for (const sd of [-1, 1]) {
+        const mastil = new THREE.Mesh(BOX, mat.signPost);
+        mastil.scale.set(0.3, VALLA_ALTA + 2.6, 0.3);
+        mastil.position.set(sd * (ROAD_WIDTH / 2 + 1.4), (VALLA_ALTA + 2.6) / 2, 0);
+        alta.add(mastil);
+    }
+    const panelA = new THREE.Mesh(VALLA_GEO, new THREE.MeshBasicMaterial({
+        color: 0xffffff, side: THREE.DoubleSide, toneMapped: false
+    }));
+    panelA.scale.set(ROAD_WIDTH + 2.4, 2.2, 1);
+    panelA.position.y = VALLA_ALTA + 1.2;
+    alta.add(panelA);
+    alta.visible = false;
+    group.add(alta);
+
+    group.visible = false;
+    scene.add(group);
+    return { group, lado, alta, panelL, panelA, z: 0, curve: 0, rise: 0, active: false };
+}
+
+function spawnValla(z, alta) {
+    let v = null;
+    for (const c of vallas) if (!c.active) { v = c; break; }
+    if (!v) return;
+    const tex = loadVallaTex();
+    const t = tex[(Math.random() * tex.length) | 0];
+    v.panelL.material.map = t;
+    v.panelA.material.map = t;
+    v.panelL.material.needsUpdate = true;
+    v.panelA.material.needsUpdate = true;
+
+    v.alta.visible = !!alta;
+    v.lado.visible = !alta;
+    // La del margen se planta a un lado u otro, y girada hacia el jugador: una
+    // valla de perfil no es una valla, es un poste.
+    if (!alta) {
+        const sd = Math.random() < 0.5 ? -1 : 1;
+        v.lado.position.x = sd * (ROAD_WIDTH / 2 + 4.2);
+        v.lado.rotation.y = -sd * 0.42;
+    }
+    v.z = z;
+    v.curve = trackCurve(z);
+    v.rise = trackRise(z);
+    v.active = true;
+    v.group.visible = true;
+    v.group.position.set(curveOf(v), riseOf(v), z);
+}
+
+function updateVallas(dz) {
+    for (const v of vallas) {
+        if (!v.active) continue;
+        v.z += dz;
+        v.group.position.set(curveOf(v), riseOf(v), v.z);
+        if (v.z > DESPAWN_Z) { v.active = false; v.group.visible = false; }
+    }
+}
+
+// --- Confeti ---
+// No es decorado suelto: sale donde algo se ha CONSEGUIDO —al pasar bajo la
+// estructura que cierra una zona y al llenar el pachon—, que es exactamente
+// donde lo tiran en una carrera de verdad. Seis colores en vez de uno, porque
+// confeti de un solo color son chispas.
+const CONFETI = [0xef4444, 0xf0c34a, 0x2ec4a0, 0x4a90d9, 0xf2f6fa, 0xd94f6a];
+
+function throwConfeti(z, n) {
+    for (let i = 0; i < n; i++) {
+        burstParticles(
+            (Math.random() - 0.5) * (ROAD_WIDTH + 6),
+            5.5 + Math.random() * 5,
+            z + (Math.random() - 0.5) * 26,
+            2, 1.9, CONFETI[(Math.random() * CONFETI.length) | 0]
+        );
+    }
+}
+
 function spawnGate(z, kind) {
     gate.z = z;
     gate.curve = trackCurve(z);
     gate.rise = trackRise(z);
     gate.active = true;
     gate.parts.forEach((p, i) => { p.visible = (i === kind); });
+    // Lona nueva en cada estructura: si fuera siempre la misma, cerrar doce
+    // zonas seria pasar doce veces por debajo del mismo cartel.
+    const tex = loadVallaTex();
+    gate.lona.material.map = tex[(Math.random() * tex.length) | 0];
+    gate.lona.material.needsUpdate = true;
     gate.group.visible = true;
     gate.group.position.set(curveOf(gate), riseOf(gate), z);
 }
@@ -4922,6 +5104,7 @@ function buildPools() {
     // los cruces van a mas de mil, asi que nunca hay dos a la vez.
     gate = makeGate();
     for (let i = 0; i < FAUNA_POOL; i++) fauna.push(makeFauna());
+    for (let i = 0; i < VALLA_POOL; i++) vallas.push(makeValla());
 }
 
 // ---------------------------------------------------------------------------
@@ -5181,6 +5364,29 @@ function buildPlayer() {
     const legL = limb(playerMats.legs, playerMats.boot, -0.24, 0.85, 0.3, 0.8, 0.3, [0.34, 0.2, 0.5, -0.08]);
     const legR = limb(playerMats.legs, playerMats.boot, 0.24, 0.85, 0.3, 0.8, 0.3, [0.34, 0.2, 0.5, -0.08]);
 
+    // --- El equipo del runner ---
+    // Gorra, dorsal y pachon. Va colgado del cuerpo como el casco, y como el
+    // casco apaga el tocado: un corredor de asfalto con penacho de plumas seria
+    // otro traje distinto, no este.
+    const runner = new THREE.Group();
+    runner.visible = false;
+    playerBody.add(runner);
+    cube(runner, playerMats.crest, 0.68, 0.26, 0.66, 0, 2.34, 0);          // gorra
+    cube(runner, playerMats.crest, 0.6, 0.08, 0.34, 0, 2.24, -0.42);       // visera
+    cube(runner, playerMats.trim, 0.7, 0.07, 0.68, 0, 2.2, 0);             // ribete
+    // El dorsal va a la ESPALDA y no al pecho. En una carrera de verdad va
+    // delante, pero al jugador se le ve por detras todo el rato: puesto donde
+    // no se ve, seria un detalle que no existe.
+    cube(runner, playerMats.crest, 0.52, 0.42, 0.06, 0, 1.36, 0.36);
+    cube(runner, playerMats.boot, 0.34, 0.1, 0.05, 0, 1.36, 0.39);
+
+    // El pachon, a la cintura. Se llena de verdad conforme se recogen gotas:
+    // el cuerpo del bote es fijo y el agua de dentro sube. Es el mismo dato que
+    // el contador del HUD, pero sin apartar la vista de la calzada.
+    const pachon = cube(runner, playerMats.trim, 0.2, 0.44, 0.2, 0.34, 1.02, 0.24);
+    const pachonAgua = cube(runner, playerMats.cloth, 0.15, 0.36, 0.15, 0.34, 0.86, 0.24);
+    cube(runner, playerMats.boot, 0.12, 0.08, 0.12, 0.34, 1.27, 0.24);     // tapon
+
     // --- La maquina ---
     // Cuelga de playerGroup y NO de playerBody: el cuerpo se inclina hacia
     // delante con la velocidad y se agacha al esconderse tras el carenado, y una
@@ -5231,7 +5437,8 @@ function buildPlayer() {
     pieza(playerMats.trim, 0.5, 0.08, 0.16, 0.42, 0.6, 0.1);
 
     playerParts = { torso, head, armL, armR, legL, legR,
-                    tocado, casco, moto, ruedaT, ruedaD };
+                    tocado, casco, moto, ruedaT, ruedaD,
+                    runner, pachon, pachonAgua };
     scene.add(playerGroup);
 
     // Sombra de contacto. Sin ella no hay forma de juzgar donde vas a caer ni
@@ -5294,6 +5501,7 @@ function buildPlayer() {
 // en cada frame: la postura lo pregunta sesenta veces por segundo y skinById
 // recorre la lista entera.
 let motoOn = false;
+let runnerOn = false;
 
 function applySkin(id) {
     const sk = skinById(id);
@@ -5309,10 +5517,25 @@ function applySkin(id) {
     playerMats.visor.color.setHex(sk.visor || sk.legs);
 
     motoOn = !!sk.moto;
+    runnerOn = !!sk.runner;
     playerParts.moto.visible = motoOn;
     playerParts.casco.visible = motoOn;
-    // Con el casco puesto se apagan el pelo, el tocado y las plumas
-    for (const p of playerParts.tocado) p.visible = !motoOn;
+    playerParts.runner.visible = runnerOn;
+    // Con el casco o con la gorra puestos se apagan el pelo, el tocado y las
+    // plumas: los tres tapan la misma cabeza.
+    for (const p of playerParts.tocado) p.visible = !motoOn && !runnerOn;
+    fillPachon();
+}
+
+// El agua del pachon, de vacio a lleno. El bote mide 0,44 y el agua vive
+// dentro: crece hacia arriba desde su fondo, que es lo que hace que se lea como
+// que se llena y no como que se infla.
+function fillPachon() {
+    if (!runnerOn) return;
+    const t = Math.min(1, game.gotas / GOTAS_VIDA);
+    const alto = Math.max(0.02, 0.36 * t);
+    playerParts.pachonAgua.scale.set(0.15, alto, 0.15);
+    playerParts.pachonAgua.position.y = 0.84 - 0.18 + alto / 2;
 }
 
 // --- Jaguar: la presion visual de las vidas ---
@@ -5483,8 +5706,13 @@ function spawnPickup(lane, z, height, kind = 'jade') {
     p.active = true;
     p.kind = kind;
     p.pulled = false;
-    p.mesh.geometry = GEO[kind] || GEO.jade;
-    p.mesh.material = mat[kind] || mat.jade;
+    // Con el runner puesto, el jade se recoge como AGUA. Es la misma pieza y el
+    // mismo valor —cambiar la moneda dejaria al runner sin poder comprar nada—
+    // pero se ve distinta y ademas llena el pachon. El cambio se hace aqui, al
+    // soltar la pieza, y no rehaciendo el pozo al cambiar de traje.
+    const gota = kind === 'jade' && runnerOn;
+    p.mesh.geometry = gota ? GEO.gota : (GEO[kind] || GEO.jade);
+    p.mesh.material = gota ? mat.gota : (mat[kind] || mat.jade);
     p.mesh.visible = true;
     p.mesh.position.set(LANE_X[lane] + curveOf(p), height + riseOf(p), z);
 }
@@ -7453,6 +7681,22 @@ function scrollWorld(dt) {
     }
     updateFauna(dt, dz);
 
+    // --- La publicidad de la calzada ---
+    // Cada VALLA_EVERY unidades, y con el runner puesto dos veces y media mas
+    // seguido: el runner corre una CARRERA, no un camino, y una carrera se
+    // reconoce porque el margen esta forrado de anuncios. Una de cada cuatro va
+    // cruzada por encima, que es lo que rompe la fila de paneles al mismo lado.
+    if (game.distance > game.nextValla) {
+        const cada = runnerOn ? VALLA_RUNNER : VALLA_EVERY;
+        game.nextValla = game.distance + cada * (0.75 + Math.random() * 0.5);
+        // Nunca encima de la bifurcacion: ahi hay que leer el rotulo verde y un
+        // anuncio al lado es exactamente lo que no debe haber.
+        if (!limpioEntre(game.distance - SPAWN_Z - 60, game.distance - SPAWN_Z + 60)) {
+            spawnValla(SPAWN_Z, Math.random() < 0.25);
+        }
+    }
+    updateVallas(dz);
+
     // Motas: pocas y constantes. No son un suceso, son el aire del sitio.
     if (zr && Math.random() < 0.05) {
         burstParticles(
@@ -7465,8 +7709,13 @@ function scrollWorld(dt) {
 
     // La estructura de fin de zona viaja como cualquier otra cosa del mundo
     if (gate && gate.active) {
+        const antes = gate.z;
         gate.z += dz;
         gate.group.position.set(curveOf(gate), riseOf(gate), gate.z);
+        // Confeti justo al pasar POR DEBAJO, no al verla ni al dejarla atras.
+        // Cerrar una zona es lo unico que se consigue sin que te lo den, y en
+        // una carrera de verdad el confeti cae exactamente ahi.
+        if (antes < PLAYER_Z && gate.z >= PLAYER_Z) throwConfeti(PLAYER_Z - 8, 16);
         if (gate.z > DESPAWN_Z + 14) {
             gate.active = false;
             gate.group.visible = false;
@@ -7710,7 +7959,26 @@ function collect(p) {
         const mult = comboMultiplier() * (game.powers.double > 0 ? 2 : 1);
         game.jadeScore += Math.round(25 * mult * jadeScale());
         sfx.jade();
-        burstParticles(x, y, z, 8, 0.85, C.jade);
+        burstParticles(x, y, z, 8, 0.85, runnerOn ? C.agua : C.jade);
+
+        // El pachon del runner. Cien gotas lo llenan y valen una vida, y el
+        // contador vuelve a cero: es una vida que se GANA corriendo bien, no
+        // una que se compra, y por eso no tiene tope de mejoras ni cuesta jade.
+        if (runnerOn) {
+            game.gotas++;
+            if (game.gotas >= GOTAS_VIDA) {
+                game.gotas = 0;
+                // Solo hasta el maximo de la partida: pasarse de ahi
+                // desbordaria los rombos del HUD, que se dibujan contra
+                // maxLives(). Si ya va lleno, el agua se bebe y ya esta.
+                const cabe = game.lives < maxLives();
+                if (cabe) game.lives++;
+                sfx.shield();
+                burstParticles(player.x, player.y + 1.4, PLAYER_Z, 26, 1.6, C.agua);
+                showBanner('PACHÓN LLENO', cabe ? 'Una vida más' : 'Un trago');
+            }
+            fillPachon();
+        }
         hudDirty = true;
         return;
     }
@@ -7870,7 +8138,7 @@ function showRegionBanner(ri) {
 // reescribia el innerHTML de las vidas 60 veces por segundo, forzando un
 // recalculo de estilo continuo por un texto que casi nunca cambia.
 let hudDirty = true;
-const hudLast = { lives: -1, shield: null, casco: null, jade: -1, dist: -1, combo: -1 };
+const hudLast = { lives: -1, shield: null, casco: null, gotas: -1, jade: -1, dist: -1, combo: -1 };
 
 function renderHud() {
     if (game.lives !== hudLast.lives) {
@@ -7907,6 +8175,20 @@ function renderHud() {
     if (game.casco !== hudLast.casco) {
         hudLast.casco = game.casco;
         dom.casco.hidden = !game.casco;
+    }
+
+    // El pachon. Solo aparece con el runner puesto: los otros dos trajes no
+    // tienen nada que contar ahi y un contador a cero permanente es ruido.
+    if (game.gotas !== hudLast.gotas) {
+        hudLast.gotas = game.gotas;
+        if (runnerOn) {
+            dom.pachon.hidden = false;
+            dom.pachon.firstElementChild.style.width =
+                Math.round(game.gotas / GOTAS_VIDA * 100) + '%';
+            dom.pachonN.textContent = game.gotas + '/' + GOTAS_VIDA;
+        } else if (!dom.pachon.hidden) {
+            dom.pachon.hidden = true;
+        }
     }
 
 }
@@ -7969,6 +8251,7 @@ function resetHudCache() {
     hudLast.lives = -1;
     hudLast.shield = null;
     hudLast.casco = null;
+    hudLast.gotas = -1;
     hudLast.jade = -1;
     hudLast.dist = -1;
     hudLast.combo = -1;
@@ -8361,6 +8644,10 @@ function startGame() {
     // moto puesta y se recupera al empezar otra carrera, no al revivir.
     game.casco = motoOn;
     playerParts.casco.visible = motoOn;
+    // El pachon empieza vacio en cada carrera: es agua que se bebe, no una
+    // mejora que se guarda.
+    game.gotas = 0;
+    fillPachon();
     game.invuln = 0;
     game.elapsed = 0;
     game.nextMilestone = MILESTONE_EVERY;
@@ -8385,6 +8672,9 @@ function startGame() {
     game.nextZone = zoneClimaxAt();
     game.zoneFrom = 0;
     game.nextFauna = 120;
+    game.nextValla = 260;
+    game.gotas = 0;
+    for (const v of vallas) { v.active = false; v.group.visible = false; }
     game.zone.active = false;
     game.zone.k = 0;
     player.push = 0;
@@ -9249,6 +9539,7 @@ function frame(now) {
         // Pulso de las recogidas: materiales compartidos, asi que basta una
         // asignacion por tipo y frame para todas las piezas de la escena.
         mat.jade.emissiveIntensity = 0.3 + Math.sin(t * 5) * 0.22;
+        mat.gota.emissiveIntensity = mat.jade.emissiveIntensity;
         const pulse = 0.45 + Math.sin(t * 8) * 0.3;
         for (const k of POWER_KEYS) mat[k].emissiveIntensity = pulse;
 

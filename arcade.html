@@ -300,6 +300,35 @@
            queda, sin leer la palabra. */
         .casco { color: var(--jade); }
 
+        /* El pachón: una barra que se llena, no un número suelto. Cien gotas
+           es demasiado para leerlas de reojo mientras esquivas; lo que hay que
+           poder ver sin pensar es cuánto falta, y eso es una barra. */
+        .pachon {
+            display: block;
+            margin-top: 0.32rem;
+            width: 100%;
+        }
+
+        .pachon[hidden] { display: none !important; }
+
+        .pachon i {
+            display: block;
+            height: 4px;
+            width: 0;
+            border-radius: 2px;
+            background: #8fd8ee;
+            box-shadow: 0 0 0 1px rgba(239, 230, 210, 0.18);
+        }
+
+        .pachon b {
+            display: block;
+            margin-top: 0.15rem;
+            font-size: 0.58rem;
+            letter-spacing: 0.1em;
+            color: #8fd8ee;
+            opacity: 0.8;
+        }
+
         .hud-best { font-size: 0.95rem; font-weight: 700; opacity: 0.75; }
 
         .combo {
@@ -1342,6 +1371,13 @@
                 <!-- Va DEBAJO del escudo porque se gasta ANTES que él: el
                      orden de la lista es el orden en que se pierden. -->
                 <span class="shield casco" id="casco" hidden>◓ Casco</span>
+                <!-- El pachón del runner. Solo aparece con ese traje puesto:
+                     los otros dos no tienen nada que contar aquí, y un
+                     contador clavado en cero es ruido. -->
+                <span class="pachon" id="pachon" hidden>
+                    <i></i>
+                    <b id="pachonN">0/100</b>
+                </span>
             </div>
 
             <div class="hud-box minimap" id="minimap">
