@@ -1444,8 +1444,33 @@ const POWERS = {
     magnet: { name: 'Imán de jade',        time: 9,    color: 0xa86ad9, weight: 22 },
     double: { name: 'Jade doble',          time: 11,   color: 0x4affd0, weight: 20 },
     amber:  { name: 'Ámbar de Verapaz',    time: 6,    color: 0xe0a02c, weight: 16 },
-    flight: { name: 'Vuelo del quetzal',   time: 6.5,  color: 0x7fd4ff, weight: 12 }
+    flight: { name: 'Vuelo del quetzal',   time: 6.5,  color: 0x7fd4ff, weight: 12 },
+    // El poder PROPIO del traje que lleves. Es un solo hueco con cinco
+    // significados y no cinco poderes sueltos, y eso no es un atajo: solo se
+    // puede llevar un traje a la vez, asi que dos de ellos no pueden coincidir
+    // NUNCA. Con cinco entradas habria cinco materiales, cinco geometrias,
+    // cinco casillas de HUD y cinco relojes para que cuatro estuvieran siempre
+    // a cero. Con uno, el nombre, el color y el efecto se cambian al vestirse.
+    propio: { name: '', time: 8, color: 0xffffff, weight: 18 }
 };
+
+// Lo que ese hueco significa segun lo que lleves puesto. El de Ajaw no existe a
+// proposito: es el traje de referencia y es gratis, asi que no le toca nada.
+const PROPIOS = {
+    runner:    { name: 'Segundo aire', time: 9, color: 0x8fd8ee, icon: '≈',
+                 corto: 'Cada gota cuenta por dos' },
+    bici:      { name: 'Escapada',     time: 7, color: 0xf0c34a, icon: '»',
+                 corto: 'Te sueltas: un tercio más de velocidad' },
+    patineta:  { name: 'Ollie',        time: 8, color: 0xc8862f, icon: '⌃',
+                 corto: 'La tabla salta sola lo que se salta' },
+    monopatin: { name: 'Brinco',       time: 8, color: 0xef4444, icon: '⇈',
+                 corto: 'Saltos sin contar, uno detrás de otro' },
+    moto:      { name: 'Embestida',    time: 6, color: 0xd93a3a, icon: '◈',
+                 corto: 'Te llevas por delante lo que toques' }
+};
+
+// El traje puesto tiene poder propio o no. Ajaw no lo tiene.
+let propioAct = null;
 // Cuantas chispas dan la vuelta al personaje. Doce es lo que hace falta para
 // que a la velocidad a la que va esto se lea un anillo y no cuatro puntos.
 const AURA_ORBS = 12;
@@ -1484,8 +1509,8 @@ const game = {
     // tramo de ciudad, que es lo que convierte la llegada en llegada.
     finishS: -1,
     won: false,          // la carrera se cerro por llegar, no por morir
-    powers: { magnet: 0, double: 0, amber: 0, flight: 0 },
-    powerMax: { magnet: 1, double: 1, amber: 1, flight: 1 },
+    powers: { magnet: 0, double: 0, amber: 0, flight: 0, propio: 0 },
+    powerMax: { magnet: 1, double: 1, amber: 1, flight: 1, propio: 1 },
     boost: 0,            // segundos que quedan de impulso
     routePos: 0,         // en que punto de la ruta se esta; solo lo mueven los cruces
     roadS0: -1,          // trazado donde el firme cambia de departamento, -1 si no
@@ -1610,7 +1635,8 @@ const dom = {
     powers: $('powers'),
     pw: {
         magnet: $('pwMagnet'), flight: $('pwFlight'),
-        double: $('pwDouble'), amber: $('pwAmber'), boost: $('pwBoost')
+        double: $('pwDouble'), amber: $('pwAmber'), boost: $('pwBoost'),
+        propio: $('pwPropio')
     }
 };
 
@@ -2138,7 +2164,11 @@ const GEO = {
     magnet: new THREE.TorusGeometry(0.42, 0.14, 6, 10, Math.PI),
     double: new THREE.IcosahedronGeometry(0.44),
     amber:  new THREE.DodecahedronGeometry(0.42),
-    flight: new THREE.ConeGeometry(0.4, 0.95, 4)
+    flight: new THREE.ConeGeometry(0.4, 0.95, 4),
+    // El poder propio: un tetraedro, que es la unica forma de la lista con una
+    // punta hacia arriba y tres caras. No se parece a ninguna de las otras
+    // cinco, que es lo unico que se le pide a la pieza de un poder.
+    propio: new THREE.TetrahedronGeometry(0.52)
 };
 
 const cam = { y: 6.6, aimY: 1.6, aimZ: -16, fov: 60 };
@@ -5711,6 +5741,20 @@ function applySkin(id) {
     // Antes la condicion miraba solo a motoOn y a runnerOn, asi que los tres
     // vehiculos nuevos salian emplumados.
     for (const p of playerParts.tocado) p.visible = !vehOn && !runnerOn;
+
+    // Y el hueco del poder propio se viste con el traje: nombre, color, reloj y
+    // glifo. La pieza de la calzada, el aura del jugador y la casilla del HUD
+    // salen todas de aqui, asi que cambiarlo en un sitio lo cambia en los tres.
+    propioAct = PROPIOS[sk.veh] || (sk.runner ? PROPIOS.runner : null);
+    if (propioAct) {
+        POWERS.propio.name = propioAct.name;
+        POWERS.propio.time = propioAct.time;
+        POWERS.propio.color = propioAct.color;
+        mat.propio.color.setHex(propioAct.color);
+        mat.propio.emissive.setHex(propioAct.color);
+        dom.pw.propio.style.setProperty('--c', '#' + propioAct.color.toString(16).padStart(6, '0'));
+        dom.pw.propio.firstChild.nodeValue = propioAct.icon;
+    }
     fillPachon();
 }
 
@@ -5999,15 +6043,20 @@ function hazX(h, z) {
 
 // Elige un poder segun su peso. El escudo solo entra en el sorteo si no
 // llevas uno: ofrecer un escudo a quien ya lo tiene es un premio vacio.
+// Y el poder propio solo entra en el sorteo si llevas un traje que TENGA uno:
+// con el Ajaw puesto no existe, porque soltar en la calzada una pieza que al
+// recogerla no hace nada seria peor que no soltarla.
 function rollPower() {
+    const fuera = k => (k === 'shield' && game.shield) ||
+                       (k === 'propio' && !propioAct);
     let total = 0;
     for (const k of POWER_KEYS) {
-        if (k === 'shield' && game.shield) continue;
+        if (fuera(k)) continue;
         total += POWERS[k].weight;
     }
     let r = Math.random() * total;
     for (const k of POWER_KEYS) {
-        if (k === 'shield' && game.shield) continue;
+        if (fuera(k)) continue;
         r -= POWERS[k].weight;
         if (r <= 0) return k;
     }
@@ -7115,6 +7164,16 @@ function doJump(v) {
 function jump() {
     if (game.powers.flight > 0) return;      // volando no hay nada que saltar
 
+    // El BRINCO del monopatin: mientras dura, los saltos no se cuentan y se
+    // encadenan en el aire. Va antes que todo lo demas porque no depende de
+    // estar en el suelo ni de tener la mejora del salto doble.
+    if (game.powers.propio > 0 && vehOn === 'monopatin' && !player.grounded) {
+        doJump(DOUBLE_JUMP_V * dote().salto);
+        sfx.djump();
+        burstParticles(player.x, player.y + 0.4, PLAYER_Z, 6, 0.6, PROPIOS.monopatin.color);
+        return;
+    }
+
     if (player.grounded || player.coyote > 0) {
         // Coyote time: un salto pulsado justo despues de dejar el borde sigue
         // valiendo. Es la queja clasica del genero cuando falta.
@@ -7355,7 +7414,13 @@ const AURA_SHAPE = {
     magnet: { r: 1.4,  y: 1.2, sube: 0,   atras: 0,   giro: 3.4, onda: 0.14 },
     double: { r: 0.95, y: 0.45, sube: 2.0, atras: 0,   giro: 2.6, onda: 0.1 },
     amber:  { r: 0.8,  y: 1.05, sube: 0,   atras: 2.2, giro: 1.4, onda: 0.45 },
-    flight: { r: 1.2,  y: 1.55, sube: 1.0, atras: 0,   giro: 4.8, onda: 0.22 }
+    flight: { r: 1.2,  y: 1.55, sube: 1.0, atras: 0,   giro: 4.8, onda: 0.22 },
+    // El poder propio TIENE que estar aqui aunque sea uno solo para los cinco
+    // trajes: updateAuras busca la forma por la clave del poder activo y no
+    // comprueba que exista, asi que sin esta linea el juego reventaba en el
+    // momento exacto de recoger la pieza. Lo destapo la sonda al primer intento.
+    // Va rapido y ceñido, que es lo que le pega a un poder de vehiculo.
+    propio: { r: 1.05, y: 0.95, sube: 0.6, atras: 0.8, giro: 5.4, onda: 0.18 }
 };
 
 // El poder con cuenta atras que mas dura de los que hay puestos. Si hay dos,
@@ -7506,6 +7571,23 @@ function updatePlayer(dt) {
             player.coyote = COYOTE_TIME;
             player.jumps = 0;
             player.wantSlide = false;
+        }
+    }
+
+    // El OLLIE de la patineta: la tabla salta sola lo que se salta. Mira solo
+    // por delante y solo en el carril propio, y solo lo que se libra saltando:
+    // el dintel, que se pasa AGACHADO, lo deja a proposito. Un automatico que
+    // resuelve cuatro de cinco cosas y calla en la quinta es peor que ninguno,
+    // asi que la tarjeta de la tienda lo dice con todas las letras.
+    if (game.powers.propio > 0 && vehOn === 'patineta' && player.grounded) {
+        for (const o of obstacles) {
+            if (!o.active) continue;
+            if (o.type === DINTEL || o.type === MURO) continue;
+            const d = PLAYER_Z - o.z;                  // lo que le falta por llegar
+            if (d < 2.5 || d > 13) continue;
+            if (!WIDE[o.type] && Math.abs(player.x - LANE_X[o.lane]) > LANE_HALF) continue;
+            jump();
+            break;
         }
     }
 
@@ -8145,7 +8227,21 @@ function checkCollisions() {
             hit = true;                       // no se salta ni se rodea
         }
 
-        if (hit) { takeHit(); return; }
+        if (!hit) continue;
+
+        // La EMBESTIDA de la moto: lo que se pueda romper, se rompe. Pero NO
+        // los huecos ni el muro del ramal cortado: un agujero no se embiste, se
+        // cae uno dentro, y el muro es la consecuencia de haberse metido por
+        // donde decia que no. Dejar que se atraviese convertiria la unica
+        // decision del cruce en un tramite.
+        if (embistiendo() && o.type !== VACIO && o.type !== CENOTE && o.type !== MURO) {
+            romper(o.group.position.x, o.baseY + 1, o.z);
+            o.active = false;
+            o.group.visible = false;
+            continue;
+        }
+        takeHit();
+        return;
     }
 
     // --- Amenazas ---
@@ -8171,8 +8267,34 @@ function checkCollisions() {
         const feet = player.y;
         const head = player.y + (sliding ? 1.1 : 2.4);
 
-        if (head > lo && feet < hi) { takeHit(); return; }
+        if (!(head > lo && feet < hi)) continue;
+
+        // Las amenazas SI se embisten todas: son bichos, piedras y camionetas,
+        // y ninguna es una decision del jugador ni un agujero en el suelo.
+        if (embistiendo()) {
+            romper(h.group.position.x, h.y, h.z);
+            h.active = false;
+            h.group.visible = false;
+            continue;
+        }
+        takeHit();
+        return;
     }
+}
+
+// La embestida esta activa. Se pregunta en dos sitios del bucle de colisiones,
+// asi que vale la pena tenerla escrita una vez.
+const embistiendo = () => game.powers.propio > 0 && vehOn === 'moto';
+
+// Lo que se lleva por delante se rompe A LA VISTA. Sin esto, un obstaculo
+// embestido simplemente desaparecia, que se lee como un fallo de dibujo y no
+// como haberselo llevado puesto.
+function romper(x, y, z) {
+    burstParticles(x, y, z, 14, 1.4, PROPIOS.moto.color);
+    shake = Math.max(shake, 0.5);
+    sfx.shieldBreak();
+    game.jade += 1;
+    game.jadeScore += Math.round(20 * jadeScale());
 }
 
 function collect(p) {
@@ -8199,8 +8321,14 @@ function collect(p) {
         // contador vuelve a cero: es una vida que se GANA corriendo bien, no
         // una que se compra, y por eso no tiene tope de mejoras ni cuesta jade.
         if (runnerOn) {
-            game.gotas++;
+            // El SEGUNDO AIRE: cada gota cuenta por dos. No cambia el jade
+            // —eso seria el poder del doble, que ya existe— sino lo que llena
+            // el pachon, que es lo unico que el runner tiene y nadie mas.
+            game.gotas += game.powers.propio > 0 ? 2 : 1;
             if (game.gotas >= GOTAS_VIDA) {
+                // A cero y no restando: con el segundo aire se puede llegar a
+                // 101, y arrastrar esa gota suelta a la siguiente vuelta seria
+                // un detalle que nadie ve y que descuadra el contador del HUD.
                 game.gotas = 0;
                 // Solo hasta el maximo de la partida: pasarse de ahi
                 // desbordaria los rombos del HUD, que se dibujan contra
@@ -8314,7 +8442,7 @@ function updatePowers(dt) {
         game.boost = Math.max(0, game.boost - dt);
         if (game.boost === 0) changed = true;
     }
-    for (const k of ['magnet', 'double', 'amber', 'flight']) {
+    for (const k of ['magnet', 'double', 'amber', 'flight', 'propio']) {
         if (game.powers[k] <= 0) continue;
         game.powers[k] = Math.max(0, game.powers[k] - dt);
         if (game.powers[k] === 0) {
@@ -8442,7 +8570,7 @@ function renderHud() {
 // en enteros y solo cuando el entero cambia. Un poder de nueve segundos hace
 // cien escrituras en total —once por segundo— en vez de 540, y con nada puesto
 // no hace ninguna.
-const barLast = { boost: -1, magnet: -1, flight: -1, double: -1, amber: -1 };
+const barLast = { boost: -1, magnet: -1, flight: -1, double: -1, amber: -1, propio: -1 };
 
 function setBar(el, key, frac) {
     const pct = Math.round(Math.max(0, Math.min(1, frac)) * 100);
@@ -8460,7 +8588,7 @@ function renderBars() {
         barLast.boost = -1;
     }
 
-    for (const k of ['magnet', 'flight', 'double', 'amber']) {
+    for (const k of ['magnet', 'flight', 'double', 'amber', 'propio']) {
         const el = dom.pw[k];
         const t = game.powers[k];
         if (t <= 0) {
@@ -9312,7 +9440,7 @@ function finishGame() {
 
     // Los poderes se apagan al morir. Si el vuelo sobreviviese a la partida,
     // la camara se quedaria encuadrada en el aire durante todo el menu.
-    for (const k of ['magnet', 'double', 'amber', 'flight']) game.powers[k] = 0;
+    for (const k of ['magnet', 'double', 'amber', 'flight', 'propio']) game.powers[k] = 0;
 
     dom.hud.hidden = true;
     dom.over.hidden = false;
@@ -9498,9 +9626,18 @@ function renderShop() {
         const on = save.skin === s.id;
         const label = on ? 'Puesto' : owned ? 'Ponérselo' : s.cost + ' jade';
         const dis = (!owned && save.bank < s.cost) || on;
+        // El poder propio, en su propia linea y con su color. Va aparte de la
+        // descripcion porque no es lo que el traje ES, sino lo que le sale en
+        // la calzada solo a el.
+        const pr = PROPIOS[s.veh] || (s.runner ? PROPIOS.runner : null);
+        const linea = pr
+            ? '<span class="card-poder" style="--c:#' +
+              pr.color.toString(16).padStart(6, '0') + '">' +
+              pr.icon + ' <b>' + pr.name + '</b> · ' + pr.corto + '</span>'
+            : '';
         return '<div class="card' + (on ? ' on' : '') + (owned ? '' : ' locked') + '">' +
             '<span class="card-ic skin-ic">' + skinIcon(s) + '</span>' +
-            '<b>' + s.name + '</b><p>' + s.desc + '</p>' +
+            '<b>' + s.name + '</b><p>' + s.desc + '</p>' + linea +
             '<button type="button" data-skin="' + s.id + '"' +
             (dis ? ' disabled' : '') + (on ? ' class="equipped"' : '') + '>' + label + '</button>' +
             '</div>';
@@ -9698,6 +9835,10 @@ function frame(now) {
             // sin motor— y ademas habria empujado el techo todo el rato.
             const cuesta = slopeSteep(game.distance);
             if (cuesta > 0) game.speed *= 1 + (SLOPE_SPEED - 1) * cuesta * dote().cuesta;
+            // La ESCAPADA de la bici: un tercio mas, en llano y en cuesta. Es
+            // lo unico que multiplica la velocidad de crucero, y por eso dura
+            // siete segundos y no los nueve del resto.
+            if (game.powers.propio > 0 && vehOn === 'bici') game.speed *= 1.33;
             const giro = turnGrip(game.distance);
             if (giro > 0) game.speed *= 1 + (TURN_SPEED - 1) * giro;
             // Y al morir el mundo frena hasta pararse, en lo que dura la

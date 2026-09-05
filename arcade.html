@@ -807,6 +807,23 @@
 
         .card-lvl i.full { background: var(--jade); }
 
+        /* El poder propio del traje, con su color. Va en una línea aparte de la
+           descripción porque no es lo que el traje es, sino lo que le sale en
+           la calzada sólo a él. */
+        .card-poder {
+            display: block;
+            font-size: 0.66rem;
+            line-height: 1.4;
+            padding: 0.3rem 0.4rem;
+            border-radius: 0.32rem;
+            border: 1px solid color-mix(in srgb, var(--c) 45%, transparent);
+            background: color-mix(in srgb, var(--c) 12%, transparent);
+            color: var(--c);
+            margin-bottom: 0.15rem;
+        }
+
+        .card-poder b { font-size: inherit; }
+
         /* El ángel es lo único de la tienda que se GASTA, así que va en ocre en
            toda la tarjeta: las barritas de las mejoras suben y no bajan nunca,
            y éstas se vacían al usarlas. */
@@ -1413,6 +1430,11 @@
                 <span class="pw" id="pwDouble" style="--c:#4affd0" hidden>✦<i></i></span>
                 <span class="pw" id="pwAmber"  style="--c:#e0a02c" hidden>◉<i></i></span>
                 <span class="pw" id="pwBoost"  style="--c:#4affd0" hidden>»<i></i></span>
+                <!-- El poder propio del traje. El glifo y el color los pone
+                     applySkin al vestirse: es un solo hueco con cinco
+                     significados, porque sólo se puede llevar un traje a la vez
+                     y dos de ellos no pueden coincidir nunca. -->
+                <span class="pw" id="pwPropio" style="--c:#ffffff" hidden>◈<i></i></span>
             </div>
         </div>
 

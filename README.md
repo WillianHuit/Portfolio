@@ -1525,6 +1525,41 @@ entrada es una forma de jugar vale más que una larga de recolores.
 | **Monopatín** | 1.000 | **Levanta la tabla** al saltar | salto **3,55** (+34 %) |
 | **Moto** | 1.500 | El **casco** aguanta un golpe | — |
 
+### Y cada traje tiene su poder, que sólo le sale a él
+
+| Traje | Poder | Qué hace |
+|---|---|---|
+| **Runner** | Segundo aire · 9 s | Cada gota cuenta por dos |
+| **Bicicleta** | Escapada · 7 s | Te sueltas: un tercio más de velocidad |
+| **Patineta** | Ollie · 8 s | La tabla salta sola lo que se salta |
+| **Monopatín** | Brinco · 8 s | Saltos sin contar, uno detrás de otro |
+| **Moto** | Embestida · 6 s | Te llevas por delante lo que toques |
+
+**Es UN hueco con cinco significados, no cinco poderes sueltos**, y eso no es un
+atajo: sólo se puede llevar un traje a la vez, así que dos de ellos no pueden
+coincidir **nunca**. Con cinco entradas habría cinco materiales, cinco
+geometrías, cinco casillas de HUD y cinco relojes para que cuatro estuvieran
+siempre a cero. Con uno, el nombre, el color, el glifo y el efecto se cambian al
+vestirse, y la pieza de la calzada, el aura del jugador y la casilla del HUD
+salen todos del mismo sitio.
+
+**Y no entra en el sorteo si no significa nada.** Con el Ajaw puesto la pieza no
+se suelta jamás: soltar en la calzada algo que al recogerlo no hace nada sería
+peor que no soltarlo. Medido: 0 de 4.000 tiradas con Ajaw, 15 % con un traje que
+sí lo tiene.
+
+Dos límites que hacen que los poderes no rompan lo que ya estaba:
+
+- **La embestida no se lleva por delante los huecos ni el muro del ramal
+  cortado.** Un agujero no se embiste, se cae uno dentro; y el muro es la
+  consecuencia de haberse metido por donde decía que no —dejar que se atraviese
+  convertiría la única decisión del cruce en un trámite—. Sí se lleva estelas,
+  dinteles, troncos y todas las amenazas.
+- **El ollie salta lo que se salta, y el dintel lo deja.** Ese se pasa
+  **agachado**, y un automático que resuelve cuatro de cinco cosas y calla en la
+  quinta es peor que ninguno. La tarjeta de la tienda lo dice con todas las
+  letras.
+
 **Cada dote sale de lo que ese vehículo hace de verdad**, no de repartir
 ventajas a partes iguales: una bici baja más rápido que cualquier otra cosa de
 la lista y además es lo único que puede hacer sin motor; cambiar de carril en
