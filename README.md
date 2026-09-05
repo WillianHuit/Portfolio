@@ -1475,6 +1475,76 @@ Lo que importa mantener si se toca:
   puro y no se puede atenuar, así que se avisa y decide el jugador.
 
 
+## Rendimiento: lo que se paga en cada frame
+
+Repaso hecho sobre el bucle entero. Lo que ya estaba bien: **cero asignaciones
+de Three.js por frame** —los once `THREE.Color` del fichero son objetos de
+usar y tirar declarados una vez, y nunca dentro de un bucle—; la mezcla cara de
+departamento va detrás de `lastBlendKey` y durante el 62 % del tramo no se
+repinta nada; el canvas del cielo tiene su propio umbral; y la escenografía se
+recompone una vez por **frame** y no una por paso de simulación.
+
+Salieron dos cosas.
+
+**Las cinco barras de cuenta atrás del HUD no se movían.** Y esto era un fallo,
+no un ajuste: `renderHud` sólo corre cuando `hudDirty` está puesto, y `hudDirty`
+sólo se pone cuando algo **cambia de estado** —se recoge un poder, se gasta una
+vida, se acaba el ámbar—. Pero una barra de cuenta atrás no cambia de estado,
+cambia de **ancho** sesenta veces por segundo, así que estaba metida detrás de la
+puerta equivocada: se pintaba al 100 % al recoger el poder, se quedaba clavada
+ahí los nueve segundos y desaparecía de golpe al caducar.
+
+Se arregla sin pagar lo que `renderHud` quería ahorrar. Las barras salen a su
+propia función, que corre en cada frame, y **el ancho se escribe en enteros y
+sólo cuando el entero cambia**: un poder de nueve segundos hace 100 escrituras en
+total —once por segundo— en vez de 540, y con nada puesto no hace ninguna.
+Medido en el arnés: 100 escrituras en 540 frames, y 1 en 200 con el valor
+quieto.
+
+**Y el minimapa escribía cuatro propiedades del DOM en cada frame** —las dos
+coordenadas del marcador y el ancho de las dos barras— con sus cuatro cadenas
+nuevas, para mover números que el 99 % del tiempo son los mismos: el marcador
+sólo se mueve durante el cruce de departamento, que dura segundo y medio de los
+tres minutos que dura una zona, y las barras avanzan un uno por ciento cada
+varios segundos. Ahora se recuerda lo último escrito y se comparan cuatro
+cadenas, que sale mucho más barato que escribirlas.
+
+## El traje de moto
+
+El único traje que **no es sólo color**. Todos los demás cambian siete tonos
+sobre la misma silueta —para que la lectura de la postura no dependa de lo que
+lleves puesto—; éste trae máquina debajo y casco encima.
+
+- **La máquina cuelga de `playerGroup` y no de `playerBody`.** El cuerpo se
+  inclina hacia delante con la velocidad y se agacha tras el carenado, y una
+  moto que se tumba con su piloto no es una moto, es un accidente. El jinete se
+  mueve encima de ella; ella se queda a plomo sobre la calzada.
+- **Agacharse deja de ser tirarse de barriga.** A pie, deslizarse pone el cuerpo
+  horizontal y lo estira un 60 % en profundidad; en moto no hay tumbada ni
+  estiramiento, porque debajo hay un chasis que no da de sí. Sólo cambia cuánto
+  se echa hacia delante: de 0,20 a 0,62 radianes.
+- **Las ruedas giran con el mundo, no con el reloj.** Si fueran con el reloj,
+  frenar dejaría la moto parada con las ruedas a tope, que es lo que delata a un
+  juguete.
+- **Con el casco puesto se apagan el pelo, el tocado y las plumas.** Tres plumas
+  de quetzal saliendo por debajo de un integral no son un guiño, son un fallo de
+  montaje.
+- Las ruedas son cilindros y son **la única geometría nueva** de todo esto: una
+  caja girando sobre su eje se lee como una caja girando.
+
+**Y el casco es un escudo extra.** Va primero, antes incluso que el escudo, que
+es lo que se lleva encima de todo lo demás: casco → escudo → vidas. **Uno por
+carrera y no vuelve** —revivir devuelve el escudo, no el casco—, porque si se
+repusiera la moto dejaría de ser un traje con ventaja para ser un traje con otra
+regla de vidas.
+
+Cuesta 1.500 de jade, el más caro con diferencia, y va el último de la lista.
+**Aun así hay que decirlo: es el primer traje del juego que da ventaja
+mecánica**, así que mientras esté puesto los otros seis son estrictamente
+peores. Si al probarlo desequilibra, lo natural es darle una contrapartida en
+vez de rebajarle el casco —una moto se inclina, no se desplaza de lado, así que
+cambiar de carril más lento le sienta bien al vehículo y al balance a la vez—.
+
 ## Idiomas y URLs
 
 El idioma se resuelve en este orden: `?lang=es|en` → `localStorage` → idioma del

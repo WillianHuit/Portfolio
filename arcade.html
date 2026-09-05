@@ -295,6 +295,11 @@
 
         .shield[hidden] { display: none !important; }
 
+        /* El casco en jade y el escudo en ocre: se pierden en momentos
+           distintos y hay que poder ver de un vistazo cuál de los dos te
+           queda, sin leer la palabra. */
+        .casco { color: var(--jade); }
+
         .hud-best { font-size: 0.95rem; font-weight: 700; opacity: 0.75; }
 
         .combo {
@@ -1334,6 +1339,9 @@
                 <span class="hud-label">Vidas</span>
                 <span class="lives" id="lives">◆ ◆ ◆</span>
                 <span class="shield" id="shield" hidden>⬡ Escudo</span>
+                <!-- Va DEBAJO del escudo porque se gasta ANTES que él: el
+                     orden de la lista es el orden en que se pierden. -->
+                <span class="shield casco" id="casco" hidden>◓ Casco</span>
             </div>
 
             <div class="hud-box minimap" id="minimap">

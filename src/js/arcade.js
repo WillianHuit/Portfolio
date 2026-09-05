@@ -1021,7 +1021,15 @@ const SKINS = [
     { id: 'ceniza', name: 'Ceniza', icon: '▲',
       desc: 'Lo que queda cuando el Fuego hace de las suyas.',
       cost: 900, cloth: 0x33312f, skin: 0xb06a4a, crest: 0xff6b2c, legs: 0x1a1a1a,
-      trim: 0xff6b2c, hair: 0x141414, boot: 0x2a2a2a }
+      trim: 0xff6b2c, hair: 0x141414, boot: 0x2a2a2a },
+    // El unico traje que NO es solo color. Trae maquina debajo y casco encima, y
+    // el casco es lo primero que se come un golpe: por eso cuesta lo que cuesta
+    // y por eso va el ultimo de la lista.
+    { id: 'moto', name: 'Moto', icon: '≡', moto: true,
+      desc: 'Con casco, y el casco aguanta un golpe antes que el escudo. Uno por carrera.',
+      cost: 1500, cloth: 0x2a2f38, skin: 0xd9a066, crest: 0xd93a3a, legs: 0x1a1c20,
+      trim: 0xd9d9d9, hair: 0x1a1008, boot: 0x22242a,
+      bike: 0xd93a3a, bikeDark: 0x14161a, visor: 0x1b2430 }
 ];
 
 // ===========================================================================
@@ -1282,6 +1290,25 @@ const ZONE_WIND = 2.6;              // unidades que llega a apartar la ventisca
 // vez icono y vista previa, y ahorra tener que ponerselo para saber como es.
 function skinIcon(sk) {
     const c = h => '#' + h.toString(16).padStart(6, '0');
+    // El de la moto es otro dibujo, no el muneco con otros colores: es lo unico
+    // que hay en la tienda que no es un traje, y la tarjeta tiene que decirlo
+    // antes de leer una palabra.
+    if (sk.moto) {
+        return svg(
+            '<rect x="1" y="0" width="22" height="24" rx="4" fill="#efe6d2" opacity=".16"/>' +
+            // Piloto: casco con visera, tronco echado hacia delante
+            '<rect x="8" y="2.2" width="7" height="6" rx="2.6" fill="' + c(sk.crest) + '"/>' +
+            '<rect x="7.4" y="4.4" width="3" height="2.2" rx="1" fill="' + c(sk.visor) + '"/>' +
+            '<path d="M9 8.6h5.4l2.4 5.2h-9z" fill="' + c(sk.cloth) + '"/>' +
+            // Maquina
+            '<rect x="6" y="13" width="12" height="2.6" rx="1.2" fill="' + c(sk.bike) + '"/>' +
+            '<rect x="4.2" y="11.4" width="4" height="1.5" rx=".7" fill="' + c(sk.trim) + '"/>' +
+            '<circle cx="6.4" cy="19" r="3.6" fill="' + c(sk.bikeDark) + '"/>' +
+            '<circle cx="17.6" cy="19" r="3.6" fill="' + c(sk.bikeDark) + '"/>' +
+            '<circle cx="6.4" cy="19" r="1.2" fill="' + c(sk.trim) + '"/>' +
+            '<circle cx="17.6" cy="19" r="1.2" fill="' + c(sk.trim) + '"/>'
+        );
+    }
     return svg(
         // Placa de fondo clara. Sin ella los trajes de piernas oscuras (el
         // Ajaw lleva obsidiana) se comian las piernas contra la tarjeta, que
@@ -1335,6 +1362,7 @@ const game = {
     combo: 0,
     lives: START_LIVES,
     shield: false,
+    casco: false,        // el casco de la moto, uno por carrera y antes que el escudo
     invuln: 0,
     elapsed: 0,
     nextSpawnZ: SPAWN_Z,
@@ -1452,7 +1480,7 @@ const dom = {
     finalDist: $('finalDist'), finalJade: $('finalJade'), finalScore: $('finalScore'),
     finalRegion: $('finalRegion'), finalBank: $('finalBank'),
     bestScore: $('bestScore'), hudBest: $('hudBest'),
-    combo: $('combo'), shield: $('shield'),
+    combo: $('combo'), shield: $('shield'), casco: $('casco'),
     milestone: $('milestone'), banner: $('banner'),
     speedVeil: $('speedVeil'), hitVeil: $('hitVeil'), pauseBtn: $('pauseBtn'),
     menuRoute: $('menuRoute'), menuBank: $('menuBank'), menuBest: $('menuBest'),
@@ -5061,9 +5089,14 @@ function buildPlayer() {
         color: 0xffffff, transparent: true, opacity: 1
     });
 
+    // bike, bikeDark y visor van AQUI dentro y no en un sitio aparte, aunque no
+    // los toque ningun traje salvo la moto: la invulnerabilidad parpadea
+    // recorriendo Object.values(playerMats), asi que metidos aqui la maquina
+    // parpadea con su jinete en vez de quedarse opaca mientras el desaparece.
     playerMats = {
         cloth: slot(), skin: slot(), crest: slot(), legs: slot(),
-        trim: slot(), hair: slot(), boot: slot()
+        trim: slot(), hair: slot(), boot: slot(),
+        bike: slot(), bikeDark: slot(), visor: slot()
     };
 
     const cube = (parent, m, sx, sy, sz, x, y, z) => {
@@ -5106,30 +5139,99 @@ function buildPlayer() {
     // --- Cabeza ---
     cube(playerBody, playerMats.skin, 0.3, 0.2, 0.3, 0, 1.85, 0);         // cuello
     const head = cube(playerBody, playerMats.skin, 0.62, 0.6, 0.6, 0, 2.05, 0);
-    // Pelo: nuca y laterales. Es lo primero que se ve de el.
-    cube(playerBody, playerMats.hair, 0.66, 0.5, 0.22, 0, 2.08, 0.22);
-    cube(playerBody, playerMats.hair, 0.66, 0.22, 0.62, 0, 2.31, 0);
-    cube(playerBody, playerMats.hair, 0.16, 0.42, 0.5, -0.35, 2.02, 0.06);
-    cube(playerBody, playerMats.hair, 0.16, 0.42, 0.5, 0.35, 2.02, 0.06);
-    // Tocado y tres plumas abiertas hacia atras
-    cube(playerBody, playerMats.crest, 0.72, 0.24, 0.72, 0, 2.5, 0);
-    cube(playerBody, playerMats.trim, 0.76, 0.1, 0.76, 0, 2.63, 0);
+    // Pelo, tocado y plumas se guardan juntos: con el casco puesto hay que
+    // apagarlos, y tres plumas de quetzal saliendo por debajo de un integral
+    // no es un guino, es un fallo de montaje.
+    const tocado = [];
+    const pelo = (m, sx, sy, sz, x, y, z) => {
+        tocado.push(cube(playerBody, m, sx, sy, sz, x, y, z));
+    };
+    pelo(playerMats.hair, 0.66, 0.5, 0.22, 0, 2.08, 0.22);
+    pelo(playerMats.hair, 0.66, 0.22, 0.62, 0, 2.31, 0);
+    pelo(playerMats.hair, 0.16, 0.42, 0.5, -0.35, 2.02, 0.06);
+    pelo(playerMats.hair, 0.16, 0.42, 0.5, 0.35, 2.02, 0.06);
+    pelo(playerMats.crest, 0.72, 0.24, 0.72, 0, 2.5, 0);
+    pelo(playerMats.trim, 0.76, 0.1, 0.76, 0, 2.63, 0);
     const plume = (x, rz, h) => {
         const f = cube(playerBody, playerMats.crest, 0.13, h, 0.34, x, 2.62 + h / 2, 0.2);
         f.rotation.z = rz;
         f.rotation.x = 0.35;
+        tocado.push(f);
         return f;
     };
     plume(0, 0, 0.66);
     plume(-0.2, 0.42, 0.52);
     plume(0.2, -0.42, 0.52);
 
+    // --- El casco ---
+    // Va colgado del cuerpo como el pelo, para que herede la inclinacion del
+    // tronco sin ningun calculo aparte. La visera mira al frente, o sea a -z,
+    // que es adonde corre el jugador.
+    const casco = new THREE.Group();
+    casco.visible = false;
+    playerBody.add(casco);
+    cube(casco, playerMats.crest, 0.74, 0.72, 0.76, 0, 2.06, 0);          // calota
+    cube(casco, playerMats.crest, 0.78, 0.26, 0.5, 0, 2.34, 0.06);        // cresta
+    cube(casco, playerMats.visor, 0.66, 0.28, 0.1, 0, 2.06, -0.36);       // visera
+    cube(casco, playerMats.trim, 0.7, 0.08, 0.12, 0, 2.22, -0.36);        // ceja
+    cube(casco, playerMats.bikeDark, 0.6, 0.22, 0.5, 0, 1.78, -0.1);      // mentonera
+
     const armL = limb(playerMats.skin, playerMats.skin, -0.55, 1.66, 0.24, 0.72, 0.24, [0.28, 0.24, 0.28, 0]);
     const armR = limb(playerMats.skin, playerMats.skin, 0.55, 1.66, 0.24, 0.72, 0.24, [0.28, 0.24, 0.28, 0]);
     const legL = limb(playerMats.legs, playerMats.boot, -0.24, 0.85, 0.3, 0.8, 0.3, [0.34, 0.2, 0.5, -0.08]);
     const legR = limb(playerMats.legs, playerMats.boot, 0.24, 0.85, 0.3, 0.8, 0.3, [0.34, 0.2, 0.5, -0.08]);
 
-    playerParts = { torso, head, armL, armR, legL, legR };
+    // --- La maquina ---
+    // Cuelga de playerGroup y NO de playerBody: el cuerpo se inclina hacia
+    // delante con la velocidad y se agacha al esconderse tras el carenado, y una
+    // moto que se tumba con su piloto no es una moto, es un accidente. El jinete
+    // se mueve encima de ella; ella se queda a plomo sobre la calzada.
+    //
+    // Las ruedas son cilindros y no cajas, que es la unica geometria nueva de
+    // todo esto: una caja girando sobre su eje se lee como una caja girando.
+    const moto = new THREE.Group();
+    moto.visible = false;
+    playerGroup.add(moto);
+
+    const RUEDA = new THREE.CylinderGeometry(0.52, 0.52, 0.24, 14);
+    const rueda = (z) => {
+        const w = new THREE.Mesh(RUEDA, playerMats.bikeDark);
+        w.position.set(0, 0.52, z);
+        w.rotation.z = Math.PI / 2;          // el eje pasa a ser el X
+        moto.add(w);
+        const llanta = new THREE.Mesh(BOX, playerMats.trim);
+        llanta.scale.set(0.26, 0.62, 0.13);
+        llanta.position.set(0, 0.52, z);
+        moto.add(llanta);
+        return w;
+    };
+    const ruedaT = rueda(1.05);              // trasera
+    const ruedaD = rueda(-1.15);             // delantera
+
+    const pieza = (m, sx, sy, sz, x, y, z, rx) => {
+        const q = new THREE.Mesh(BOX, m);
+        q.scale.set(sx, sy, sz);
+        q.position.set(x, y, z);
+        if (rx) q.rotation.x = rx;
+        moto.add(q);
+        return q;
+    };
+    pieza(playerMats.bike, 0.42, 0.34, 2.0, 0, 0.86, 0);                  // cuna
+    pieza(playerMats.bike, 0.56, 0.46, 0.92, 0, 1.12, -0.34);             // deposito
+    pieza(playerMats.bikeDark, 0.62, 0.16, 0.72, 0, 1.02, 0.5);           // asiento
+    pieza(playerMats.bike, 0.5, 0.5, 0.34, 0, 1.28, -0.98, -0.32);        // carenado
+    pieza(playerMats.trim, 0.18, 0.78, 0.18, -0.3, 0.9, -1.1, -0.28);     // horquilla
+    pieza(playerMats.trim, 0.18, 0.78, 0.18, 0.3, 0.9, -1.1, -0.28);
+    pieza(playerMats.trim, 1.0, 0.12, 0.12, 0, 1.36, -0.86);              // manillar
+    pieza(playerMats.bikeDark, 0.16, 0.16, 0.8, -0.34, 0.72, 0.72);       // escape
+    pieza(playerMats.bikeDark, 0.16, 0.16, 0.8, 0.34, 0.72, 0.72);
+    // Estriberas: es lo que explica donde apoya los pies, y sin ellas las
+    // piernas quedaban dobladas en el aire.
+    pieza(playerMats.trim, 0.5, 0.08, 0.16, -0.42, 0.6, 0.1);
+    pieza(playerMats.trim, 0.5, 0.08, 0.16, 0.42, 0.6, 0.1);
+
+    playerParts = { torso, head, armL, armR, legL, legR,
+                    tocado, casco, moto, ruedaT, ruedaD };
     scene.add(playerGroup);
 
     // Sombra de contacto. Sin ella no hay forma de juzgar donde vas a caer ni
@@ -5188,6 +5290,11 @@ function buildPlayer() {
     applySkin(save.skin);
 }
 
+// Si el traje puesto trae maquina. Se guarda aparte y no se consulta el traje
+// en cada frame: la postura lo pregunta sesenta veces por segundo y skinById
+// recorre la lista entera.
+let motoOn = false;
+
 function applySkin(id) {
     const sk = skinById(id);
     playerMats.cloth.color.setHex(sk.cloth);
@@ -5197,6 +5304,15 @@ function applySkin(id) {
     playerMats.trim.color.setHex(sk.trim);
     playerMats.hair.color.setHex(sk.hair);
     playerMats.boot.color.setHex(sk.boot);
+    playerMats.bike.color.setHex(sk.bike || sk.cloth);
+    playerMats.bikeDark.color.setHex(sk.bikeDark || sk.legs);
+    playerMats.visor.color.setHex(sk.visor || sk.legs);
+
+    motoOn = !!sk.moto;
+    playerParts.moto.visible = motoOn;
+    playerParts.casco.visible = motoOn;
+    // Con el casco puesto se apagan el pelo, el tocado y las plumas
+    for (const p of playerParts.tocado) p.visible = !motoOn;
 }
 
 // --- Jaguar: la presion visual de las vidas ---
@@ -6997,16 +7113,28 @@ function updatePlayer(dt) {
     // Achatar Y tumbar dejaba una figura deforme.
     if (sliding) { sy = 0.92; sxz = 1; }
 
-    playerBody.scale.set(sxz, sy, sliding ? 1.6 : sxz);
-    // Deslizarse no es agacharse: es tirarse de barriga. El cuerpo se pone
-    // practicamente horizontal —cinco grados de plano— y baja hasta rozar la
-    // calzada. Con la inclinacion anterior seguia leyendose como alguien en
-    // cuclillas, que es una postura de la que se puede uno levantar; esta no.
-    playerBody.rotation.x = sliding ? -1.48 : -0.06 - (game.speed - SPEED_START) * 0.006;
-    playerBody.position.y = sliding ? -0.06 : 0;
-    // Bamboleo del roce, cortito y rapido: es lo unico que dice que se esta
-    // arrastrando por el suelo y no volando a un palmo de el.
-    playerBody.rotation.z = sliding ? Math.sin(player.run * 3.4) * 0.05 : 0;
+    if (motoOn) {
+        // En moto no hay tumbada ni aplastamiento: agacharse es meterse detras
+        // del carenado, y el cuerpo no se estira porque debajo hay un chasis
+        // que no da de si. Solo cambia cuanto se echa hacia delante.
+        playerBody.scale.set(1, 1, 1);
+        playerBody.rotation.x = sliding ? -0.62 : -0.2 - (game.speed - SPEED_START) * 0.004;
+        playerBody.position.y = sliding ? -0.1 : 0;
+        // Vibracion del motor, muy corta y muy rapida. Es lo unico que hace que
+        // una moto parada en el sitio no parezca una pegatina.
+        playerBody.rotation.z = Math.sin(game.elapsed * 46) * 0.006;
+    } else {
+        playerBody.scale.set(sxz, sy, sliding ? 1.6 : sxz);
+        // Deslizarse no es agacharse: es tirarse de barriga. El cuerpo se pone
+        // practicamente horizontal —cinco grados de plano— y baja hasta rozar la
+        // calzada. Con la inclinacion anterior seguia leyendose como alguien en
+        // cuclillas, que es una postura de la que se puede uno levantar; esta no.
+        playerBody.rotation.x = sliding ? -1.48 : -0.06 - (game.speed - SPEED_START) * 0.006;
+        playerBody.position.y = sliding ? -0.06 : 0;
+        // Bamboleo del roce, cortito y rapido: es lo unico que dice que se esta
+        // arrastrando por el suelo y no volando a un palmo de el.
+        playerBody.rotation.z = sliding ? Math.sin(player.run * 3.4) * 0.05 : 0;
+    }
 
     // Inclinacion lateral: se calcula contra el destino, asi que el cuerpo se
     // tumba al salir y se endereza al llegar.
@@ -7031,6 +7159,19 @@ function updatePlayer(dt) {
         playerParts.legR.rotation.set(Math.sin(game.elapsed * 2.6 + 0.9) * 0.28 + 0.05, 0, 0);
         playerParts.torso.position.y = 1.28;
         playerParts.head.rotation.set(-0.12, 0, 0);
+    } else if (motoOn) {
+        // Sentado: brazos al manillar, rodillas dobladas y pies en las
+        // estriberas. Las piernas van a rotacion NEGATIVA para que la cadera
+        // las mande hacia delante, que es donde estan los estribos.
+        const tuck = sliding ? 1 : 0;
+        playerParts.armL.rotation.set(-1.5 + tuck * 0.28, 0, 0.3);
+        playerParts.armR.rotation.set(-1.5 + tuck * 0.28, 0, -0.3);
+        playerParts.legL.rotation.set(-1.15, 0, 0.16);
+        playerParts.legR.rotation.set(-1.15, 0, -0.16);
+        playerParts.torso.position.y = 1.28;
+        // La cabeza compensa lo que se echa el cuerpo, para seguir mirando a la
+        // calzada tanto sentado como escondido tras el carenado.
+        playerParts.head.rotation.set(0.2 + tuck * 0.34, 0, 0);
     } else if (sliding) {
         // Los DOS brazos estirados hacia delante, como quien se tira de cabeza
         // a una piscina. Con el cuerpo ya tumbado, un brazo a -2,7 queda
@@ -7068,6 +7209,17 @@ function updatePlayer(dt) {
         playerParts.armL.rotation.set(-2.0, 0, 0.25);
         playerParts.armR.rotation.set(-2.0, 0, -0.25);
         playerParts.head.rotation.set(rising ? -0.15 : 0.2, 0, 0);
+    }
+
+    // Las ruedas. Giran con el mundo y no con el reloj, asi que a poca
+    // velocidad ruedan despacio: si fueran con el reloj, frenar dejaria la moto
+    // parada con las ruedas a tope, que es lo que delata a un juguete.
+    if (motoOn) {
+        playerParts.ruedaT.rotation.x = -player.run * 1.6;
+        playerParts.ruedaD.rotation.x = -player.run * 1.6;
+        // En el aire la moto levanta el morro, y al aterrizar lo baja de golpe.
+        const aire = player.grounded ? 0 : (player.vy > 0 ? 1 : -0.55);
+        playerParts.moto.rotation.x = aire * 0.16 - squashK * 0.1;
     }
 
     // Topetazo contra el muro de un carril alto: el cuerpo se asoma y vuelve.
@@ -7615,6 +7767,21 @@ function takeHit() {
     game.combo = 0;
     jadeStreak = 0;
 
+    // El casco va PRIMERO, antes incluso que el escudo: es lo que llevas puesto
+    // encima de todo lo demas. Uno por carrera y no vuelve —revivir devuelve el
+    // escudo, no el casco—, porque si se repusiera la moto no seria un traje con
+    // ventaja sino un traje con otra regla de vidas.
+    if (game.casco) {
+        game.casco = false;
+        playerParts.casco.visible = false;
+        shake = 0.7;
+        flashHurt(HURT_AMBER, 0.55);
+        sfx.shieldBreak();
+        burstParticles(player.x, player.y + 1.9, PLAYER_Z, 20, 1.3, C.ochre);
+        hudDirty = true;
+        return;
+    }
+
     // El escudo absorbe el golpe antes que las vidas. Se acusa distinto: el
     // escudo cuesta algo que se puede volver a encontrar, perder una vida no.
     // Mismo lenguaje, distinta intensidad y distinto color, para que se
@@ -7703,7 +7870,7 @@ function showRegionBanner(ri) {
 // reescribia el innerHTML de las vidas 60 veces por segundo, forzando un
 // recalculo de estilo continuo por un texto que casi nunca cambia.
 let hudDirty = true;
-const hudLast = { lives: -1, shield: null, jade: -1, dist: -1, combo: -1 };
+const hudLast = { lives: -1, shield: null, casco: null, jade: -1, dist: -1, combo: -1 };
 
 function renderHud() {
     if (game.lives !== hudLast.lives) {
@@ -7737,24 +7904,55 @@ function renderHud() {
         dom.shield.hidden = !game.shield;
     }
 
-    if (game.boost > 0) {
-        if (dom.pw.boost.hidden) dom.pw.boost.hidden = false;
-        dom.pw.boost.firstElementChild.style.width =
-            (game.boost / BOOST_TIME * 100).toFixed(1) + '%';
-    } else if (!dom.pw.boost.hidden) {
-        dom.pw.boost.hidden = true;
+    if (game.casco !== hudLast.casco) {
+        hudLast.casco = game.casco;
+        dom.casco.hidden = !game.casco;
     }
 
-    // Los poderes activos: solo cambia el ancho de la barra, nunca el arbol
+}
+
+// ---------------------------------------------------------------------------
+// Las barras de cuenta atras
+// ---------------------------------------------------------------------------
+// Van APARTE de renderHud, y esto era un fallo de verdad. renderHud solo corre
+// cuando hudDirty esta puesto, y hudDirty solo se pone cuando algo CAMBIA de
+// estado: se recoge un poder, se gasta una vida, se acaba el ambar. Pero una
+// barra de cuenta atras no cambia de estado, cambia de ANCHO sesenta veces por
+// segundo, asi que estaba dentro de la puerta equivocada: se pintaba al 100 %
+// al recoger el poder, se quedaba clavada ahi los nueve segundos y desaparecia
+// de golpe al caducar. Las cinco barras del HUD no se movian.
+//
+// Y se arregla sin pagar lo que renderHud queria ahorrar: se escribe el ancho
+// en enteros y solo cuando el entero cambia. Un poder de nueve segundos hace
+// cien escrituras en total —once por segundo— en vez de 540, y con nada puesto
+// no hace ninguna.
+const barLast = { boost: -1, magnet: -1, flight: -1, double: -1, amber: -1 };
+
+function setBar(el, key, frac) {
+    const pct = Math.round(Math.max(0, Math.min(1, frac)) * 100);
+    if (pct === barLast[key]) return;
+    barLast[key] = pct;
+    el.firstElementChild.style.width = pct + '%';
+}
+
+function renderBars() {
+    if (game.boost > 0) {
+        if (dom.pw.boost.hidden) dom.pw.boost.hidden = false;
+        setBar(dom.pw.boost, 'boost', game.boost / BOOST_TIME);
+    } else if (!dom.pw.boost.hidden) {
+        dom.pw.boost.hidden = true;
+        barLast.boost = -1;
+    }
+
     for (const k of ['magnet', 'flight', 'double', 'amber']) {
         const el = dom.pw[k];
         const t = game.powers[k];
         if (t <= 0) {
-            if (!el.hidden) el.hidden = true;
+            if (!el.hidden) { el.hidden = true; barLast[k] = -1; }
             continue;
         }
         if (el.hidden) el.hidden = false;
-        el.firstElementChild.style.width = (t / game.powerMax[k] * 100).toFixed(1) + '%';
+        setBar(el, k, t / game.powerMax[k]);
     }
 }
 
@@ -7770,6 +7968,7 @@ function renderDistance() {
 function resetHudCache() {
     hudLast.lives = -1;
     hudLast.shield = null;
+    hudLast.casco = null;
     hudLast.jade = -1;
     hudLast.dist = -1;
     hudLast.combo = -1;
@@ -8008,6 +8207,8 @@ function refreshMinimapDots() {
 let mmLastName = '';
 let mmLastLeg = -1;
 let mmLastLeft = -1;
+let mmLastX = '', mmLastY = '';
+let mmLastCross = -1, mmLastZone = -1;
 
 // Los caminos recorridos EN ESTA CARRERA, no los de siempre. Los puntos si
 // recuerdan lo alcanzado alguna vez —son el mapa de lo descubierto—, pero el
@@ -8022,9 +8223,17 @@ function paintRouteLegs(upto) {
 function renderMinimap(i, j, raw, e) {
     // El marcador viaja del punto actual al siguiente durante la transicion,
     // asi que el mapa se mueve incluso mientras el nombre no cambia.
+    // Con memoria de lo ultimo escrito. El marcador solo se mueve durante el
+    // cruce de departamento —que dura segundo y medio de los tres minutos que
+    // dura una zona— y las dos barras avanzan un uno por ciento cada varios
+    // segundos, asi que esto eran cuatro escrituras al DOM por frame, con sus
+    // cuatro cadenas nuevas, para mover numeros que el 99 % del tiempo son los
+    // mismos. Comparar cuatro cadenas sale mucho mas barato que escribirlas.
     const A = REGIONS[i].mm, B = REGIONS[j].mm;
-    dom.mmYou.setAttribute('cx', lerp(A[0], B[0], e).toFixed(1));
-    dom.mmYou.setAttribute('cy', lerp(A[1], B[1], e).toFixed(1));
+    const cx = lerp(A[0], B[0], e).toFixed(1);
+    const cy = lerp(A[1], B[1], e).toFixed(1);
+    if (cx !== mmLastX) { mmLastX = cx; dom.mmYou.setAttribute('cx', cx); }
+    if (cy !== mmLastY) { mmLastY = cy; dom.mmYou.setAttribute('cy', cy); }
     paintRouteLegs(i);
 
     if (REGIONS[i].id !== mmLastName) {
@@ -8036,13 +8245,15 @@ function renderMinimap(i, j, raw, e) {
     // la ruta esta quieta— sino lo que falta para el proximo cruce, que es lo
     // unico que puede cambiarlo. Y en el ultimo tramo, lo que falta para la
     // meta.
-    dom.mmFill.style.width = (raw * 100).toFixed(0) + '%';
+    const pc = Math.round(raw * 100);
+    if (pc !== mmLastCross) { mmLastCross = pc; dom.mmFill.style.width = pc + '%'; }
 
     // Y debajo, la otra cuenta: la de la ZONA. Son dos relojes distintos y por
     // eso son dos barras: la de arriba dice cuando toca elegir y la de abajo
     // cuando esa eleccion te saca de aqui.
     const zp = zoneProgress();
-    dom.mmZone.style.width = (zp * 100).toFixed(0) + '%';
+    const pz = Math.round(zp * 100);
+    if (pz !== mmLastZone) { mmLastZone = pz; dom.mmZone.style.width = pz + '%'; }
 
     // El texto en decenas de metro: a cero coma cinco segundos por unidad,
     // repintar cada metro es reescribir el DOM sesenta veces por segundo para
@@ -8146,6 +8357,10 @@ function startGame() {
     game.combo = 0;
     game.lives = maxLives();
     game.shield = lvl('shield') > 0;
+    // El casco viene con el traje, no con las mejoras: se tiene por llevar la
+    // moto puesta y se recupera al empezar otra carrera, no al revivir.
+    game.casco = motoOn;
+    playerParts.casco.visible = motoOn;
     game.invuln = 0;
     game.elapsed = 0;
     game.nextMilestone = MILESTONE_EVERY;
@@ -8247,6 +8462,9 @@ function startGame() {
     resetRoadColors();
     mmLastName = '';
     mmLastLeft = -1;
+    mmLastX = ''; mmLastY = '';
+    mmLastCross = -1; mmLastZone = -1;
+    for (const k in barLast) barLast[k] = -1;
     lastBlendKey = -1;
     hudDirty = true;
     renderHud();
@@ -8995,6 +9213,10 @@ function frame(now) {
         }
 
         if (hudDirty) { renderHud(); hudDirty = false; }
+        // Las barras SI van en cada frame: son cuentas atras, y lo que cambia
+        // en ellas no es el estado sino el ancho. Se escriben solas cuando el
+        // entero cambia, asi que con nada puesto no cuestan una escritura.
+        renderBars();
         renderDistance();
 
         // El panel de pruebas se refresca cada cincuenta unidades, no cada
