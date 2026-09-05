@@ -527,15 +527,20 @@ const CAMAZOTZ = 0;   // murcielago de Xibalba: vuela a la altura del pecho
 const RODANTE = 1;    // piedra que baja rodando por el carril
 const VACA = 2;       // cruza la calzada de lado a lado, sin prisa
 const BUS = 3;        // viene de frente por su carril y no se aparta
+// Bomba volcanica. Se comporta como la piedra rodante —cae del cielo y luego
+// rueda— pero va al rojo vivo y no se tine con la zona: la lava es lava en
+// Tajumulco y en el Fuego, y que cambiase de color con el departamento la
+// convertiria en decorado.
+const BOMBA = 4;
 
-const HAZ_SPEED = [15, 9, 0, 17];        // velocidad propia, sumada a la del mundo
+const HAZ_SPEED = [15, 9, 0, 17, 9];     // velocidad propia, sumada a la del mundo
 // Franja vertical que ocupa cada amenaza sobre su suelo. Debajo del
 // murcielago se pasa deslizandose; la piedra solo se salta.
-const HAZ_LOW = [1.25, 0, 0, 0];
+const HAZ_LOW = [1.25, 0, 0, 0, 0];
 // La vaca y la camioneta son mas altas que un salto a proposito: la respuesta
 // a las dos es apartarse, y dejar que ademas se pudieran saltar convertiria
 // tres respuestas distintas en una sola.
-const HAZ_HIGH = [2.35, 1.45, 2.55, 3.7];
+const HAZ_HIGH = [2.35, 1.45, 2.55, 3.7, 1.5];
 // Lo que avanza la vaca de lado por cada unidad que avanza el mundo. Al ir
 // atada a la velocidad y no al reloj, cruza siempre por el mismo sitio: se
 // puede aprender, que es lo unico que hace justo un obstaculo movil.
@@ -1011,6 +1016,77 @@ const REGION_ICONS = {
 
 const svg = body => '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">' + body + '</svg>';
 
+// ===========================================================================
+// El suceso de cada zona
+// ===========================================================================
+// Cada punto de la ruta tiene UNA cosa que solo pasa ahi, y pasa una vez por
+// visita, cerca del final del tramo. No es decorado: es lo que convierte
+// "estoy en Tajumulco" en "estoy en Tajumulco Y EL VOLCAN ESTA ESCUPIENDO".
+// Antes, las trece zonas se distinguian por el color del cielo y por lo que
+// crecia en la cuneta, y eso las hacia distintas de mirar pero identicas de
+// JUGAR: la misma piedra rodante y el mismo murcielago en la selva, en la
+// playa y en la cumbre nevada.
+//
+// Trece sucesos con arte propio serian trece juegos. Lo que hay es un
+// vocabulario de seis patrones y una ficha por zona que los compone y los
+// tematiza —el nombre, el color con el que se tine la escena mientras dura, de
+// que color son las chispas y con que cadencia viene lo que viene—:
+//
+//   lluvia   - algo cae del cielo sobre los carriles
+//   enjambre - amenazas que vienen a por ti, seguidas y por el mismo sitio
+//   cruce    - algo cruza la calzada de un margen al otro
+//   pasillo  - obstaculos del suelo encadenados
+//   viento   - empuja de lado; no golpea, descoloca
+//   temblor  - retumba y cae piedra de los margenes
+//
+// La UNICA pieza nueva es la bomba volcanica, que es la que el suceso de
+// Tajumulco necesitaba de verdad. Todo lo demas recombina lo que ya hay.
+//
+// n es la cuenta a dureza maxima; la de verdad sale de lo avanzada que este la
+// ruta. Y esta MEDIDA en tiempo, no elegida a ojo: el hueco entre piezas es
+// ZONE_LEN / n unidades, que a la velocidad de crucero de esa zona tiene que
+// dar entre seis decimas y segundo y medio. Los primeros numeros que puse
+// daban un autobus de frente cada media decima en la capital, que no es
+// dificil: es imposible.
+const ZONES = {
+    tikal:       { name: 'Vuelo de camazotz',   kind: 'enjambre', what: CAMAZOTZ, n: 7,
+                   warn: 'animal',   tint: 0x1d3326, spark: 0x14776a },
+    flores:      { name: 'El lago se la traga', kind: 'pasillo',  what: CENOTE,   n: 6,
+                   warn: 'hueco',    tint: 0x2f6b8a, spark: 0x7fd4e6 },
+    semuc:       { name: 'Desprendimiento',     kind: 'lluvia',   what: RODANTE,  n: 8,
+                   warn: 'derrumbe', tint: 0x3f6a52, spark: 0x9fb08a },
+    riodulce:    { name: 'Troncos del río',     kind: 'pasillo',  what: TRONCO,   n: 5,
+                   warn: 'derrumbe', tint: 0x2f7a4e, spark: 0x6f4f2f },
+    esquipulas:  { name: 'Caravana de romería', kind: 'enjambre', what: BUS,      n: 5,
+                   warn: 'parada',   tint: 0x6a5030, spark: 0xd4a63a },
+    monterrico:  { name: 'Marejada',            kind: 'pasillo',  what: TRONCO,   n: 6,
+                   warn: 'derrumbe', tint: 0x2f6f8a, spark: 0x9fd8e6 },
+    tajumulco:   { name: 'Erupción',            kind: 'lluvia',   what: BOMBA,    n: 9,
+                   warn: 'derrumbe', tint: 0xd4451f, spark: 0xff8a4a },
+    todossantos: { name: 'Ventisca',            kind: 'viento',   what: 0,        n: 0,
+                   warn: 'viento',   tint: 0xcfe0ea, spark: 0xffffff },
+    chichi:      { name: 'Camino del mercado',  kind: 'cruce',    what: VACA,     n: 4,
+                   warn: 'animal',   tint: 0x4a3f63, spark: 0xf0c34a },
+    atitlan:     { name: 'Xocomil',             kind: 'viento',   what: 0,        n: 0,
+                   warn: 'viento',   tint: 0x3a5a7a, spark: 0xcfe4ef },
+    fuego:       { name: 'El Fuego escupe',     kind: 'lluvia',   what: BOMBA,    n: 11,
+                   warn: 'derrumbe', tint: 0xff5a1f, spark: 0xffb04a },
+    antigua:     { name: 'Temblor',             kind: 'temblor',  what: RODANTE,  n: 9,
+                   warn: 'derrumbe', tint: 0x8a7a5c, spark: 0xd8c8a8 },
+    guate:       { name: 'Hora pico',           kind: 'enjambre', what: BUS,      n: 6,
+                   warn: 'parada',   tint: 0x2a3550, spark: 0xf0c34a }
+};
+
+// Cuanto dura el suceso, en unidades de trazado, y cuando se arma.
+//
+// ZONE_AFTER se cuenta desde que se entra en la zona. Con cruces cada 950 y
+// uno de cada dos cambiando de sitio, cada zona dura 1.900: a 1.350 el suceso
+// cae holgadamente entre el cruce cortado de en medio y el distribuidor que
+// saca de la zona, que es "casi finalizando" sin pisar ninguno de los dos.
+const ZONE_AFTER = 1350;
+const ZONE_LEN = 380;
+const ZONE_WIND = 2.6;              // unidades que llega a apartar la ventisca
+
 // Los trajes no llevan glifo sino un muñeco pintado con SUS colores: es a la
 // vez icono y vista previa, y ahorra tener que ponerselo para saber como es.
 function skinIcon(sk) {
@@ -1110,6 +1186,11 @@ const game = {
     lastTramo: -1,       // cual salio la vez anterior, para no repetirlo
     nextEvento: 0,       // distancia a la que toca el proximo suceso anunciado
     lastEvento: -1,      // cual salio la vez anterior, para no repetirlo
+    // Suceso de zona: i es la region a la que pertenece, k lo que lleva
+    // soltado, libre el carril que se respeta mientras la dureza lo permita y
+    // dur lo apretado que va, de 0 a 1, segun lo avanzada que este la ruta.
+    zone: { active: false, s0: 0, i: 0, k: 0, libre: 1, dur: 0, dicho: false },
+    nextZone: 0,         // distancia a la que se puede armar el proximo
     crossKind: 1,        // 0 = cruce de destino, 1 = bifurcacion cortada
     boostTaken: 0,       // aceleradores pisados, para la vida extra
     boostPerm: 0,        // velocidad que se queda para siempre
@@ -1143,6 +1224,7 @@ const player = {
     outVX: 0,            // lo que se aleja de lado mientras cae
     outVZ: 0,            // ...y lo que sale despedido hacia la camara
     outZ: 0,             // desplazamiento acumulado hacia la camara
+    push: 0,             // lo que la ventisca lo aparta de su carril
     wantSlide: false, // picado que se convierte en deslizamiento al tocar suelo
     jumps: 0,         // saltos gastados desde que dejo el suelo
     holding: false,   // la tecla de salto sigue pulsada
@@ -1821,6 +1903,13 @@ function buildMaterials() {
     mat.signPost  = lam(0x8d9298);
     mat.island    = lam(0xb9b2a4);
     mat.islandTop = lam(0xe8e2d4);
+
+    // Lava. Tampoco se tine con la zona, y por el mismo motivo que las
+    // senales: una bomba volcanica que cambiase de color con el departamento
+    // dejaria de leerse como algo que quema. Emisiva, o en las zonas de noche
+    // -que son justo las de los dos volcanes- se veria como una piedra gris.
+    mat.ember     = lam(0x8a2408, { emissive: 0xd4451f, emissiveIntensity: 0.85 });
+    mat.emberCore = lam(0xff9a3c, { emissive: 0xffb04a, emissiveIntensity: 1.15 });
 
     mat.boostPad  = lam(0x0d3a33);
     mat.boostMark = lam(0x4affd0, { emissive: 0x4affd0, emissiveIntensity: 0.7 });
@@ -3506,8 +3595,22 @@ function makeHazard() {
     group.visible = false;
     scene.add(group);
 
+    // Bomba volcanica: el mismo cuerpo de la piedra rodante pero al rojo, con
+    // el nucleo incandescente asomando por las juntas. Se reconoce de lejos
+    // por el color, que es lo unico que hay tiempo de mirar.
+    const bomba = new THREE.Group();
+    piece(bomba, mat.ember, 1.35, 1.35, 1.35, 0, 0, 0);
+    piece(bomba, mat.ember, 1.66, 0.9, 0.9, 0, 0, 0);
+    piece(bomba, mat.ember, 0.9, 1.66, 0.9, 0, 0, 0);
+    piece(bomba, mat.ember, 0.9, 0.9, 1.66, 0, 0, 0);
+    piece(bomba, mat.emberCore, 1.78, 0.34, 0.34, 0, 0.34, 0.34);
+    piece(bomba, mat.emberCore, 0.34, 0.34, 1.78, -0.34, -0.3, 0);
+    piece(bomba, mat.emberCore, 0.34, 1.78, 0.34, 0.36, 0, -0.34);
+    piece(bomba, mat.emberCore, 0.5, 0.5, 0.5, 0, 0, 0);
+    group.add(bomba);
+
     return {
-        group, parts: [bat, rock, vaca, bus], bat, rock, vaca, bus,
+        group, parts: [bat, rock, vaca, bus, bomba], bat, rock, vaca, bus, bomba,
         cuerpo, patas, rabo, faroL, faroR, wingL, wingR,
         type: CAMAZOTZ, lane: 1, z: 0, y: 0, phase: 0, entry: 0,
         drop: 0, dropV: 0, cross: 0, crossTo: 0, active: false
@@ -3696,6 +3799,23 @@ const SIGN_ART = {
         x.stroke();
         x.beginPath();
         x.moveTo(38, -18); x.lineTo(12, -34); x.lineTo(14, 0);
+        x.closePath(); x.fill();
+    },
+    // Viento fuerte de costado. Una manga cateada y tres rafagas: el unico
+    // suceso de zona para el que no habia rombo que no mintiera. Usar el de
+    // curva —que fue el primer apano— decia que la calzada iba a torcer, y no
+    // tuerce: lo que se mueve es el jugador.
+    viento: x => {
+        x.lineWidth = 9; x.lineCap = 'round';
+        for (let k = 0; k < 3; k++) {
+            const y = -14 + k * 17;
+            x.beginPath();
+            x.moveTo(-36, y); x.lineTo(6 + k * 9, y);
+            x.stroke();
+        }
+        // La punta de la manga, abierta hacia donde sopla
+        x.beginPath();
+        x.moveTo(14, -30); x.lineTo(40, 2); x.lineTo(14, 34);
         x.closePath(); x.fill();
     },
     // Distribuidor vial: hay que elegir salida.
@@ -4549,7 +4669,7 @@ function spawnHazard(type, lane, z, side, drop) {
 // Altura del ancla de cada amenaza sobre el suelo que pisa.
 function hazBaseY(h) {
     if (h.type === CAMAZOTZ) return 1.8;
-    if (h.type === RODANTE) return 0.72;
+    if (h.type === RODANTE || h.type === BOMBA) return 0.72;
     return 0;                                  // vaca y camioneta van al ras
 }
 
@@ -4654,7 +4774,7 @@ function limpioEntre(a, b) {
 // metros y una partida normal no veia ninguno.
 function trackBusy(len) {
     if (game.slopeS0 >= 0 || game.turn.active || game.narrowS0 >= 0 ||
-        game.sink.active) return true;
+        game.sink.active || game.zone.active) return true;
     // Donde caeria el tramo si se armase ahora mismo, con margen a los lados
     return limpioEntre(game.distance + ARM_AHEAD - 45,
                        game.distance + ARM_AHEAD + len + 45);
@@ -4743,6 +4863,171 @@ function armNarrow() {
     game.narrowS0 = game.distance + ARM_AHEAD;
 }
 
+// ===========================================================================
+// El suceso de la zona
+// ===========================================================================
+// Se arma como los demas tramos —por delante de lo que se ve, sin pisar una
+// bifurcacion ni otro tramo— pero no se dispara por sorteo ni por reparto: es
+// de la ZONA, y ocurre una vez por visita.
+function armZone() {
+    const ri = Math.floor(routePos()) % REGION_N;
+    const spec = ZONES[REGIONS[ri].id];
+    if (!spec) return false;
+    if (trackBusy(ZONE_LEN)) return false;
+
+    // Cuanto aprieta: de un tercio en Peten a entero en la capital. La ruta va
+    // de Tikal a Ciudad de Guatemala, asi que lo avanzado del recorrido ES la
+    // dificultad, y no hace falta ningun contador aparte.
+    const dur = 0.34 + 0.66 * (ri / (REGION_N - 1));
+
+    // El cartel es forzado: un suceso de zona no puede pillar a nadie sin
+    // avisar, y menos el primero que se ve en la vida.
+    if (spawnWarn(spec.warn, ARM_SIGN_Z, null, true) === 0) return false;
+
+    game.zone.active = true;
+    game.zone.s0 = game.distance + ARM_AHEAD;
+    game.zone.i = ri;
+    game.zone.k = 0;
+    game.zone.dur = dur;
+    game.zone.dicho = false;
+    game.zone.libre = (Math.random() * 3) | 0;
+    return true;
+}
+
+// Lo que aprieta el suceso en un punto del trazado: una campana, como la de la
+// curva. Manda sobre el tinte de la escena, sobre las chispas y sobre el
+// retumbo del temblor, y vuelve sola a cero al salir.
+function zoneGrip(sc) {
+    const Z = game.zone;
+    if (!Z.active) return 0;
+    const t = (sc - Z.s0) / ZONE_LEN;
+    if (t <= 0 || t >= 1) return 0;
+    return Math.sin(t * Math.PI);
+}
+
+// Un carril cualquiera que NO sea el libre. Siempre queda uno por el que se
+// pasa; lo que cambia con la dureza es cada cuantas piezas se MUEVE.
+//
+// La primera version quitaba el carril libre del todo en las ultimas zonas, y
+// eso no es dificultad: con una bomba cada seis decimas en un carril al azar de
+// tres, sobrevivir pasa a ser cuestion de suerte y morir deja de ser culpa de
+// nadie. Moviendo el hueco cada dos piezas se pide exactamente lo mismo —no
+// parar de leer y no parar de moverse— pero siempre hay una respuesta correcta.
+function zoneLane() {
+    const Z = game.zone;
+    let l = (Math.random() * 2) | 0;
+    if (l >= Z.libre) l++;
+    return l;
+}
+
+// Mueve el hueco. Se llama SOLO al soltar una pieza y no dentro de zoneLane:
+// el pasillo de jade tambien pregunta por el carril libre, y si moverlo fuera
+// efecto de preguntar, el jade acabaria corriendo el hueco de las bombas.
+function zoneShift() {
+    const Z = game.zone;
+    const cada = Math.max(2, Math.round(5 - 3 * Z.dur));
+    if (Z.k === 0 || Z.k % cada !== 0) return;
+    let n = (Math.random() * 2) | 0;
+    if (n >= Z.libre) n++;
+    Z.libre = n;
+}
+
+function updateZone(dt) {
+    const Z = game.zone;
+    if (!Z.active) return;
+    const spec = ZONES[REGIONS[Z.i].id];
+    const d = game.distance;
+
+    if (d > Z.s0 + ZONE_LEN + 60) {
+        Z.active = false;
+        player.push = 0;
+        return;
+    }
+
+    // El rotulo, al entrar y no al armar: armar ocurre doscientas quince
+    // unidades por delante y el nombre saldria sobre una recta vacia.
+    if (!Z.dicho && d > Z.s0 - 40) {
+        Z.dicho = true;
+        showBanner(spec.name, REGIONS[Z.i].name);
+    }
+
+    const grip = zoneGrip(d);
+
+    // --- Lo que suelta ---
+    // Se va soltando segun el punto de aparicion alcanza cada hueco, en vez de
+    // programarse entero al armar: asi la cadencia sale en unidades de calzada
+    // y se ve igual a cualquier velocidad.
+    const n = Math.max(2, Math.round(spec.n * (0.5 + 0.5 * Z.dur)));
+    if (spec.kind !== 'viento') {
+        const paso = ZONE_LEN / n;
+        while (Z.k < n && d - (Z.s0 + Z.k * paso) >= SPAWN_Z) {
+            emitZone(spec, Z.s0 + Z.k * paso);
+            Z.k++;
+        }
+    }
+
+    // --- Ventisca ---
+    // No golpea: descoloca. El empuje va con la DISTANCIA y no con el reloj,
+    // asi que las rafagas caen siempre en el mismo sitio del tramo y se pueden
+    // aprender, que es lo que separa un obstaculo de una loteria. Se asigna
+    // SIEMPRE, tambien fuera de la campana: multiplicado por grip vale cero
+    // ahi, y si se saltase el jugador se quedaria empujado hasta que el suceso
+    // caducara.
+    if (spec.kind === 'viento') {
+        player.push = Math.sin(d * 0.055) * ZONE_WIND * grip * (0.5 + 0.5 * Z.dur);
+    }
+
+    if (grip <= 0) return;
+
+    // --- Temblor ---
+    if (spec.kind === 'temblor') {
+        shake = Math.max(shake, SHAKE_SOFT * grip * 1.3);
+    }
+
+    // --- Ceniza, espuma, polvo ---
+    // Dos chispas de vez en cuando alrededor del jugador. Es barato y es la
+    // mitad de lo que hace que el suceso se lea como un suceso y no como una
+    // tanda de obstaculos con otro nombre. La tasa va baja a proposito: esto
+    // corre por PASO DE SIMULACION, sesenta veces por segundo, y el pozo de
+    // particulas lo comparten el jade, los golpes y los poderes.
+    if (Math.random() < grip * 0.12) {
+        burstParticles(
+            player.x + (Math.random() - 0.5) * 16,
+            3.5 + Math.random() * 5,
+            PLAYER_Z - 8 - Math.random() * 60,
+            2, 0.8, spec.spark
+        );
+    }
+}
+
+// Una pieza del suceso, en la coordenada de trazado dada.
+function emitZone(spec, sc) {
+    const z = game.distance - sc;
+    const Z = game.zone;
+    zoneShift();
+    switch (spec.kind) {
+        case 'lluvia':
+        case 'temblor':
+            // Cae del cielo y despues rueda. La altura se escalona para que no
+            // aterricen todas a la vez, que es lo que hace que suene a lluvia y
+            // no a un solo golpe.
+            spawnHazard(spec.what, zoneLane(), z, 0, 20 + (Z.k % 4) * 6);
+            break;
+        case 'enjambre':
+            spawnHazard(spec.what, zoneLane(), z);
+            break;
+        case 'cruce':
+            spawnHazard(spec.what, 1, z, Math.random() < 0.5 ? -1 : 1);
+            break;
+        case 'pasillo':
+            // El tronco cruza la calzada entera y solo se salta, asi que el
+            // carril libre no pinta nada: lo que dosifica es el hueco entre
+            // uno y el siguiente, que ya sale de la cuenta.
+            spawnObstacle(spec.what, spec.what === TRONCO ? 1 : zoneLane(), z, 0);
+            break;
+    }
+}
+
 // Se apagan cuando el jugador los ha dejado atras del todo: pasado ese punto
 // ya no queda nada dibujado dentro y apagarlos no mueve un solo pixel.
 function updateTrackSystems(dt) {
@@ -4822,6 +5107,16 @@ function enEstrecho(sc) {
     return false;
 }
 
+// El suceso de zona trae lo suyo y no cabe nada mas. Sin esto, la erupcion del
+// Tajumulco caia ENCIMA del reparto normal de obstaculos y lo que salia no era
+// un suceso: era ruido. Se deja pasar el jade, que es lo unico que ahi dentro
+// sigue significando algo.
+function enZona(sc) {
+    const Z = game.zone;
+    if (!Z.active) return false;
+    return sc > Z.s0 - TRAMO_MARGEN && sc < Z.s0 + ZONE_LEN + TRAMO_MARGEN;
+}
+
 function generateChunk(z) {
     const hard = Math.min(game.elapsed / 95, 1);        // 0 -> 1 en poco mas de un minuto
     const sz = game.distance - z;                       // trazado de este compas
@@ -4833,6 +5128,18 @@ function generateChunk(z) {
     // ver una mecanica entera del juego o no.
     if (game.distance > 260 && game.distance > game.nextTramo) {
         if (armTramo()) game.nextTramo = game.distance + 200;
+    }
+
+    // --- El suceso de la zona ---
+    // Una vez por visita, cerca del final del tramo. Va DESPUES del armado de
+    // tramos especiales y comparte su comprobacion de sitio, de modo que nunca
+    // cae encima de una bajada, una curva ni una bifurcacion. Si no cabe, no se
+    // gasta el turno: se vuelve a intentar en el compas siguiente.
+    // Y una sola: armado, no vuelve a haber turno hasta que se cambie de zona.
+    // Con un reparto por distancia salian uno y medio por visita, y el segundo
+    // caia con el jugador ya leyendo el rotulo del distribuidor de salida.
+    if (!game.zone.active && game.distance > game.nextZone) {
+        if (armZone()) game.nextZone = Infinity;
     }
 
     // --- La zona limpia de la bifurcacion ---
@@ -4851,6 +5158,16 @@ function generateChunk(z) {
     // En el estrechamiento no cabe nada: es un carril, y meterle algo dentro
     // seria pedir dos cosas a la vez en el sitio donde menos margen hay.
     if (enEstrecho(sz) || enHundido(sz)) return;
+
+    // Dentro del suceso de zona, solo jade. Lo que hay que resolver ahi es el
+    // suceso, y lo que trae ya viene medido: anadirle el reparto normal de
+    // obstaculos encima convertia la erupcion en ruido.
+    if (enZona(sz)) {
+        // Y el jade va por el carril LIBRE, que ademas de premiar ensena por
+        // donde se pasa. Es la unica pista que hay ahi dentro.
+        for (let k = 0; k < 4; k++) spawnPickup(game.zone.libre, z - k * 4, 1.3);
+        return;
+    }
 
     // En la cuesta y en la curva entran los enemigos y el jade, nada mas. Un
     // obstaculo del suelo ahi no se ve venir —la calzada se va hacia abajo o
@@ -5272,6 +5589,10 @@ function takeExit(c, lane) {
 
     if (cambio) {
         showRegionBanner(destino);
+        // Zona nueva, suceso nuevo. Se apunta desde aqui y no desde el reparto
+        // por distancia: es de la ZONA, y tiene que salir una vez por visita
+        // caiga donde caiga el kilometraje.
+        game.nextZone = game.distance + ZONE_AFTER;
         const id = REGIONS[destino].id;
         if (!save.regions.includes(id)) {
             save.regions.push(id);
@@ -5713,6 +6034,16 @@ function updatePlayer(dt) {
         player.x = LANE_X[player.lane];
     }
 
+    // --- Ventisca ---
+    // El viento de zona se suma DESPUES del carril y no lo sustituye: el
+    // jugador sigue mandando sobre a que carril va, pero el viento lo saca de
+    // la linea y hay que corregir. Y se recorta contra el borde de la calzada:
+    // el viento descoloca, no mata, o seria una muerte que no se puede evitar.
+    if (player.push !== 0) {
+        const tope = ROAD_WIDTH / 2 - 0.9;
+        player.x = Math.max(-tope, Math.min(tope, player.x + player.push));
+    }
+
     const flying = game.powers.flight > 0;
 
     // --- Suelo bajo los pies ---
@@ -6014,7 +6345,7 @@ function scrollWorld(dt) {
             h.wingL.rotation.z = flap;
             h.wingR.rotation.z = -flap;
             h.bat.rotation.z = Math.sin(h.phase * 3.1) * 0.2;
-        } else if (h.type === RODANTE) {
+        } else if (h.type === RODANTE || h.type === BOMBA) {
             // Las del derrumbe caen del cerro antes de empezar a rodar.
             // Mientras estan en el aire su ancla va alta, y como la franja de
             // golpe se mide desde el ancla, no golpean hasta tocar la calzada:
@@ -6033,7 +6364,9 @@ function scrollWorld(dt) {
                     // golpea.
                     const cerca = Math.max(0, 1 + Math.min(0, h.z) / SHAKE_NEAR);
                     shake = Math.max(shake, SHAKE_ROCK * (0.62 + 0.38 * cerca));
-                    burstParticles(x, riseAtZ(h.z), h.z, 10, 1, 0x8a7a68);
+                    // La bomba volcanica revienta en brasas, no en polvo.
+                    burstParticles(x, riseAtZ(h.z), h.z, h.type === BOMBA ? 14 : 10,
+                                   1, h.type === BOMBA ? 0xff8a4a : 0x8a7a68);
                     sfx.bump();
                 }
                 h.rock.rotation.z += dt * 3.2;
@@ -6093,6 +6426,7 @@ function scrollWorld(dt) {
 
     updateCrossings(dt);
     updateTrackSystems(dt);
+    updateZone(dt);
     runPending();
 
     // --- Nuevos compases ---
@@ -6532,6 +6866,7 @@ function scoreOf() {
 const _cA = new THREE.Color();
 const _cB = new THREE.Color();
 const _cMix = new THREE.Color();
+const _cZ = new THREE.Color();
 let lastSkyPaint = -1;
 let lastBlendKey = -1;
 
@@ -6590,6 +6925,22 @@ function applyBlend(pos) {
     groundMesh.material.color.copy(mixHex(A.ground, B.ground, e, _cMix));
     sunLight.color.copy(mixHex(A.sun, B.sun, e, _cMix));
     sunLight.intensity = lerp(A.sunI, B.sunI, e);
+
+    // Y encima, el suceso de zona. Va DESPUES de la mezcla de departamento y no
+    // dentro: es un estado pasajero, no un sitio, y tiene que poder tenirlo
+    // todo sin ensuciar la region a la que pertenece. Es la mitad de lo que
+    // hace que una erupcion se lea como una erupcion: sin el aire rojo, las
+    // bombas volcanicas serian piedras naranjas cayendo en un dia normal.
+    const zg = zoneGrip(game.distance);
+    if (zg > 0) {
+        const zs = ZONES[REGIONS[game.zone.i].id];
+        if (zs) {
+            _cZ.setHex(zs.tint);
+            scene.fog.color.lerp(_cZ, zg * 0.72);
+            sunLight.color.lerp(_cZ, zg * 0.4);
+            sunLight.intensity *= 1 - zg * 0.28;
+        }
+    }
     hemiLight.color.copy(mixHex(A.hemi, B.hemi, e, _cMix));
     hemiLight.intensity = lerp(A.hemiI, B.hemiI, e);
     hemiLight.groundColor.copy(mixHex(A.ground, B.ground, e, _cMix));
@@ -6813,6 +7164,12 @@ function startGame() {
     game.lastTramo = -1;
     game.nextEvento = 0;
     game.lastEvento = -1;
+    // Tikal tambien tiene el suyo, y es el primero que se ve en la vida: se
+    // apunta desde la salida, porque a Tikal no se entra por ningun cruce.
+    game.nextZone = 700;
+    game.zone.active = false;
+    game.zone.k = 0;
+    player.push = 0;
     game.crossKind = 1;
     game.routePos = 0.02;
     game.finishS = -1;
@@ -6855,6 +7212,7 @@ function startGame() {
     player.outVZ = 0;
     player.outZ = 0;
     player.outKind = 0;
+    player.push = 0;
     playerGroup.position.z = PLAYER_Z;
     playerGroup.rotation.set(0, 0, 0);
     shadowMesh.material.opacity = 0.4;
@@ -7080,6 +7438,7 @@ function doRevive() {
     player.outVZ = 0;
     player.outZ = 0;
     player.outKind = 0;
+    player.push = 0;
     playerGroup.position.z = PLAYER_Z;
     playerGroup.rotation.set(0, 0, 0);
     shadowMesh.material.opacity = 0.4;
@@ -7152,6 +7511,10 @@ function finishGame() {
     game.slopeS0 = -1;
     game.sink.active = false;
     game.finishS = -1;
+    // Y el suceso de zona: si no, el menu se quedaba con el aire rojo de la
+    // erupcion en la que acababas de morir.
+    game.zone.active = false;
+    player.push = 0;
 
     // Los poderes se apagan al morir. Si el vuelo sobreviviese a la partida,
     // la camara se quedaria encuadrada en el aire durante todo el menu.

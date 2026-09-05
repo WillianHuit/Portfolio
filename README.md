@@ -196,12 +196,49 @@ está plantada.**
 | Bifurcación en Y | Viene una bifurcación. |
 | Prohibido virar (disco rojo) | Ese ramal del cruce está **cortado por un derrumbe**. Meterse por ahí se acabó. |
 | Hueco | Uno de dos: un vacío de lado a lado, o **un hundimiento del firme** en uno o dos carriles. En el segundo caso los carriles que se van a caer parpadean en rojo mucho antes, y el que se salva lleva una viga o un sumidero: se pasa agachándose o saltando, nunca cambiándose de carril. |
+| Viento | Rachas de costado que **te sacan de la línea**. No golpean: descolocan, y hay que corregir. |
 
 Zona escolar, paso de peatones y calzada resbaladiza son las únicas de
 ambiente, atadas al tipo de departamento y con cuentagotas. **El murciélago y
 la piedra rodante sueltos salen SIN señal**, a propósito: son el ruido de
 fondo del camino, y ponerles cartel llenaría el margen de rombos hasta que
 dejaran de mirarse los que sí anuncian algo gordo.
+
+**El suceso de cada zona.** Cada punto de la ruta tiene **una cosa que solo
+pasa ahí**, y pasa una vez por visita, cerca del final del tramo. Antes las
+trece zonas se distinguían por el color del cielo y por lo que crecía en la
+cuneta: distintas de mirar, idénticas de **jugar** —la misma piedra rodante y
+el mismo murciélago en la selva, en la playa y en la cumbre nevada—.
+
+| Zona | Lo que pasa |
+|---|---|
+| Tikal | **Vuelo de camazotz**: los murciélagos salen del templo en fila |
+| Flores | **El lago se la traga**: sumideros encadenados sobre el agua |
+| Semuc Champey | **Desprendimiento**: cae piedra caliza del cañón |
+| Río Dulce | **Troncos del río**: de lado a lado, uno detrás de otro |
+| Esquipulas | **Caravana de romería**: camionetas de frente |
+| Monterrico | **Marejada**: la ola barre la calzada y hay que saltarla |
+| Volcán Tajumulco | **Erupción**: llueven bombas volcánicas al rojo vivo |
+| Todos Santos | **Ventisca**: el viento te saca de la línea |
+| Chichicastenango | **Camino del mercado**: ganado cruzando |
+| Lago de Atitlán | **Xocomil**: el viento del lago, más fuerte |
+| Volcán de Fuego | **El Fuego escupe**: la erupción, pero de verdad |
+| Antigua | **Temblor**: retumba y caen sillares |
+| Ciudad de Guatemala | **Hora pico**: buses de frente, sin parar |
+
+Trece sucesos con arte propio serían trece juegos. Lo que hay es un vocabulario
+de **seis patrones** —lluvia, enjambre, cruce, pasillo, viento y temblor— y una
+ficha por zona que los compone y los tematiza: el nombre, el color con el que se
+tiñe la escena mientras dura, de qué color son las chispas que caen y con qué
+cadencia viene lo que viene. **La única pieza nueva es la bomba volcánica**, que
+es la que el suceso de Tajumulco necesitaba de verdad; todo lo demás recombina
+lo que ya había. El tinte de la escena hace la mitad del trabajo: sin el aire
+rojo, las bombas serían piedras naranjas cayendo en un día normal.
+
+**Aprieta según lo avanzada que esté la ruta.** No hay contador de dificultad
+aparte: la ruta va de Tikal a la capital, así que *lo avanzado del recorrido es*
+la dificultad. En Petén el suceso sale a un tercio de intensidad; en la capital,
+entero.
 
 **Las bifurcaciones.** Cada 950 m la calzada se parte de verdad, y no se abre:
 **se desvía, a 45° clavados**. Desde la cola del divisor los dos ramales salen
@@ -567,6 +604,25 @@ Lo que importa mantener si se toca:
   saldría con la zona limpia de alguna bifurcación?— y el reparto es firme: uno
   por ciclo, sin repetir el anterior. Medido: **1,3 tramos por km**, y las
   bifurcaciones alternando destino/cortada sin fallar una.
+- **La cadencia del suceso de zona está medida en tiempo, no elegida a ojo.** El
+  hueco entre piezas es `ZONE_LEN / n` unidades, y a la velocidad de crucero de
+  esa zona tiene que dar entre seis décimas y segundo y medio. Los primeros
+  números que escribí daban **un autobús de frente cada media décima** en la
+  capital, que no es difícil: es imposible.
+- **Y el carril libre no desaparece nunca: se MUEVE.** La primera versión lo
+  quitaba del todo en las últimas zonas, y eso tampoco es dificultad —con una
+  bomba cada seis décimas en un carril al azar de tres, sobrevivir pasa a ser
+  cuestión de suerte y morir deja de ser culpa de nadie—. Moviendo el hueco cada
+  dos piezas en vez de cada cinco se pide exactamente lo mismo (no parar de leer
+  y no parar de moverse) pero siempre hay una respuesta correcta. **El jade va
+  por el carril libre**, que además de premiar enseña por dónde se pasa.
+- **Dentro del suceso no entra el reparto normal.** Solo jade. La erupción caía
+  encima de la tanda de obstáculos de siempre, y lo que salía no era un suceso:
+  era ruido.
+- **Y hubo que dibujar un rombo nuevo para el viento.** Era el único patrón para
+  el que no había señal que no mintiera; el apaño inicial usó el de curva, que
+  dice que la calzada va a torcer, y no tuerce: lo que se mueve es el jugador.
+  Una señal que dice lo contrario de lo que pasa es peor que ninguna señal.
 - **Y la misma lección hubo que aprenderla otra vez con los enemigos
   anunciados.** El derrumbe, el ganado y la camioneta salían de un dado al 22 %
   por compás, con la mitad de los compases descartados por la zona limpia de la
