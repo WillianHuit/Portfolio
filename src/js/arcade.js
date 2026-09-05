@@ -1044,8 +1044,34 @@ const SKINS = [
       desc: 'Con casco, y el casco aguanta un golpe antes que el escudo. Uno por carrera.',
       cost: 1500, cloth: 0x2a2f38, skin: 0xd9a066, crest: 0xd93a3a, legs: 0x1a1c20,
       trim: 0xd9d9d9, hair: 0x1a1008, boot: 0x22242a,
-      bike: 0xd93a3a, bikeDark: 0x14161a, visor: 0x1b2430 }
+      bike: 0xd93a3a, bikeDark: 0x14161a, visor: 0x1b2430 },
+    // La misma moto y las mismas dos cosas —casco y embestida—, mas la tumbada.
+    // Es lo mas caro de la tienda porque es lo unico que se PILOTA: las demas
+    // ventajas se llevan puestas y esta hay que sostenerla.
+    { id: 'pista', name: 'Moto de pista', icon: '≣', moto: true, veh: 'moto', pista: true,
+      desc: 'Mantén abajo para tumbarte tras el carenado: mientras aguantes, ' +
+            'acelera sin parar hasta su techo. Al levantarte vuelve a lo normal.',
+      cost: 2400, cloth: 0x14161a, skin: 0xd9a066, crest: 0x2ec4a0, legs: 0x101216,
+      trim: 0xe8e8e8, hair: 0x1a1008, boot: 0x18181c,
+      bike: 0x2ec4a0, bikeDark: 0x0e1013, visor: 0x101a24 }
 ];
+
+// ===========================================================================
+// La tumbada de la moto de pista
+// ===========================================================================
+// Mientras se aguanta abajo, la moto acelera sola. Y no sin fin: tiene SU
+// techo, TUCK_MAX, que es lo que esta maquina sabe dar. Pasado ese punto —o
+// cuando el juego ya va igual de rapido por su cuenta— la tumbada deja de
+// acelerar y se queda en un empujon corto, porque una moto no acelera por
+// encima de su propia punta por mucho que te escondas mejor.
+//
+// Al levantarse vuelve a lo normal, pero no de golpe: se suelta en algo mas de
+// medio segundo. Un corte seco de treinta unidades por segundo se lee como un
+// tiron del juego y no como haberse incorporado.
+const TUCK_ACC = 16;                // unidades por segundo que gana tumbado
+const TUCK_MAX = 98;                // el techo de ESTA moto
+const TUCK_PUSH = 0.06;             // el empujon corto cuando ya no puede mas
+const TUCK_SUELTA = 42;             // lo rapido que lo devuelve al incorporarse
 
 // ===========================================================================
 // Lo que trae cada vehiculo
@@ -1497,6 +1523,7 @@ const game = {
     shield: false,
     casco: false,        // el casco de la moto, uno por carrera y antes que el escudo
     gotas: 0,            // agua en el pachon del runner, 0..GOTAS_VIDA
+    tuck: 0,             // velocidad ganada tumbado en la moto de pista
     invuln: 0,
     elapsed: 0,
     nextSpawnZ: SPAWN_Z,
@@ -1547,6 +1574,8 @@ const game = {
     zoneFrom: 0,         // distancia a la que se entro en la zona actual
     nextFauna: 0,        // distancia a la que sale el proximo bicho de adorno
     nextValla: 0,        // ...y el proximo anuncio al borde de la calzada
+    nextPublico: 0,      // ...y el proximo corrillo de gente mirando
+    nextCerca: 0,        // ...y el proximo hito del sitio pasando de cerca
     // 0 = cruce de destino, 1 = bifurcacion cortada. Ya no se alterna: lo
     // decide si la zona ha cumplido su tiempo. Se guarda solo para consultarlo.
     crossKind: 1,
@@ -1579,6 +1608,7 @@ const player = {
     vy: 0,
     grounded: true,
     sliding: 0,
+    tucking: false,      // se esta aguantando abajo en la moto de pista
     rez: 0,              // segundos que quedan de la vuelta a la vida, 0 = normal
     out: 0,              // segundos que quedan de la animacion final, 0 = vivo
     outMax: 1,           // lo que duraba entera, para el frenado del mundo
@@ -1615,7 +1645,7 @@ const dom = {
     finalDist: $('finalDist'), finalJade: $('finalJade'), finalScore: $('finalScore'),
     finalRegion: $('finalRegion'), finalBank: $('finalBank'),
     bestScore: $('bestScore'), hudBest: $('hudBest'),
-    combo: $('combo'), shield: $('shield'), casco: $('casco'),
+    combo: $('combo'), shield: $('shield'), casco: $('casco'), tuck: $('tuck'),
     pachon: $('pachon'), pachonN: $('pachonN'),
     milestone: $('milestone'), banner: $('banner'),
     speedVeil: $('speedVeil'), hitVeil: $('hitVeil'), pauseBtn: $('pauseBtn'),
@@ -1624,7 +1654,7 @@ const dom = {
     minimap: $('minimap'), mmDots: $('mmDots'), mmRoute: $('mmRoute'),
     mmYou: $('mmYou'),
     mmName: $('mmName'), mmDept: $('mmDept'), mmFill: $('mmFill'),
-    mmZone: $('mmZone'), mmGoal: $('mmGoal'),
+    mmZone: $('mmZone'), mmGoal: $('mmGoal'), mmCross: $('mmCross'),
     dbg: $('dbg'), dbgInfo: $('dbgInfo'), dbgGod: $('dbgGod'), dbgSlow: $('dbgSlow'),
     revive: $('revive'), reviveBtn: $('reviveBtn'), reviveSkip: $('reviveSkip'),
     angelBtn: $('angelBtn'), reviveAd: $('reviveAd'),
@@ -2335,6 +2365,12 @@ function buildMaterials() {
     // anime una vez por frame en vez de una vez por pieza.
     mat.jade = lam(C.jade, { emissive: C.jade, emissiveIntensity: 0.35 });
     mat.gota = lam(0x8fd8ee, { emissive: 0x3fa8d0, emissiveIntensity: 0.35 });
+    // El publico: no se tematiza por region a proposito. Todo lo demas del
+    // paisaje cambia de color trece veces, y si la gente cambiara con el sitio
+    // dejaria de leerse como gente y pasaria a leerse como decorado.
+    mat.publicoA = lam(0xd94f6a);
+    mat.publicoB = lam(0x2a2f38);
+    mat.publicoCartel = lam(0xf0f2f0);
     for (const k of POWER_KEYS) {
         mat[k] = lam(POWERS[k].color, { emissive: POWERS[k].color, emissiveIntensity: 0.5 });
     }
@@ -4903,12 +4939,18 @@ function updateRez(dt) {
 // Las telas son las seis tiras apaisadas que ya estaban en el repositorio para
 // el menu y el fin de partida, asi que esto no anade ni un archivo: se cargan
 // una vez, la primera que haga falta, y se reparten entre todo el pozo.
-const VALLA_POOL = 5;
+const VALLA_POOL = 7;
 const VALLA_EVERY = 620;            // unidades entre anuncios, de serie
-const VALLA_RUNNER = 240;           // ...y con el runner puesto
+// Con el runner, casi sin hueco. Una valla cada 110 unidades a velocidad de
+// crucero es una cada segundo y medio: el margen no se queda "con anuncios",
+// se queda FORRADO, que es lo que se ve desde dentro de una maraton patrocinada
+// y lo que separa correr una carrera de ir por una carretera.
+const VALLA_RUNNER = 110;
 const VALLA_ALTA = 11.6;            // alto libre de la pancarta
 
 const vallas = [];
+const publico = [];
+const cercas = [];
 let vallaTex = null;                // se cargan la primera vez que se pide una
 
 function loadVallaTex() {
@@ -5007,6 +5049,166 @@ function updateVallas(dz) {
         if (!v.active) continue;
         v.z += dz;
         v.group.position.set(curveOf(v), riseOf(v), v.z);
+        if (v.z > DESPAWN_Z) { v.active = false; v.group.visible = false; }
+    }
+}
+
+// ===========================================================================
+// Los hitos DE CERCA
+// ===========================================================================
+// La cosa que define a cada sitio —la piramide de Tikal, el mogote de Semuc, el
+// paredon del Río Dulce, la basilica de Esquipulas— vivia en dos sitios y en
+// ninguno de los dos se veia bien: en el horizonte, a treinta o cuarenta de
+// distancia y medio comida por la bruma, y en la estructura que CIERRA la zona,
+// o sea al final. El resultado era que en Petén salian primero los murcielagos
+// y la piramide aparecia casi al terminar, cuando la piramide no es la
+// despedida de Tikal: es Tikal.
+//
+// Esto lo pone donde tiene que estar: piezas del sitio al borde de la calzada,
+// a doce o dieciseis unidades del centro, pasando cada veinte segundos desde
+// que se entra. Reusa silhouette(), la MISMA funcion que dibuja el horizonte,
+// asi que cada region trae de cerca exactamente lo suyo sin una linea de arte
+// nueva y sin poder desincronizarse de lo que se ve al fondo.
+const CERCA_POOL = 3;
+const CERCA_EVERY = 1250;           // unas veinte veces por zona
+const CERCA_X = 15.5;               // a que distancia del centro se plantan
+
+function makeCerca() {
+    const group = new THREE.Group();
+    const piezas = [];
+    for (let i = 0; i < LAND_PARTS; i++) {
+        const m = new THREE.Mesh(BOX, new THREE.MeshLambertMaterial({ color: 0xffffff }));
+        m.visible = false;
+        group.add(m);
+        piezas.push(m);
+    }
+    group.visible = false;
+    scene.add(group);
+    return { group, piezas, z: 0, curve: 0, rise: 0, active: false, lado: 1 };
+}
+
+function spawnCerca(z) {
+    let c = null;
+    for (const v of cercas) if (!v.active) { c = v; break; }
+    if (!c) return;
+
+    const R = REGIONS[roadRegionOf(game.distance - z)];
+    // Escala menor que la del horizonte: de cerca, una piramide a tamano de
+    // horizonte taparia media pantalla y ademas se saldria a la calzada.
+    const s = 0.85 + Math.random() * 0.4;
+    const partes = silhouette(R.land, s, R);
+    const lado = Math.random() < 0.5 ? -1 : 1;
+
+    for (let i = 0; i < LAND_PARTS; i++) {
+        const p = partes[i];
+        const m = c.piezas[i];
+        if (!p) { m.visible = false; continue; }
+        m.visible = true;
+        // Se refleja segun el lado, igual que el hito del horizonte, para que
+        // la cara buena mire siempre a la calzada.
+        m.position.set(p.x * lado, p.y, p.z);
+        m.scale.set(p.w, p.h, p.d);
+        m.rotation.set(0, (p.ry || 0) * lado, (p.rz || 0) * lado);
+        m.material.color.setHex(p.c);
+    }
+    c.lado = lado;
+    c.z = z;
+    c.curve = trackCurve(z);
+    c.rise = trackRise(z);
+    c.active = true;
+    c.group.visible = true;
+}
+
+function updateCercas(dz) {
+    for (const c of cercas) {
+        if (!c.active) continue;
+        c.z += dz;
+        c.group.position.set(c.lado * CERCA_X + curveOf(c), riseOf(c), c.z);
+        if (c.z > DESPAWN_Z) { c.active = false; c.group.visible = false; }
+    }
+}
+
+// ===========================================================================
+// El publico
+// ===========================================================================
+// Corrillos de gente al borde de la calzada, saltando y con carteles. Es lo que
+// convierte una carretera con anuncios en una CARRERA: los anuncios los pone
+// quien paga, el publico viene a ver. Salen para todos los trajes de vez en
+// cuando —en la vida real tambien hay gente mirando pasar— pero con el runner
+// salen cuatro veces mas seguido, porque el runner va en una maraton.
+//
+// Cada corrillo son cuatro figuras de dos cajas, y cada una salta a su propio
+// ritmo con su propio desfase: seis personas saltando a la vez son un mecanismo,
+// y seis saltando cada una a lo suyo son un publico.
+const PUBLICO_POOL = 6;
+const PUBLICO_EVERY = 780;          // de serie
+const PUBLICO_RUNNER = 190;         // con el runner
+const PUBLICO_N = 4;                // figuras por corrillo
+
+function makePublico() {
+    const group = new THREE.Group();
+    const gente = [];
+    for (let i = 0; i < PUBLICO_N; i++) {
+        const p = new THREE.Group();
+        const cuerpo = new THREE.Mesh(BOX, mat.publicoA);
+        cuerpo.scale.set(0.5, 1.15, 0.4);
+        cuerpo.position.y = 0.58;
+        p.add(cuerpo);
+        const cabeza = new THREE.Mesh(BOX, mat.publicoB);
+        cabeza.scale.set(0.38, 0.38, 0.38);
+        cabeza.position.y = 1.35;
+        p.add(cabeza);
+        // Uno de cada dos lleva cartel: si lo llevaran todos, el corrillo
+        // pareceria una manifestacion y no un publico.
+        let cartel = null;
+        if (i % 2 === 0) {
+            cartel = new THREE.Mesh(BOX, mat.publicoCartel);
+            cartel.scale.set(0.9, 0.6, 0.06);
+            cartel.position.set(0, 2.15, -0.1);
+            p.add(cartel);
+            const palo = new THREE.Mesh(BOX, mat.publicoB);
+            palo.scale.set(0.07, 0.7, 0.07);
+            palo.position.set(0, 1.6, -0.1);
+            p.add(palo);
+        }
+        p.position.set((i % 2 ? 1 : -1) * (0.5 + (i >> 1) * 0.55),
+                       0, (i - 1.5) * 0.85);
+        group.add(p);
+        gente.push({ nodo: p, fase: i * 1.7, salto: 0.9 + (i % 3) * 0.35, cartel });
+    }
+    group.visible = false;
+    scene.add(group);
+    return { group, gente, z: 0, curve: 0, rise: 0, active: false };
+}
+
+function spawnPublico(z) {
+    let v = null;
+    for (const c of publico) if (!c.active) { v = c; break; }
+    if (!v) return;
+    const sd = Math.random() < 0.5 ? -1 : 1;
+    v.group.position.x = sd * (ROAD_WIDTH / 2 + 3.4);
+    v.group.rotation.y = -sd * 1.35;      // mirando a la calzada
+    v.z = z;
+    v.curve = trackCurve(z);
+    v.rise = trackRise(z);
+    v.active = true;
+    v.group.visible = true;
+    v.lado = sd;
+}
+
+function updatePublico(dt, dz) {
+    for (const v of publico) {
+        if (!v.active) continue;
+        v.z += dz;
+        v.group.position.set(v.lado * (ROAD_WIDTH / 2 + 3.4) + curveOf(v), riseOf(v), v.z);
+        // Saltan. Y cada uno a lo suyo: el valor absoluto de un seno da el
+        // rebote de un salto —sube, cae, toca y vuelve— mucho mejor que un seno
+        // a secas, que da un balanceo de flotador.
+        for (const p of v.gente) {
+            const t = game.elapsed * p.salto * 3.4 + p.fase;
+            p.nodo.position.y = Math.abs(Math.sin(t)) * 0.44;
+            if (p.cartel) p.cartel.rotation.z = Math.sin(t * 0.8) * 0.22;
+        }
         if (v.z > DESPAWN_Z) { v.active = false; v.group.visible = false; }
     }
 }
@@ -5230,6 +5432,8 @@ function buildPools() {
     gate = makeGate();
     for (let i = 0; i < FAUNA_POOL; i++) fauna.push(makeFauna());
     for (let i = 0; i < VALLA_POOL; i++) vallas.push(makeValla());
+    for (let i = 0; i < PUBLICO_POOL; i++) publico.push(makePublico());
+    for (let i = 0; i < CERCA_POOL; i++) cercas.push(makeCerca());
 }
 
 // ---------------------------------------------------------------------------
@@ -5707,7 +5911,8 @@ function buildPlayer() {
 // Si el traje puesto trae maquina. Se guarda aparte y no se consulta el traje
 // en cada frame: la postura lo pregunta sesenta veces por segundo y skinById
 // recorre la lista entera.
-let motoOn = false;         // solo la moto: es la unica que trae casco
+let motoOn = false;         // las dos motos: son las unicas que traen casco
+let pistaOn = false;        // ...y solo la de pista se tumba
 let runnerOn = false;
 let vehOn = null;           // 'moto' | 'bici' | 'patineta' | 'monopatin' | null
 let vehAct = null;          // el vehiculo puesto, ya resuelto
@@ -5727,6 +5932,7 @@ function applySkin(id) {
 
     motoOn = !!sk.moto;
     runnerOn = !!sk.runner;
+    pistaOn = !!sk.pista;
     vehOn = sk.veh || null;
     vehAct = vehOn ? playerParts.vehs[vehOn] : null;
     for (const k in playerParts.vehs) {
@@ -7269,7 +7475,13 @@ function initInput() {
                 player.holding = true;
                 jump();
                 break;
-            case 'ArrowDown': case 'KeyS': e.preventDefault(); slide(); break;
+            // En la moto de pista, abajo no es un gesto sino una postura que se
+            // SOSTIENE: se marca al pulsar y se suelta al levantar el dedo.
+            case 'ArrowDown': case 'KeyS':
+                e.preventDefault();
+                player.tucking = true;
+                slide();
+                break;
             case 'KeyP': case 'Escape': togglePause(); break;
             case 'KeyM': setSound(!audio.on); break;
             case 'KeyN': setMusic(!music.on); break;
@@ -7278,7 +7490,12 @@ function initInput() {
 
     window.addEventListener('keyup', (e) => {
         if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space') releaseJump();
+        if (e.code === 'ArrowDown' || e.code === 'KeyS') player.tucking = false;
     });
+
+    // Y si la ventana pierde el foco con la tecla abajo pulsada, el keyup no
+    // llega nunca: la moto se quedaria acelerando sola al volver.
+    window.addEventListener('blur', () => { player.tucking = false; });
 
     // Gestos tactiles. El gesto se resuelve en cuanto el dedo pasa el umbral,
     // sin esperar a que se levante: esperar al touchend metia hasta 200 ms de
@@ -7304,7 +7521,9 @@ function initInput() {
         resolved = true;
         if (Math.abs(dx) > Math.abs(dy)) moveLane(dx > 0 ? 1 : -1);
         else if (dy < 0) jump();
-        else slide();
+        // En tactil, tumbarse es deslizar abajo Y DEJAR EL DEDO PUESTO. El
+        // touchend lo suelta, igual que el keyup suelta la tecla.
+        else { player.tucking = true; slide(); }
     }, { passive: true });
 
     window.addEventListener('touchend', () => {
@@ -7313,6 +7532,7 @@ function initInput() {
         if (game.state === State.PLAYING && !resolved) jump();   // toque simple = salto
         // En tactil no hay forma de "mantener": el salto sale siempre entero.
         player.holding = false;
+        player.tucking = false;
     }, { passive: true });
 
     window.addEventListener('touchcancel', () => {
@@ -7589,6 +7809,14 @@ function updatePlayer(dt) {
             jump();
             break;
         }
+    }
+
+    // La tumbada SOSTIENE la postura: mientras la tecla siga abajo, el
+    // deslizamiento no caduca. Sin esto se incorporaba solo a los 0,45 s y
+    // habia que ir machacando la tecla para acelerar, que es justo lo contrario
+    // de lo que se pide.
+    if (pistaOn && player.tucking && player.grounded && player.out <= 0) {
+        player.sliding = Math.max(player.sliding, 0.2);
     }
 
     if (player.buffer > 0) player.buffer = Math.max(0, player.buffer - dt);
@@ -8012,6 +8240,29 @@ function scrollWorld(dt) {
         }
     }
     updateVallas(dz);
+
+    // El publico. No comparte turno con las vallas a proposito: si fueran el
+    // mismo reparto, cada corrillo llegaria pegado a un panel y el margen
+    // saldria a bandazos en vez de lleno.
+    if (game.distance > game.nextPublico) {
+        const cada = runnerOn ? PUBLICO_RUNNER : PUBLICO_EVERY;
+        game.nextPublico = game.distance + cada * (0.7 + Math.random() * 0.6);
+        if (!limpioEntre(game.distance - SPAWN_Z - 40, game.distance - SPAWN_Z + 40)) {
+            spawnPublico(SPAWN_Z);
+        }
+    }
+    updatePublico(dt, dz);
+
+    // Lo que hace que el sitio sea el sitio, pasando de cerca. No se salta la
+    // ventana limpia de la bifurcacion —ahi no puede haber un templo tapando el
+    // rotulo verde— y por lo demas sale desde la primera vuelta de la zona.
+    if (game.distance > game.nextCerca) {
+        game.nextCerca = game.distance + CERCA_EVERY * (0.75 + Math.random() * 0.5);
+        if (!limpioEntre(game.distance - SPAWN_Z - 70, game.distance - SPAWN_Z + 70)) {
+            spawnCerca(SPAWN_Z);
+        }
+    }
+    updateCercas(dz);
 
     // Motas: pocas y constantes. No son un suceso, son el aire del sitio.
     if (zr && Math.random() < 0.05) {
@@ -8571,6 +8822,7 @@ function renderHud() {
 // cien escrituras en total —once por segundo— en vez de 540, y con nada puesto
 // no hace ninguna.
 const barLast = { boost: -1, magnet: -1, flight: -1, double: -1, amber: -1, propio: -1 };
+let tuckLast = -1;
 
 function setBar(el, key, frac) {
     const pct = Math.round(Math.max(0, Math.min(1, frac)) * 100);
@@ -8580,6 +8832,23 @@ function setBar(el, key, frac) {
 }
 
 function renderBars() {
+    // La tumbada va con las barras y no con renderHud: es un numero que cambia
+    // en cada frame mientras se aguanta, o sea exactamente el caso para el que
+    // renderHud es la puerta equivocada.
+    if (pistaOn) {
+        const on = game.tuck > 0.5;
+        if (on !== !dom.tuck.hidden) dom.tuck.hidden = !on;
+        if (on) {
+            const v = Math.round(game.speed);
+            if (v !== tuckLast) {
+                tuckLast = v;
+                dom.tuck.textContent = '▼ ' + v + ' / ' + TUCK_MAX;
+            }
+        }
+    } else if (!dom.tuck.hidden) {
+        dom.tuck.hidden = true;
+    }
+
     if (game.boost > 0) {
         if (dom.pw.boost.hidden) dom.pw.boost.hidden = false;
         setBar(dom.pw.boost, 'boost', game.boost / BOOST_TIME);
@@ -8678,6 +8947,23 @@ function crossProgress() {
 // llegaria a cero con el cambio todavia a un cruce de distancia.
 function zoneProgress() {
     return Math.min(1, (game.distance - game.zoneFrom) / ZONE_SPAN);
+}
+
+// Lo que falta para el PROXIMO CRUCE, sea del tipo que sea. Mismo cuidado que
+// en zoneAhead: nextCross salta a la siguiente en cuanto una se planta, asi que
+// el distribuidor que viene de frente hay que contarlo aparte o el rotulo diria
+// mil doscientas de mas justo cuando hay que decidir carril.
+function crossAhead() {
+    if (game.finishS >= 0) return Math.max(0, game.finishS - game.distance);
+    // Y solo cuenta si de verdad HAY uno plantado. La cuenta de "el que viene
+    // de frente" se saca restandole un ciclo a nextCross, y eso da un numero
+    // aunque no se haya armado ninguna todavia: al empezar la carrera nextCross
+    // vale un ciclo entero y la resta daba 247, o sea que el rotulo anunciaba un
+    // distribuidor a doscientos metros cuando el primero estaba a mil quinientos.
+    const enVuelo = crossings.some(c => c.active);
+    const vivo = game.nextCross - CROSS_EVERY + CROSS_ISLAND_AT;
+    if (enVuelo && vivo > game.distance) return vivo - game.distance;
+    return Math.max(0, game.nextCross + CROSS_ISLAND_AT - game.distance);
 }
 
 function zoneAhead() {
@@ -8854,6 +9140,7 @@ let mmLastLeg = -1;
 let mmLastLeft = -1;
 let mmLastX = '', mmLastY = '';
 let mmLastCross = -1, mmLastZone = -1;
+let mmLastCrossN = -1, mmLastFin = null;
 
 // Los caminos recorridos EN ESTA CARRERA, no los de siempre. Los puntos si
 // recuerdan lo alcanzado alguna vez —son el mapa de lo descubierto—, pero el
@@ -8892,6 +9179,23 @@ function renderMinimap(i, j, raw, e) {
     // meta.
     const pc = Math.round(raw * 100);
     if (pc !== mmLastCross) { mmLastCross = pc; dom.mmFill.style.width = pc + '%'; }
+
+    // Y su rotulo, que antes no estaba: una barra que se mueve y no dice que
+    // mide no informa, solo distrae. En el ultimo tramo se apaga entera, porque
+    // ahi ya no queda ningun cruce que contar y la otra barra ya dice la meta.
+    const ultimo = game.finishS >= 0;
+    if (ultimo !== mmLastFin) {
+        mmLastFin = ultimo;
+        dom.mmCross.hidden = ultimo;
+        dom.mmFill.parentNode.hidden = ultimo;
+    }
+    if (!ultimo) {
+        const falCruce = Math.round(crossAhead() / 10);
+        if (falCruce !== mmLastCrossN) {
+            mmLastCrossN = falCruce;
+            dom.mmCross.textContent = 'Cruce · ' + milesDe(crossAhead()) + ' m';
+        }
+    }
 
     // Y debajo, la otra cuenta: la de la ZONA. Son dos relojes distintos y por
     // eso son dos barras: la de arriba dice cuando toca elegir y la de abajo
@@ -9010,6 +9314,8 @@ function startGame() {
     // mejora que se guarda.
     game.gotas = 0;
     fillPachon();
+    game.tuck = 0;
+    player.tucking = false;
     game.invuln = 0;
     game.elapsed = 0;
     game.nextMilestone = MILESTONE_EVERY;
@@ -9035,8 +9341,15 @@ function startGame() {
     game.zoneFrom = 0;
     game.nextFauna = 120;
     game.nextValla = 260;
+    game.nextPublico = 420;
+    // Pronto: el primero tiene que salir en los primeros segundos, porque es lo
+    // que dice donde estas antes de que el rotulo se apague.
+    game.nextCerca = 200;
     game.gotas = 0;
+    game.tuck = 0;
     for (const v of vallas) { v.active = false; v.group.visible = false; }
+    for (const v of publico) { v.active = false; v.group.visible = false; }
+    for (const v of cercas) { v.active = false; v.group.visible = false; }
     game.zone.active = false;
     game.zone.k = 0;
     player.push = 0;
@@ -9116,6 +9429,7 @@ function startGame() {
     mmLastLeft = -1;
     mmLastX = ''; mmLastY = '';
     mmLastCross = -1; mmLastZone = -1;
+    mmLastCrossN = -1; mmLastFin = null;
     for (const k in barLast) barLast[k] = -1;
     lastBlendKey = -1;
     hudDirty = true;
@@ -9855,6 +10169,30 @@ function frame(now) {
             // vez de esquivarlo. Va aqui y no en el tope porque es un
             // multiplicador mas, y solo puede BAJAR la velocidad.
             if (dbg.slow) game.speed *= 0.34;
+
+            // --- La tumbada de la moto de pista ---
+            // Se aplica al final y SUMANDO, no multiplicando: lo que se gana
+            // tumbado son unidades por segundo de mas, no un porcentaje, asi
+            // que en una cuesta abajo no se dispara y en llano se nota igual.
+            //
+            // Y el techo es de la MOTO, no del juego: si la partida ya va a mas
+            // de lo que esta maquina sabe dar, tumbarse deja de acelerar y se
+            // queda en un empujon corto. Una moto no pasa de su propia punta
+            // por mucho que el piloto se esconda mejor.
+            if (pistaOn) {
+                if (player.tucking && player.grounded && player.out <= 0) {
+                    if (game.speed >= TUCK_MAX) {
+                        game.tuck = game.speed * TUCK_PUSH;
+                    } else {
+                        game.tuck = Math.min(TUCK_MAX - game.speed,
+                                             game.tuck + TUCK_ACC * STEP);
+                    }
+                } else {
+                    game.tuck = Math.max(0, game.tuck - TUCK_SUELTA * STEP);
+                }
+                game.speed += game.tuck;
+            }
+
             // Y el tope absoluto, el ultimo de todos: ningun encadenado de
             // multiplicadores puede dejar que un obstaculo se cuele entre dos
             // pasos de simulacion.

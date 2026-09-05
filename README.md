@@ -628,6 +628,17 @@ departamento, con el nombre del siguiente punto y los metros que faltan. Cumplid
 el tiempo de la zona, el texto cambia a **«en el próximo cruce»** y se enciende:
 es la única vez en toda la zona que elegir salida importa.
 
+**Y cada barra lleva su rótulo debajo.** La jade estuvo un tiempo sin él y no
+decía para qué era: una barra que se mueve y no dice qué mide no informa, sólo
+ocupa sitio y distrae. Ahora dice «Cruce · N m», del color de su propia barra
+para que no haya que adivinar cuál explica a cuál, y en el último tramo se apaga
+entera —ahí ya no queda ningún cruce que contar, y la otra barra ya dice la
+meta—. La cuenta lleva el mismo cuidado que la de la zona, más uno propio: sólo
+cuenta el distribuidor que viene de frente **si de verdad hay uno plantado**,
+porque restarle un ciclo a `nextCross` da un número aunque no se haya armado
+ninguno todavía, y al empezar la carrera el rótulo anunciaba un cruce a
+doscientos metros cuando el primero estaba a mil quinientos.
+
 Y lo que cuenta no es *cuánto falta para que se cumpla el tiempo*, sino **las
 unidades hasta el cruce concreto que cierra la zona**, que es el primero
 posterior a que se cumpla. Con un detalle que costó un fallo: `nextCross` salta
@@ -1525,6 +1536,30 @@ entrada es una forma de jugar vale más que una larga de recolores.
 | **Monopatín** | 1.000 | **Levanta la tabla** al saltar | salto **3,55** (+34 %) |
 | **Moto** | 1.500 | El **casco** aguanta un golpe | — |
 
+### La moto de pista
+
+La misma moto y las mismas dos cosas —casco y embestida—, más **la tumbada**. Es
+lo más caro de la tienda (2.400) porque es lo único que se **pilota**: las demás
+ventajas se llevan puestas y ésta hay que sostenerla.
+
+**Manteniendo abajo, la moto acelera sola.** Y no sin fin: tiene **su** techo,
+98 u/s, que es lo que esa máquina sabe dar —de crucero a tope tarda 1,9 s—.
+Pasado ese punto, o cuando la partida ya va más rápido por su cuenta, la tumbada
+deja de acelerar y se queda en **un empujón corto**: una moto no pasa de su
+propia punta por mucho que el piloto se esconda mejor. Al levantarse vuelve a lo
+normal en 0,72 s, no de golpe: un corte seco de treinta unidades por segundo se
+lee como un tirón del juego y no como haberse incorporado.
+
+Dos detalles que hacen que se sostenga de verdad:
+
+- **La postura no caduca mientras se aguanta.** El deslizamiento normal dura
+  0,45 s; sin esto habría que machacar la tecla para acelerar, que es justo lo
+  contrario de lo que se pide.
+- **Se suma, no se multiplica.** Lo que se gana tumbado son unidades por segundo
+  de más, así que en una cuesta abajo no se dispara y en llano se nota igual.
+- Y si la ventana pierde el foco con la tecla abajo, el `keyup` no llega nunca:
+  hay un `blur` que suelta la tumbada, o la moto se quedaría acelerando sola.
+
 ### Y cada traje tiene su poder, que sólo le sale a él
 
 | Traje | Poder | Qué hace |
@@ -1674,6 +1709,41 @@ pasar doce veces por debajo del mismo cartel.
 Cerrar una zona es lo único que se consigue sin que te lo den, y en una carrera
 de verdad el confeti cae exactamente ahí. Seis colores en vez de uno, porque
 confeti de un solo color son chispas.
+
+**Y el público.** Corrillos de cuatro personas al borde de la calzada,
+saltando, y una de cada dos con cartel —si lo llevaran todas, el corrillo
+parecería una manifestación—. Cada una salta a su ritmo y con su desfase: seis
+personas saltando a la vez son un mecanismo, seis saltando cada una a lo suyo
+son un público. Es lo que convierte una carretera con anuncios en una **carrera**:
+los anuncios los pone quien paga, el público viene a ver.
+
+**Al runner, el margen no se le queda «con anuncios»: se le queda forrado.** Una
+valla cada 110 unidades es una cada segundo y medio a velocidad de crucero, 5,6
+veces más que a los demás, y un corrillo cada 190. Es lo que se ve desde dentro
+de una maratón patrocinada, y lo que separa correr una carrera de ir por una
+carretera. El público y las vallas van en repartos **separados** a propósito: si
+compartieran turno, cada corrillo llegaría pegado a un panel y el margen saldría
+a bandazos en vez de lleno.
+
+### Lo que hace que el sitio sea el sitio, pasando de cerca
+
+La cosa que define a cada parada —la pirámide de Tikal, el mogote de Semuc, el
+paredón del Río Dulce, la basílica de Esquipulas— vivía en dos sitios y en
+ninguno de los dos se veía bien: **en el horizonte**, a treinta o cuarenta de
+distancia y medio comida por la bruma, y **en la estructura que cierra la zona**,
+o sea al final. El resultado era que en Petén salían primero los murciélagos y la
+pirámide aparecía casi al terminar, cuando **la pirámide no es la despedida de
+Tikal: es Tikal**.
+
+Ahora pasan piezas del sitio **al borde de la calzada**, a 15,5 del centro, una
+cada 18 segundos —unas diez por zona— y desde los primeros segundos de entrar.
+Reusan `silhouette()`, la **misma** función que dibuja el horizonte, así que cada
+región trae de cerca exactamente lo suyo sin una línea de arte nueva y sin poder
+desincronizarse de lo que se ve al fondo.
+
+Lo único que hay que garantizar es que no invadan la calzada, y está medido
+sobre **las trece regiones a la escala más grande que pueden salir**: lo más
+cerca que llega una pieza es a 5,8 del centro, y la calzada acaba en 4,2.
 
 **Y todo esto no añade un solo archivo.** Las telas son las seis tiras apaisadas
 que ya estaban en el repositorio para el menú y el fin de partida; se cargan una

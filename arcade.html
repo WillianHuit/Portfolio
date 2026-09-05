@@ -300,6 +300,10 @@
            queda, sin leer la palabra. */
         .casco { color: var(--jade); }
 
+        /* La tumbada: en blanco y con números, porque es lo único del HUD que
+           cambia sesenta veces por segundo mientras lo miras. */
+        .tuck { color: #f2f6fa; font-variant-numeric: tabular-nums; }
+
         /* El pachón: una barra que se llena, no un número suelto. Cien gotas
            es demasiado para leerlas de reojo mientras esquivas; lo que hay que
            poder ver sin pensar es cuánto falta, y eso es una barra. */
@@ -417,8 +421,14 @@
             letter-spacing: 0.08em;
             text-transform: uppercase;
             opacity: 0.62;
-            margin-top: 0.25rem;
+            margin-top: 0.22rem;
+            margin-bottom: 0.3rem;
         }
+
+        /* El rótulo de la barra jade va del color de su barra, para que no haya
+           que adivinar cuál explica a cuál. */
+        .mm-goal.cruce { color: var(--jade); }
+        .mm-goal[hidden] { display: none !important; }
 
         /* Cumplido el tiempo de la zona, el próximo cruce ES el que cambia de
            departamento. Es la única vez en doce minutos que elegir salida
@@ -1388,6 +1398,10 @@
                 <!-- Va DEBAJO del escudo porque se gasta ANTES que él: el
                      orden de la lista es el orden en que se pierden. -->
                 <span class="shield casco" id="casco" hidden>◓ Casco</span>
+                <!-- Sólo mientras se aguanta abajo en la moto de pista. Dice
+                     los dos números que importan: a cuánto vas y hasta dónde
+                     puede llegar esta máquina. -->
+                <span class="shield tuck" id="tuck" hidden>▼ 68 / 98</span>
                 <!-- El pachón del runner. Solo aparece con ese traje puesto:
                      los otros dos no tienen nada que contar aquí, y un
                      contador clavado en cero es ruido. -->
@@ -1414,12 +1428,14 @@
                 </svg>
                 <b class="mm-name" id="mmName">Tikal</b>
                 <span class="mm-dept" id="mmDept">Petén</span>
+                <!-- Dos relojes distintos, dos barras, y CADA UNA CON SU
+                     RÓTULO debajo. La de arriba dice cuándo toca elegir camino;
+                     la de abajo, cuándo esa elección te saca de la zona. La
+                     jade estuvo un tiempo sin rótulo y no decía para qué era:
+                     una barra que se mueve y no dice qué mide no informa, sólo
+                     ocupa sitio y distrae. -->
                 <div class="mm-bar"><i id="mmFill"></i></div>
-                <!-- Dos relojes distintos, dos barras. La de arriba dice
-                     cuándo toca elegir camino; ésta, cuándo esa elección te
-                     saca de la zona. Con zonas de doce minutos y un cruce cada
-                     veinte segundos, sin la segunda no había forma de saber si
-                     el cruce que viene es el que cambia de departamento. -->
+                <span class="mm-goal cruce" id="mmCross">Cruce · 940 m</span>
                 <div class="mm-bar zone"><i id="mmZone"></i></div>
                 <span class="mm-goal" id="mmGoal">Flores · 48 960 m</span>
             </div>
