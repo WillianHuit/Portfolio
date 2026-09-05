@@ -283,6 +283,33 @@ a ver ahora se ven enteros. Petén es el primer repaso, y salieron cuatro:
   **blanquea**, porque es polvo en el aire y el polvo en el aire coge luz. Ahora
   0,64 contra 0,33.
 
+### Repaso zona por zona: Monterrico
+
+Éste salió al revés que los cuatro anteriores: **lo que estaba mal era la
+métrica, no la zona.**
+
+- **El «fallo» de 43° era ruido.** El suelo de Monterrico es arena volcánica
+  negra, o sea un **neutro** —saturación 0,065—, y de un delta de tres sobre 255
+  la fórmula del tono saca 240° que no significan nada. Medido así, su tinte
+  azul suspendía por 43°; en realidad un azul saturado sobre arena negra se ve
+  perfectamente. **Contra un suelo sin color, lo que separa a un tinte es tener
+  color.** La métrica pasa a mirar tres cosas —tono, claridad y saturación— y
+  sólo suspende el tinte que falla las tres. Eso deshizo también el otro falso
+  positivo de la cola: el de la capital, que separa 0,47 en saturación.
+- **La mejora real era otra: la palmera sola no dice Monterrico.** Dice «playa
+  tropical», y podría ser de cualquier sitio del mundo. Ahora lleva al lado un
+  **rancho de palma** —horcones y techo de hoja—, que es lo que hace que la playa
+  sea ésta. Ocupa los dos huecos que gastaba una segunda palmera más pequeña,
+  que no añadía nada que la grande no dijera ya.
+- **El techo va con color propio y no con `landB`.** `landB` es el verde de las
+  hojas vivas de la palmera, y una hoja de palma **seca** —que es de lo que están
+  hechos los techos— es dorada. Mismo recurso que el vano negro del templo y el
+  humo gris del volcán.
+- **Y se queda bajo a propósito**: 7,1, el horizonte más bajo de la ruta.
+  Monterrico es costa llana y es el único sitio donde el horizonte tiene que
+  estar vacío. Levantarlo para igualar a los demás sería inventarse una sierra
+  en el Pacífico.
+
 **De aquí salió una métrica, y con ella una cola de trabajo.** El tinte de un
 suceso hay que medirlo **en tono contra el SUELO de su región**, no contra la
 niebla: el suelo es el plano grande que el jugador tiene a los dos lados de la
@@ -306,18 +333,25 @@ ruta:
 
 | Parada | Qué le falta |
 |---|---|
-| Monterrico | Tinte a 43° de su suelo |
 | Tajumulco | Cuneta de 2,6 · **misma silueta que Todos Santos, y van seguidas** |
 | Todos Santos | La otra mitad de lo anterior |
 | Chichicastenango | Cuneta de 2,8 · **mismo suelo que Atitlán, y van seguidas** |
 | Atitlán | **Misma silueta que el Fuego, y van seguidas** |
 | Volcán de Fuego | Cuneta de 2,0 · la otra mitad de lo anterior |
-| Ciudad de Guatemala | Tinte a 4° de su suelo |
 
-**Y la métrica del tinte tiene dos mitades, no una.** Esquipulas enseñó la
-segunda: su tinte pasaba el tono (59°) y aun así no hacía nada, porque tenía la
-misma luz que el suelo. Un tinte tiene que separarse **en tono o en claridad**,
-y lo honesto es mirar las dos columnas.
+**Y la métrica del tinte tiene tres dimensiones, no una.** Se fue construyendo a
+golpes, y cada zona enseñó una:
+
+| Dimensión | La enseñó | El caso |
+|---|---|---|
+| **Tono** | Tikal y Semuc | Verde oscuro sobre suelo verde: a 4° y 2°, sólo oscurecía |
+| **Claridad** | Esquipulas | Pasaba el tono (59°) y tenía la misma luz que el suelo (0,01) |
+| **Saturación** | Monterrico | Suelo neutro: medir su tono es medir ruido, y «suspendía» por eso |
+
+Un tinte hace algo si se separa en **cualquiera** de las tres, y sólo suspende
+el que falla las tres a la vez. Con la métrica completa, dos de los siete
+pendientes que había en la cola resultaron no ser defectos sino artefactos de
+medirla a medias.
 
 **El juego.** Tres vidas (hasta cinco con mejoras), escudo que absorbe un
 golpe, multiplicador por racha de jade, hitos cada 2.000 m, jaguar que se acerca

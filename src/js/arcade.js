@@ -3417,14 +3417,30 @@ function silhouette(kind, s, R) {
             break;
         }
         case 'palm': {                                    // Monterrico
+            // La palmera, y a su lado un RANCHO DE PALMA. Sola, la palmera dice
+            // "playa tropical" y podria ser de cualquier sitio del mundo; el
+            // rancho de horcones y techo de hoja es lo que hace que la playa sea
+            // ESTA. Ocupa los dos huecos que gastaba una segunda palmera mas
+            // pequena, que no anadia nada que la grande no dijera ya.
+            //
+            // Y se queda baja a proposito: Monterrico es costa llana y es el
+            // unico sitio del recorrido donde el horizonte tiene que estar
+            // vacio. Levantarlo para igualar a los demas seria inventarse una
+            // sierra en el Pacifico.
             put(0, 3.2 * s - 1, 0, 0.75 * s, 7.4 * s, 0.75 * s, R.landA);
             for (let f = 0; f < 4; f++) {
                 const a = f * Math.PI / 4 + 0.3;
                 put(Math.cos(a) * 1.9 * s, 6.9 * s, Math.sin(a) * 1.9 * s,
                     4.4 * s, 0.42 * s, 1.1 * s, R.landB, a, -0.32);
             }
-            put(3.4 * s, 2.2 * s - 1, 2 * s, 0.6 * s, 5.4 * s, 0.6 * s, R.landA);
-            put(3.4 * s, 4.9 * s, 2 * s, 3.6 * s, 0.4 * s, 3.2 * s, R.landB);
+            // El techo va con color propio y no con landB: landB es el verde de
+            // las hojas vivas de la palmera, y una hoja de palma SECA —que es de
+            // lo que estan hechos los techos— es dorada. Es el mismo recurso que
+            // usan el vano negro del templo y el humo gris del volcan.
+            const paja = 0xb8955c;
+            put(3.6 * s, 0.4 * s - 1, 2.2 * s, 4.0 * s, 2.8 * s, 3.4 * s, R.landA);
+            put(3.6 * s, 2.6 * s - 1, 2.2 * s, 4.8 * s, 1.6 * s, 4.2 * s, paja);
+            put(3.6 * s, 3.9 * s - 1, 2.2 * s, 2.6 * s, 1.0 * s, 2.4 * s, paja);
             break;
         }
         case 'basilica': {                                // Esquipulas
