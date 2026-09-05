@@ -1023,17 +1023,20 @@ const SKINS = [
     // el casco es lo primero que se come un golpe: por eso cuesta lo que cuesta
     // y por eso va el ultimo de la lista.
     { id: 'bici', name: 'Bicicleta', icon: '◎', veh: 'bici',
-      desc: 'Sentado y pedaleando. Las piernas dan la vuelta entera.',
+      desc: 'Rueda libre: en las bajadas ganas un 38 % en vez de un 20 %. ' +
+            'Más metros, y más deprisa de lo que da tiempo a leer.',
       cost: 700, cloth: 0xf0c34a, skin: 0xd9a066, crest: 0x1f2a52, legs: 0x1f2a52,
       trim: 0xd9d9d9, hair: 0x241810, boot: 0x2a2f38,
       bike: 0x2ec4a0, bikeDark: 0x14161a, visor: 0x1b2430 },
     { id: 'patineta', name: 'Patineta', icon: '▭', veh: 'patineta',
-      desc: 'De pie sobre la tabla, con los brazos abiertos para no caerse.',
+      desc: 'Talla en vez de dar el paso: cambias de carril un tercio más ' +
+            'rápido. De pie y con los brazos abiertos.',
       cost: 800, cloth: 0xd94f6a, skin: 0xd9a066, crest: 0x2a2f38, legs: 0x3a4250,
       trim: 0xd9d9d9, hair: 0x1a1008, boot: 0xf2f6fa,
       bike: 0xc8862f, bikeDark: 0x14161a, visor: 0x1b2430 },
     { id: 'monopatin', name: 'Monopatín', icon: '⌐', veh: 'monopatin',
-      desc: 'De pie y agarrado al manubrio, con un pie en la tabla.',
+      desc: 'Levanta la tabla: saltas un tercio más alto. De pie y agarrado ' +
+            'al manubrio, con un pie en el estribo.',
       cost: 1000, cloth: 0x4a90d9, skin: 0xd9a066, crest: 0xf2f6fa, legs: 0x2a3038,
       trim: 0xd9d9d9, hair: 0x241810, boot: 0x22242a,
       bike: 0xef4444, bikeDark: 0x14161a, visor: 0x1b2430 },
@@ -1043,6 +1046,33 @@ const SKINS = [
       trim: 0xd9d9d9, hair: 0x1a1008, boot: 0x22242a,
       bike: 0xd93a3a, bikeDark: 0x14161a, visor: 0x1b2430 }
 ];
+
+// ===========================================================================
+// Lo que trae cada vehiculo
+// ===========================================================================
+// Un numero por vehiculo y por cosa, todos en la misma tabla, para que el
+// reparto se vea de un vistazo y no haya que ir a buscarlo a tres sitios del
+// bucle. Cada dote sale de lo que ESE vehiculo hace de verdad y no de repartir
+// ventajas a partes iguales:
+//
+//   bici      - rueda libre cuesta abajo. Una bici baja mas rapido que
+//               cualquier otra cosa de esta lista, y ademas es lo unico que
+//               puede hacer sin motor.
+//   patineta  - talla. Cambiar de carril en una tabla es inclinarse, no dar un
+//               paso, y por eso sale antes de donde estaba.
+//   monopatin - salta. Vas de pie y con el peso encima del estribo, que es
+//               justo la postura desde la que se levanta la tabla.
+//   moto      - el casco, que ya lo tiene y es la unica dote defensiva.
+//
+// Y ninguna es gratis: las cuatro se compran, y la mas cara es la que protege.
+const VEH_NADA = { cuesta: 1, carril: 1, salto: 1 };
+const VEH_DOTE = {
+    bici:      { cuesta: 1.9, carril: 1,    salto: 1 },
+    patineta:  { cuesta: 1,   carril: 0.66, salto: 1 },
+    monopatin: { cuesta: 1,   carril: 1,    salto: 1.16 },
+    moto:      VEH_NADA
+};
+const dote = () => VEH_DOTE[vehOn] || VEH_NADA;
 
 // ===========================================================================
 // Mejoras permanentes
@@ -1647,7 +1677,11 @@ function persist() {
 // --- Lo que cada mejora hace, en un solo sitio ---
 const lvl = id => save.upg[id] || 0;
 const maxLives = () => START_LIVES + lvl('lives');
-const laneTime = () => LANE_TIME - lvl('agility') * 0.021;
+// Con suelo: la mejora de agilidad al maximo y la patineta encima dejarian el
+// cambio de carril en cuatro centesimas, que a esa velocidad es teletransporte
+// y el jugador deja de ver por donde ha pasado.
+const laneTime = () =>
+    Math.max(0.055, (LANE_TIME - lvl('agility') * 0.021) * dote().carril);
 const powerScale = () => 1 + lvl('power') * 0.2;
 const jadeScale = () => 1 + lvl('value') * 0.25;
 const jadeReach = () => JADE_REACH + lvl('magnet') * 0.3;
@@ -7084,11 +7118,14 @@ function jump() {
     if (player.grounded || player.coyote > 0) {
         // Coyote time: un salto pulsado justo despues de dejar el borde sigue
         // valiendo. Es la queja clasica del genero cuando falta.
-        doJump(JUMP_V);
+        // El salto del monopatin. La altura va con el CUADRADO de la velocidad
+        // de salida, asi que un 16 % mas de impulso son un 34 % mas de alto: el
+        // numero de la tabla parece pequeno y no lo es.
+        doJump(JUMP_V * dote().salto);
         player.jumps = 1;
         sfx.jump();
     } else if (lvl('djump') > 0 && player.jumps < 2) {
-        doJump(DOUBLE_JUMP_V);
+        doJump(DOUBLE_JUMP_V * dote().salto);
         player.jumps = 2;
         sfx.djump();
         burstParticles(player.x, player.y + 0.4, PLAYER_Z, 6, 0.6, 0x7fd4ff);
@@ -9655,8 +9692,12 @@ function frame(now) {
             // nada, y por eso los dos llevan cartel. Se usa lo EMPINADO de la
             // cuesta y no lo que lleva bajado: aquello se queda en uno al
             // final y dejaria la partida acelerada para siempre.
+            // La bici multiplica ESTO y no la velocidad de crucero: lo suyo es
+            // la rueda libre, o sea bajar mas rapido, no correr mas en llano.
+            // Puesto sobre la velocidad base habria sido otra cosa —una moto
+            // sin motor— y ademas habria empujado el techo todo el rato.
             const cuesta = slopeSteep(game.distance);
-            if (cuesta > 0) game.speed *= 1 + (SLOPE_SPEED - 1) * cuesta;
+            if (cuesta > 0) game.speed *= 1 + (SLOPE_SPEED - 1) * cuesta * dote().cuesta;
             const giro = turnGrip(game.distance);
             if (giro > 0) game.speed *= 1 + (TURN_SPEED - 1) * giro;
             // Y al morir el mundo frena hasta pararse, en lo que dura la

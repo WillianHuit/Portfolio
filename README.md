@@ -1516,14 +1516,47 @@ Ceniza— eran **el mismo muñeco con otros siete colores**: se compraban una ve
 se miraban diez segundos y no cambiaban nada. Una lista corta en la que cada
 entrada es una forma de jugar vale más que una larga de recolores.
 
-| Traje | Precio | Qué cambia |
-|---|---|---|
-| **Ajaw** | 0 | Nada: es el de referencia |
-| **Runner** | 500 | El jade se recoge como **agua**, y 100 gotas dan una vida |
-| **Bicicleta** | 700 | Sentado y **pedaleando**: las piernas dan la vuelta entera |
-| **Patineta** | 800 | **De pie encima**, con los brazos abiertos para no caerse |
-| **Monopatín** | 1.000 | De pie pero **agarrado** al manubrio, un pie en la tabla |
-| **Moto** | 1.500 | El casco aguanta un golpe antes que el escudo |
+| Traje | Precio | Qué trae | Medido |
+|---|---|---|---|
+| **Ajaw** | 0 | Nada: es el de referencia | carril 0,130 s · cuesta ×1,20 · salto 2,64 |
+| **Runner** | 500 | Gotas de agua: 100 dan una vida | — |
+| **Bicicleta** | 700 | **Rueda libre** cuesta abajo | cuesta **×1,38** |
+| **Patineta** | 800 | **Talla** al cambiar de carril | carril **0,086 s** |
+| **Monopatín** | 1.000 | **Levanta la tabla** al saltar | salto **3,55** (+34 %) |
+| **Moto** | 1.500 | El **casco** aguanta un golpe | — |
+
+**Cada dote sale de lo que ese vehículo hace de verdad**, no de repartir
+ventajas a partes iguales: una bici baja más rápido que cualquier otra cosa de
+la lista y además es lo único que puede hacer sin motor; cambiar de carril en
+una tabla es inclinarse, no dar un paso; y en un monopatín vas de pie con el
+peso sobre el estribo, que es justo la postura desde la que se levanta la tabla.
+
+**Y cada uno toca UNA cosa y sólo una.** Si dos tocaran lo mismo, la elección
+dejaría de ser una elección. Están las tres en la misma tabla —`VEH_DOTE`— para
+que el reparto se vea de un vistazo en vez de tener que buscarlo en tres sitios
+del bucle.
+
+Dos detalles que los números esconden:
+
+- **La bici multiplica lo que la cuesta REGALA, no la velocidad de crucero.**
+  De serie una bajada da un 20 % y con la bici da un 38 %: casi el doble de
+  regalo, aunque el multiplicador sólo pase de 1,20 a 1,38. Puesto sobre la
+  velocidad base habría sido otra cosa —una moto sin motor— y además habría
+  empujado el techo todo el rato.
+- **El salto sube con el cuadrado de la velocidad de salida**, así que el +16 %
+  de impulso del monopatín son un **+34 % de altura**. El número de la tabla
+  parece pequeño y no lo es.
+
+Y dos suelos, porque una ventaja sin tope deja de ser una ventaja:
+
+- **El cambio de carril no baja de 0,055 s.** La mejora de agilidad al máximo
+  más la patineta encima lo dejarían en cuatro centésimas, que a esa velocidad
+  es teletransporte y el jugador deja de ver por dónde ha pasado.
+- **El tope antitúnel sigue siendo el último de la cadena.** La bici mete un
+  multiplicador más, y `SPEED_HARD` se aplica después de todos: el peor
+  encadenado posible da 264 u/s y queda recortado a 120, que a paso fijo son 2,0
+  unidades por paso contra los 2,2 de fondo de la ventana de colisión. Está
+  comprobado sobre el **orden del código**, que es donde vive esa garantía.
 
 ### Los cuatro vehículos salen del mismo molde
 
