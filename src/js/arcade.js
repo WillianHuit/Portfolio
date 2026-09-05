@@ -130,7 +130,11 @@ const JUMP_BUFFER = 0.13;           // salto pulsado justo antes de aterrizar
 
 // Cada 250 m y no cada 500: una partida corriente muere entre 300 y 400 m,
 // asi que con 500 la mayoria de jugadores no llegaria a ver un solo hito.
-const MILESTONE_EVERY = 250;
+// Con zonas de doce minutos la ruta entera son mas de seiscientos kilometros,
+// asi que un hito cada 250 m son dos mil quinientas fanfarrias por partida:
+// una cada cuatro segundos durante dos horas y media. A 2.000 sale una cada
+// medio minuto, que es lo que sigue siendo un hito y no un tic.
+const MILESTONE_EVERY = 2000;
 // Probando con un jugador activo, el maximo de jade en una carrera de 500 m
 // era 4: con el umbral en 5 el multiplicador resultaba inalcanzable y la
 // mecanica no existia en la practica. Con 3 se alcanza jugando bien.
@@ -197,12 +201,10 @@ const BOOST_POOL = 8;
 // siguiente tienen que caber la zona limpia de las dos y ademas un tramo
 // especial entero con sus margenes. Con 620 no cabia, y el resultado medido
 // era que no salia ni una bajada ni una curva en dos mil metros.
-// Y subio de 780 a 950. Los cruces alternan destino y cortada, asi que solo
-// uno de cada dos cambia de sitio: con 780 se pasaba de departamento cada 1.560
-// metros, que a la velocidad de ahora son menos de treinta segundos por lugar.
-// Un sitio que se abandona antes de haberlo mirado no es un sitio, es un color.
-// Con 950 cada punto de la ruta dura casi dos kilometros.
-const CROSS_EVERY = 1150;
+// Cada cuanto se parte la calzada. Ya NO decide cuanto dura una zona: eso se
+// desacoplo (ver ZONE_SPAN). Aqui manda solo el ritmo de las decisiones, y una
+// cada veinte segundos largos es lo que aguanta sin cansar.
+const CROSS_EVERY = 1250;
 const CROSS_SIGN_AHEAD = 62;        // el rotulo, adelantado a la isleta
 // El divisor. Es lo unico que impide cruzar de un ramal al otro mientras los
 // dos siguen pegados, asi que mide lo que mide por eso y no por estetica.
@@ -1051,47 +1053,84 @@ const svg = body => '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">' + 
 // rotulo, caia el tinte... y no habia nada que ver, porque un suceso mas flojo
 // que lo normal no es un suceso. En oleadas, con el hueco libre moviendose, se
 // pide lo mismo que antes -leer y moverse- pero se ve.
+// Las cinco formas de despedirse de una zona. No todas se despiden igual: por
+// Tikal se pasa POR DENTRO de una piramide, en Semuc por la boca de una cueva y
+// en la capital por debajo de un paso elevado. Todas comparten los materiales
+// tematizados de la region, asi que ademas van del color del sitio.
+const GATE_PIRAMIDE = 0, GATE_ARCO = 1, GATE_TUNEL = 2;
+const GATE_MUELLE = 3, GATE_PASO = 4;
+// Alto libre del vano. Por debajo se pasa incluso volando con el quetzal, que
+// sube a seis: un portico que se pudiera golpear seria un obstaculo, y esto no
+// pide nada, solo dice donde se acaba el sitio.
+const GATE_CLEAR = 11;
+
+// gate  - por que estructura se sale de la zona.
+// vida  - que se ve moverse ahi todo el rato, sin tocar nada: 'pez' salta de un
+//         margen al otro donde hay agua, 'ave' cruza por lo alto.
+// polvo - motas de ambiente que caen siempre, del color del sitio.
 const ZONES = {
     tikal:       { name: 'Vuelo de camazotz',   kind: 'enjambre', what: CAMAZOTZ, n: 7,
-                   warn: 'animal',   tint: 0x0d2a1e, spark: 0x2ec4a0 },
+                   warn: 'animal',   tint: 0x0d2a1e, spark: 0x2ec4a0,
+                   gate: GATE_PIRAMIDE, vida: 'ave', polvo: 0x9fd8a0 },
     flores:      { name: 'El lago se la traga', kind: 'pasillo',  what: CENOTE,   n: 7,
-                   warn: 'hueco',    tint: 0x1f5f8a, spark: 0x7fd4e6 },
+                   warn: 'hueco',    tint: 0x1f5f8a, spark: 0x7fd4e6,
+                   gate: GATE_MUELLE, vida: 'pez', polvo: 0xbfe3ea },
     semuc:       { name: 'Desprendimiento',     kind: 'lluvia',   what: RODANTE,  n: 8,
-                   warn: 'derrumbe', tint: 0x24503a, spark: 0xcfe0b8 },
+                   warn: 'derrumbe', tint: 0x24503a, spark: 0xcfe0b8,
+                   gate: GATE_TUNEL, vida: 'pez', polvo: 0x8fd4c0 },
     riodulce:    { name: 'Troncos del río',     kind: 'pasillo',  what: TRONCO,   n: 7,
-                   warn: 'derrumbe', tint: 0x1d5e3a, spark: 0xb08a52 },
+                   warn: 'derrumbe', tint: 0x1d5e3a, spark: 0xb08a52,
+                   gate: GATE_MUELLE, vida: 'pez', polvo: 0x8fe0c0 },
     esquipulas:  { name: 'Caravana de romería', kind: 'enjambre', what: BUS,      n: 7,
-                   warn: 'parada',   tint: 0x7a4a18, spark: 0xf0c34a },
+                   warn: 'parada',   tint: 0x7a4a18, spark: 0xf0c34a,
+                   gate: GATE_ARCO, vida: 'ave', polvo: 0xe8c896 },
     monterrico:  { name: 'Marejada',            kind: 'pasillo',  what: TRONCO,   n: 7,
-                   warn: 'derrumbe', tint: 0x1a5f7a, spark: 0xcfeef6 },
+                   warn: 'derrumbe', tint: 0x1a5f7a, spark: 0xcfeef6,
+                   gate: GATE_MUELLE, vida: 'pez', polvo: 0xffd9b0 },
     tajumulco:   { name: 'Erupción',            kind: 'lluvia',   what: BOMBA,    n: 9,
-                   warn: 'derrumbe', tint: 0xd4451f, spark: 0xff8a4a },
+                   warn: 'derrumbe', tint: 0xd4451f, spark: 0xff8a4a,
+                   gate: GATE_TUNEL, vida: 'ave', polvo: 0xa8c6e6 },
     todossantos: { name: 'Ventisca',            kind: 'viento',   what: 0,        n: 0,
-                   warn: 'viento',   tint: 0xdfeaf4, spark: 0xffffff },
+                   warn: 'viento',   tint: 0xdfeaf4, spark: 0xffffff,
+                   gate: GATE_TUNEL, vida: 'ave', polvo: 0xffffff },
     chichi:      { name: 'Camino del mercado',  kind: 'cruce',    what: VACA,     n: 6,
-                   warn: 'animal',   tint: 0x5a2f52, spark: 0xf0c34a },
+                   warn: 'animal',   tint: 0x5a2f52, spark: 0xf0c34a,
+                   gate: GATE_ARCO, vida: 'ave', polvo: 0xdfe6ff },
     atitlan:     { name: 'Xocomil',             kind: 'viento',   what: 0,        n: 0,
-                   warn: 'viento',   tint: 0x2a4f8a, spark: 0xcfe4ef },
+                   warn: 'viento',   tint: 0x2a4f8a, spark: 0xcfe4ef,
+                   gate: GATE_MUELLE, vida: 'pez', polvo: 0xf0a483 },
     fuego:       { name: 'El Fuego escupe',     kind: 'lluvia',   what: BOMBA,    n: 8,
-                   warn: 'derrumbe', tint: 0xff4a10, spark: 0xffb04a },
+                   warn: 'derrumbe', tint: 0xff4a10, spark: 0xffb04a,
+                   gate: GATE_TUNEL, vida: 'none', polvo: 0xff8a4a },
     antigua:     { name: 'Temblor',             kind: 'temblor',  what: RODANTE,  n: 8,
-                   warn: 'derrumbe', tint: 0x9a8250, spark: 0xe8dcc0 },
+                   warn: 'derrumbe', tint: 0x9a8250, spark: 0xe8dcc0,
+                   gate: GATE_ARCO, vida: 'ave', polvo: 0xe0c9a6 },
     guate:       { name: 'Hora pico',           kind: 'enjambre', what: BUS,      n: 7,
-                   warn: 'parada',   tint: 0x1a2440, spark: 0xf0c34a }
+                   warn: 'parada',   tint: 0x1a2440, spark: 0xf0c34a,
+                   gate: GATE_PASO, vida: 'ave', polvo: 0x8f9298 }
 };
 
 // Cuanto dura el suceso, en unidades de trazado, y cuando se arma.
 //
-// ZONE_AFTER se cuenta desde que se entra en la zona, y esta MEDIDO contra los
-// huecos que dejan las bifurcaciones, no puesto a ojo. Con cruces cada 950 y
-// uno de cada dos cambiando de sitio, cada zona dura 1.900 y solo tiene dos
-// huecos limpios: (+129, +845) y (+1079, +1795). El suceso ocupa 380 mas 90 de
-// margen y se arma 215 por delante, asi que armandolo a +950 cae en [+1165,
-// +1545]: dentro del segundo hueco, con 250 de sobra por cada lado y sin rozar
-// ni el cruce cortado de en medio ni el distribuidor que saca de la zona.
+// --- Cuanto dura una zona ---------------------------------------------------
+// LA PERILLA. Antes lo decidia CROSS_EVERY —los cruces alternaban destino y
+// cortada, asi que la zona duraba dos cruces— y eso ataba dos cosas que no
+// tienen nada que ver: cada cuanto se decide un camino y cuanto se esta en un
+// sitio. Con zonas de doce minutos, atados, habria un cruce cada seis.
 //
-// Con los 1.350 que tenia primero no cabia en ningun sitio: la comprobacion lo
-// rechazaba compas tras compas hasta que era demasiado tarde.
+// Ahora la zona dura ZONE_SPAN unidades de calzada y el cruce que cambia de
+// sitio no aparece hasta que se cumplen: hasta entonces todos son cortadas. Y
+// si se toma el retorno, el contador sigue vencido, asi que el siguiente cruce
+// vuelve a ser de destino y equivocarse cuesta un cruce, no una zona entera.
+const ZONE_MINUTES = 12;
+const ZONE_SPAN = ZONE_MINUTES * 60 * SPEED_MAX;
+
+// Cada cuanto se repite el suceso propio de la zona DENTRO de ella. Con doce
+// minutos por sitio, uno solo se pierde: salen unos ocho por visita, que a
+// velocidad de crucero es uno cada minuto y medio.
+const ZONE_EVERY = 6000;
+// Y el primero, contado desde que se entra: lo bastante pronto para que la
+// zona se presente con lo suyo y no con una recta.
 const ZONE_AFTER = 1100;
 
 // Cuanto antes del cruce se planta el arco de fin de zona. Sumadas las 170 que
@@ -1205,8 +1244,12 @@ const game = {
     // soltado, libre el carril que se respeta mientras la dureza lo permita y
     // dur lo apretado que va, de 0 a 1, segun lo avanzada que este la ruta.
     zone: { active: false, s0: 0, i: 0, k: 0, libre: 1, dur: 0, dicho: false },
-    nextZone: 0,         // distancia a la que se puede armar el proximo
-    crossKind: 1,        // 0 = cruce de destino, 1 = bifurcacion cortada
+    nextZone: 0,         // distancia a la que se puede armar el proximo suceso
+    zoneFrom: 0,         // distancia a la que se entro en la zona actual
+    nextFauna: 0,        // distancia a la que sale el proximo bicho de adorno
+    // 0 = cruce de destino, 1 = bifurcacion cortada. Ya no se alterna: lo
+    // decide si la zona ha cumplido su tiempo. Se guarda solo para consultarlo.
+    crossKind: 1,
     boostTaken: 0,       // aceleradores pisados, para la vida extra
     boostPerm: 0,        // velocidad que se queda para siempre
     hurt: 0,             // segundos que queda del destello de golpe
@@ -1782,7 +1825,8 @@ const crossings = [];
 const warns = [];
 const hazards = [];
 const particles = [];
-let gate = null;                    // el arco de fin de zona, uno solo
+const fauna = [];                   // peces y aves: adorno, no golpean
+let gate = null;                    // la estructura de fin de zona, una sola
 
 // Geometria unica compartida por todo el escenario
 const BOX = new THREE.BoxGeometry(1, 1, 1);
@@ -1926,6 +1970,13 @@ function buildMaterials() {
     // -que son justo las de los dos volcanes- se veria como una piedra gris.
     mat.ember     = lam(0x8a2408, { emissive: 0xd4451f, emissiveIntensity: 0.85 });
     mat.emberCore = lam(0xff9a3c, { emissive: 0xffb04a, emissiveIntensity: 1.15 });
+
+    // La fauna de adorno. Tampoco se tine con la zona: un pez plateado es
+    // plateado en el Petén y en Izabal, y lo que tiene que decir es "esto esta
+    // vivo y no te va a hacer nada", no de que departamento es.
+    mat.fishBody  = lam(0xc8d8e0);
+    mat.fishFin   = lam(0x6f9fb8);
+    mat.bird      = lam(0x2b3138);
 
     mat.boostPad  = lam(0x0d3a33);
     mat.boostMark = lam(0x4affd0, { emissive: 0x4affd0, emissiveIntensity: 0.7 });
@@ -3956,39 +4007,225 @@ function makeWarn() {
 // de mas.
 function makeGate() {
     const group = new THREE.Group();
-    const put = (m, sx, sy, sz, x, y, z) => {
+    const forma = () => { const g = new THREE.Group(); g.visible = false; group.add(g); return g; };
+    const put = (g, m, sx, sy, sz, x, y, z, ry) => {
         const q = new THREE.Mesh(BOX, m);
         q.scale.set(sx, sy, sz);
         q.position.set(x, y, z);
-        group.add(q);
+        if (ry) q.rotation.y = ry;
+        g.add(q);
     };
-    const off = ROAD_WIDTH / 2 + 1.9;
-    for (const s of [-1, 1]) {
-        // Pilar escalonado: tres cuerpos que se van estrechando.
-        put(mat.stone, 3.4, 5.2, 3.4, s * off, 2.6, 0);
-        put(mat.stone, 2.8, 3.4, 2.8, s * off, 6.9, 0);
-        put(mat.accent, 3.1, 0.5, 3.1, s * off, 8.9, 0);
-        // Y una jamba hacia dentro, que es lo que forma el vano.
-        put(mat.stone, 1.1, 6.4, 2.2, s * (off - 2.0), 3.2, 0);
+    const off = ROAD_WIDTH / 2 + 1.9;         // donde empiezan las jambas
+    const luz = off * 2;                      // ancho del vano
+
+    // --- Piramide: se pasa por un tunel abierto en la base -----------------
+    // Los cuerpos de abajo van partidos en dos para dejar el paso; a partir del
+    // dintel son macizos y de lado a lado. Es lo que hace que se entre en ella
+    // y no que se pase por al lado.
+    const pir = forma();
+    for (let t = 0; t < 6; t++) {
+        const w = 34 - t * 4.6, h = 3.2, y = 1.6 + t * h, d = 15 - t * 1.7;
+        if (y + h / 2 <= GATE_CLEAR) {
+            const lado = (w - luz) / 2;
+            for (const s of [-1, 1]) {
+                put(pir, t % 2 ? mat.stone : mat.kerb, lado, h, d, s * (luz + lado) / 2, y, 0);
+            }
+        } else {
+            put(pir, t % 2 ? mat.stone : mat.kerb, w, h, d, 0, y, 0);
+        }
     }
-    // Dintel de lado a lado, bien alto: por debajo se pasa volando incluso.
-    put(mat.stone, off * 2 + 3.4, 1.6, 2.6, 0, 10.0, 0);
-    put(mat.accent, off * 2 + 4.0, 0.55, 3.0, 0, 11.1, 0);
-    // Cresteria: tres remates que rompen la linea recta de arriba.
-    for (const s of [-1, 0, 1]) {
-        put(mat.stone, 1.6, 1.9, 1.6, s * (off - 1.2), 12.3, 0);
+    put(pir, mat.accent, 7.4, 2.2, 7.4, 0, 21.2, 0);        // templo de la cima
+    put(pir, mat.stone, 1.2, 3.0, 1.2, 0, 23.6, 0);         // crestería
+    // Y la boca del tunel enmarcada, para que se vea que ES una entrada.
+    for (const s of [-1, 1]) put(pir, mat.accent, 1.0, GATE_CLEAR, 1.2, s * luz / 2, GATE_CLEAR / 2, 7.8);
+    put(pir, mat.accent, luz + 2, 1.1, 1.2, 0, GATE_CLEAR, 7.8);
+
+    // --- Arco colonial -----------------------------------------------------
+    const arc = forma();
+    for (const s of [-1, 1]) {
+        put(arc, mat.stone, 3.4, 5.6, 3.4, s * off, 2.8, 0);
+        put(arc, mat.stone, 2.8, 3.8, 2.8, s * off, 7.5, 0);
+        put(arc, mat.accent, 3.1, 0.5, 3.1, s * off, 9.6, 0);
+        put(arc, mat.stone, 1.1, 7.0, 2.2, s * (off - 2.0), 3.5, 0);
+    }
+    put(arc, mat.stone, luz + 3.4, 1.6, 2.6, 0, GATE_CLEAR, 0);
+    put(arc, mat.accent, luz + 4.0, 0.55, 3.0, 0, GATE_CLEAR + 1.1, 0);
+    for (const s of [-1, 0, 1]) put(arc, mat.stone, 1.6, 1.9, 1.6, s * (off - 1.2), GATE_CLEAR + 2.3, 0);
+
+    // --- Boca de cueva: dos macizos de roca girados y un dintel irregular ---
+    const tun = forma();
+    for (const s of [-1, 1]) {
+        put(tun, mat.stone, 8.0, 7.0, 9.0, s * (off + 2.2), 3.5, 0, s * 0.22);
+        put(tun, mat.stone, 6.4, 5.0, 7.0, s * (off + 1.0), 9.0, -1.5, s * -0.3);
+        put(tun, mat.kerb, 3.2, 3.6, 4.0, s * (off - 0.6), 7.6, 2.0, s * 0.4);
+    }
+    put(tun, mat.stone, luz + 9, 3.4, 8.0, 0, GATE_CLEAR + 1.4, 0);
+    put(tun, mat.stone, luz + 4, 2.6, 5.0, -2.0, GATE_CLEAR + 3.6, 1.0, 0.18);
+
+    // --- Muelle: postes de madera y un travesano ---------------------------
+    const mue = forma();
+    for (const s of [-1, 1]) {
+        for (let k = 0; k < 2; k++) {
+            put(mue, mat.deckSide, 0.9, GATE_CLEAR + 1.6, 0.9,
+                s * (off + k * 1.6), (GATE_CLEAR + 1.6) / 2, k * 4 - 2);
+        }
+        put(mue, mat.deckSide, 0.6, 0.6, 5.4, s * (off + 0.8), GATE_CLEAR - 2.2, 0, 0);
+    }
+    put(mue, mat.deck, luz + 4.6, 1.0, 1.4, 0, GATE_CLEAR, -2);
+    put(mue, mat.deck, luz + 4.6, 1.0, 1.4, 0, GATE_CLEAR, 2);
+    put(mue, mat.accent, luz * 0.55, 1.8, 0.5, 0, GATE_CLEAR - 1.4, 2.1);   // el cartel
+
+    // --- Paso elevado: dos pilas y un tablero de hormigon ------------------
+    const pas = forma();
+    for (const s of [-1, 1]) {
+        put(pas, mat.stone, 3.0, GATE_CLEAR, 5.0, s * (off + 0.6), GATE_CLEAR / 2, 0);
+        put(pas, mat.kerb, 4.0, 0.8, 6.0, s * (off + 0.6), GATE_CLEAR + 0.4, 0);
+    }
+    put(pas, mat.stone, luz + 9, 1.8, 8.0, 0, GATE_CLEAR + 0.9, 0);
+    put(pas, mat.kerb, luz + 9, 0.9, 0.5, 0, GATE_CLEAR + 2.2, -3.9);
+    put(pas, mat.kerb, luz + 9, 0.9, 0.5, 0, GATE_CLEAR + 2.2, 3.9);
+    for (let k = -2; k <= 2; k++) {
+        put(pas, mat.accent, 0.4, 0.9, 0.4, k * 4.5, GATE_CLEAR + 2.2, -3.9);
     }
 
     group.visible = false;
     scene.add(group);
-    return { group, z: 0, curve: 0, rise: 0, active: false };
+    return {
+        group, parts: [pir, arc, tun, mue, pas],
+        z: 0, curve: 0, rise: 0, active: false
+    };
 }
 
-function spawnGate(z) {
+// ===========================================================================
+// La vida de cada sitio
+// ===========================================================================
+// Bichos de adorno: no golpean, no se esquivan y no cuentan para nada. Estan
+// porque un sitio en el que no se mueve nada mas que lo que te quiere matar no
+// es un sitio, es un decorado. Donde hay agua saltan peces de un margen al
+// otro; donde hay cielo cruzan bandadas por lo alto.
+//
+// La regla que los mantiene fuera del juego: el pez cruza SIEMPRE por delante
+// del jugador —entre cuarenta y ciento veinte unidades— y a ras, y el ave va a
+// mas de doce de altura. Ni uno ni otro comparten sitio con nada que golpee,
+// asi que no hay forma de confundirlos con una amenaza.
+const FAUNA_POOL = 6;
+const FAUNA_EVERY = 190;            // unidades entre bichos
+
+function makeFauna() {
+    const group = new THREE.Group();
+    const put = (g, m, sx, sy, sz, x, y, z) => {
+        const q = new THREE.Mesh(BOX, m);
+        q.scale.set(sx, sy, sz);
+        q.position.set(x, y, z);
+        g.add(q);
+        return q;
+    };
+
+    // Pez: cuerpo, cola y una aleta. Pequeno a proposito.
+    const pez = new THREE.Group();
+    put(pez, mat.fishBody, 1.1, 0.5, 0.42, 0, 0, 0);
+    put(pez, mat.fishBody, 0.42, 0.34, 0.3, 0.42, 0.14, 0);
+    put(pez, mat.fishFin, 0.5, 0.62, 0.14, -0.72, 0.06, 0);      // cola
+    put(pez, mat.fishFin, 0.34, 0.3, 0.12, 0.05, 0.34, 0);       // dorsal
+    pez.visible = false;
+    group.add(pez);
+
+    // Ave: cuerpo y dos alas que baten. Tres por bandada, montadas en fila.
+    const ave = new THREE.Group();
+    const alas = [];
+    for (let k = 0; k < 3; k++) {
+        const b = new THREE.Group();
+        b.position.set((k - 1) * 2.4, (k === 1 ? 0.9 : 0), (k - 1) * 1.6);
+        put(b, mat.bird, 0.66, 0.34, 0.34, 0, 0, 0);
+        put(b, mat.bird, 0.26, 0.2, 0.2, 0.42, 0.08, 0);
+        alas.push([
+            put(b, mat.bird, 1.5, 0.1, 0.5, -0.8, 0.1, 0),
+            put(b, mat.bird, 1.5, 0.1, 0.5, 0.8, 0.1, 0)
+        ]);
+        ave.add(b);
+    }
+    ave.visible = false;
+    group.add(ave);
+
+    group.visible = false;
+    scene.add(group);
+    return {
+        group, pez, ave, alas,
+        kind: 'ave', t: 0, dur: 1, z: 0, from: 0, to: 0, y0: 0, active: false
+    };
+}
+
+function spawnFauna(kind, z) {
+    let f = null;
+    for (const c of fauna) if (!c.active) { f = c; break; }
+    if (!f) return;
+    const lado = Math.random() < 0.5 ? -1 : 1;
+    f.kind = kind;
+    f.z = z;
+    f.t = 0;
+    f.active = true;
+    f.group.visible = true;
+    f.pez.visible = kind === 'pez';
+    f.ave.visible = kind === 'ave';
+    if (kind === 'pez') {
+        // De un margen al otro, cruzando la calzada de un salto.
+        f.from = lado * (ROAD_WIDTH / 2 + 5.5);
+        f.to = -f.from;
+        f.y0 = 0.2;
+        f.dur = 0.85 + Math.random() * 0.35;
+    } else {
+        // Las aves cruzan mas abierto, mas alto y mas despacio.
+        f.from = lado * 34;
+        f.to = -lado * (18 + Math.random() * 20);
+        f.y0 = 13 + Math.random() * 9;
+        f.dur = 2.6 + Math.random() * 1.6;
+    }
+    f.group.position.set(f.from, f.y0, z);
+}
+
+function updateFauna(dt, dz) {
+    for (const f of fauna) {
+        if (!f.active) continue;
+        f.z += dz;
+        f.t += dt;
+        const p = f.t / f.dur;
+        if (p >= 1 || f.z > DESPAWN_Z + 10) {
+            // El pez entra al agua con su chapoteo; el ave simplemente se va.
+            if (f.kind === 'pez' && p >= 1) {
+                burstParticles(f.to, 0.4, f.z, 5, 0.6, 0xbfe3ea);
+            }
+            f.active = false;
+            f.group.visible = false;
+            continue;
+        }
+        const x = f.from + (f.to - f.from) * p;
+        if (f.kind === 'pez') {
+            // Parabola: sale del agua, cruza y vuelve a entrar.
+            const y = f.y0 + Math.sin(p * Math.PI) * 4.2;
+            f.group.position.set(x, y, f.z);
+            // Y se inclina con la trayectoria, que es lo que hace que se lea
+            // como un salto y no como una pieza deslizandose por el aire.
+            f.group.rotation.z = Math.cos(p * Math.PI) * 0.9 * (f.to > f.from ? -1 : 1);
+            f.group.rotation.y = f.to > f.from ? 0 : Math.PI;
+        } else {
+            const y = f.y0 + Math.sin(f.t * 1.7) * 0.8;
+            f.group.position.set(x, y, f.z - p * 26);
+            f.group.rotation.y = f.to > f.from ? -0.5 : 0.5;
+            const bat = Math.sin(f.t * 9) * 0.9;
+            for (let k = 0; k < f.alas.length; k++) {
+                f.alas[k][0].rotation.z = bat;
+                f.alas[k][1].rotation.z = -bat;
+            }
+        }
+    }
+}
+
+function spawnGate(z, kind) {
     gate.z = z;
     gate.curve = trackCurve(z);
     gate.rise = trackRise(z);
     gate.active = true;
+    gate.parts.forEach((p, i) => { p.visible = (i === kind); });
     gate.group.visible = true;
     gate.group.position.set(curveOf(gate), riseOf(gate), z);
 }
@@ -4174,9 +4411,10 @@ function buildPools() {
                          swapLane: 0, target: 0, blocked: 0, kind: 0,
                          z: 0, active: false, done: false });
     }
-    // Uno solo: el arco pasa cuatrocientas unidades antes que su cruce y los
-    // cruces van a mas de mil, asi que nunca hay dos a la vez.
+    // Una sola: la estructura pasa cuatrocientas unidades antes que su cruce y
+    // los cruces van a mas de mil, asi que nunca hay dos a la vez.
     gate = makeGate();
+    for (let i = 0; i < FAUNA_POOL; i++) fauna.push(makeFauna());
 }
 
 // ---------------------------------------------------------------------------
@@ -4576,6 +4814,7 @@ function resetWorld() {
         c.island.group.visible = false;
     });
     if (gate) { gate.active = false; gate.group.visible = false; }
+    for (const f of fauna) { f.active = false; f.group.visible = false; }
     pending.length = 0;
     game.nextSpawnZ = SPAWN_Z + 40;   // margen inicial para orientarse
 }
@@ -4944,14 +5183,14 @@ function armZone() {
     const spec = ZONES[REGIONS[ri].id];
     if (!spec) return false;
 
-    // Si ya no da tiempo a que quepa ENTERO antes del proximo cruce, se
-    // renuncia y no se vuelve a intentar hasta la zona siguiente. Sin esta
-    // comprobacion, un suceso que no encontraba sitio se acababa armando tarde
-    // y sonaba pasado el distribuidor: el jugador veia el vuelo de camazotz de
+    // Si ya no da tiempo a que quepa ENTERO antes del proximo cruce, no se
+    // arma tarde: se aplaza a despues del cruce. Sin esta comprobacion, un
+    // suceso que no encontraba sitio se acababa armando encima del
+    // distribuidor y sonaba pasado el: el jugador veia el vuelo de camazotz de
     // Tikal con el rotulo de Tikal puesto... estando ya en Flores.
     const cruce = game.nextCross + CROSS_ISLAND_AT;
     if (game.distance + ARM_AHEAD + ZONE_LEN + 60 > cruce) {
-        game.nextZone = Infinity;
+        game.nextZone = cruce + 140;
         return false;
     }
     if (trackBusy(ZONE_LEN)) return false;
@@ -5238,7 +5477,7 @@ function generateChunk(z) {
     // partida, armado a los 260 m, ocupaba la unica ventana que le quedaba al
     // suceso de Tikal antes del cruce. No salia nunca.
     if (!game.zone.active && game.distance > game.nextZone) {
-        if (armZone()) game.nextZone = Infinity;
+        if (armZone()) game.nextZone = game.distance + ZONE_EVERY;
     }
 
     // El suceso tiene preferencia sobre el reparto de tramos: cuatrocientas
@@ -5557,8 +5796,15 @@ function spawnCrossing(z) {
     const c = freeCrossing();
     if (!c) return;
 
-    game.crossKind = 1 - game.crossKind;
-    c.kind = game.crossKind;                       // 0 = destino, 1 = cortada
+    // 0 = destino, 1 = cortada. El de destino no sale hasta que la zona ha
+    // cumplido su tiempo: dentro de una zona todos los cruces son cortadas, y
+    // el que cambia de sitio es el que la cierra. Antes se alternaban, y con
+    // zonas de doce minutos eso habria sido cambiar de departamento cada dos
+    // cruces pasara lo que pasara.
+    const cumplida = game.distance - game.zoneFrom > ZONE_SPAN;
+    const ultima = Math.floor(routePos()) % REGION_N >= REGION_N - 1;
+    c.kind = (cumplida && !ultima) ? 0 : 1;
+    game.crossKind = c.kind;
 
     const here = Math.floor(routePos()) % REGION_N;
     // El destino ya NO se sortea. La ruta es una sola y va de Tikal a la
@@ -5695,9 +5941,8 @@ function takeExit(c, lane) {
 
     if (cambio) {
         showRegionBanner(destino);
-        // Zona nueva, suceso nuevo. Se apunta desde aqui y no desde el reparto
-        // por distancia: es de la ZONA, y tiene que salir una vez por visita
-        // caiga donde caiga el kilometraje.
+        // Zona nueva: empieza a contar su tiempo y se apunta su primer suceso.
+        game.zoneFrom = game.distance;
         game.nextZone = game.distance + ZONE_AFTER;
         const id = REGIONS[destino].id;
         if (!save.regions.includes(id)) {
@@ -6530,7 +6775,32 @@ function scrollWorld(dt) {
         if (p.z > DESPAWN_Z) { p.active = false; p.mesh.visible = false; }
     }
 
-    // El arco viaja como cualquier otra cosa del mundo
+    // --- La vida del sitio ---
+    // Un bicho cada FAUNA_EVERY unidades, del tipo que le toque a la zona, y
+    // motas de ambiente cayendo todo el rato. Es lo unico del juego que se
+    // mueve sin querer nada del jugador.
+    const zr = ZONES[REGIONS[Math.floor(routePos()) % REGION_N].id];
+    if (zr && game.distance > game.nextFauna) {
+        game.nextFauna = game.distance + FAUNA_EVERY * (0.7 + Math.random() * 0.7);
+        if (zr.vida !== 'none') {
+            spawnFauna(zr.vida, zr.vida === 'pez'
+                ? -40 - Math.random() * 80          // cruza por delante, a la vista
+                : -60 - Math.random() * 90);
+        }
+    }
+    updateFauna(dt, dz);
+
+    // Motas: pocas y constantes. No son un suceso, son el aire del sitio.
+    if (zr && Math.random() < 0.05) {
+        burstParticles(
+            player.x + (Math.random() - 0.5) * 26,
+            5 + Math.random() * 8,
+            PLAYER_Z - 15 - Math.random() * 80,
+            1, 0.5, zr.polvo
+        );
+    }
+
+    // La estructura de fin de zona viaja como cualquier otra cosa del mundo
     if (gate && gate.active) {
         gate.z += dz;
         gate.group.position.set(curveOf(gate), riseOf(gate), gate.z);
@@ -6559,8 +6829,10 @@ function scrollWorld(dt) {
     // que asoma en la bruma.
     if (gate && !gate.active && game.finishS < 0 &&
         game.distance > game.nextCross - GATE_AHEAD &&
-        (1 - game.crossKind) === 0) {
-        spawnGate(SPAWN_Z);
+        game.distance - game.zoneFrom > ZONE_SPAN &&
+        Math.floor(routePos()) % REGION_N < REGION_N - 1) {
+        const zs = ZONES[REGIONS[Math.floor(routePos()) % REGION_N].id];
+        spawnGate(SPAWN_Z, zs ? zs.gate : GATE_ARCO);
     }
 
     // Con la llegada ya tomada no se planta ninguno mas: el ultimo tramo de
@@ -7309,6 +7581,8 @@ function startGame() {
     // delante y mide 380— y se quedaba sin salir: el jugador se iba de Tikal
     // sin haber visto nada. A 200 suena en [415, 795], en mitad del tramo.
     game.nextZone = 200;
+    game.zoneFrom = 0;
+    game.nextFauna = 120;
     game.zone.active = false;
     game.zone.k = 0;
     player.push = 0;

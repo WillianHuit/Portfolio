@@ -248,14 +248,48 @@ aparte: la ruta va de Tikal a la capital, así que *lo avanzado del recorrido es
 la dificultad. En Petén el suceso sale a cinco oleadas espaciadas; en la
 capital, a ocho y encima.
 
-**Y cada zona se despide con un arco.** Un pórtico de piedra que cruza la
-calzada entera y se ve emerger de la bruma mucho antes de llegar. No golpea, no
-se esquiva y no pide nada: se pasa por debajo. Lo único que hace es decir *este
-sitio se acaba aquí*, y 400 m después aparece el distribuidor que cambia de
-zona. Antes el tramo se terminaba sin ceremonia: aparecía el rótulo verde y ya
-estabas eligiendo. Va con los materiales tematizados de la región, así que es de
+**Cuánto dura una zona es UNA constante, y ya no la decide el ritmo de los
+cruces.** `ZONE_MINUTES` son los minutos de carrera a velocidad de crucero que
+se está en un sitio: doce, o sea 48.960 unidades de calzada y unas dos horas y
+media de ruta entera. Antes lo decidía `CROSS_EVERY` —los cruces alternaban
+destino y cortada, así que la zona duraba exactamente dos cruces— y eso ataba
+dos cosas que no tienen nada que ver: cada cuánto se decide un camino y cuánto
+se está en un sitio. Con zonas de doce minutos, atados, habría un cruce cada
+seis. Ahora **el cruce de destino no aparece hasta que la zona cumple su
+tiempo**: dentro de una zona todos son cortadas, y el que cambia de sitio es el
+que la cierra. Y si se toma el retorno el contador sigue vencido, así que el
+siguiente cruce vuelve a ser de destino: equivocarse cuesta un cruce, no una
+zona entera. El suceso propio de la zona se repite cada 6.000 m, unas ocho veces
+por visita —medido simulando la ruta completa—, porque con doce minutos por
+sitio uno solo se pierde.
+
+**Y cada zona se despide con una estructura, distinta según el sitio.** Se ve
+emerger de la bruma mucho antes de llegar, no golpea, no se esquiva y no pide
+nada: se pasa por dentro o por debajo. Lo único que hace es decir *este sitio se
+acaba aquí*, y 400 m después aparece el distribuidor que cambia de zona. Antes
+el tramo se terminaba sin ceremonia: aparecía el rótulo verde y ya estabas
+eligiendo.
+
+| Forma | Dónde | Qué es |
+|---|---|---|
+| Pirámide | Tikal | Se pasa **por dentro**: los cuerpos de abajo van partidos en dos para dejar el túnel, y de la altura del dintel para arriba son macizos y de lado a lado |
+| Arco colonial | Esquipulas, Chichicastenango, Antigua | Dos pilares escalonados y un dintel con crestería |
+| Boca de cueva | Semuc, Tajumulco, Todos Santos, Fuego | Dos macizos de roca girados y un dintel irregular |
+| Muelle | Flores, Río Dulce, Monterrico, Atitlán | Postes de madera, travesaños y un cartel colgado |
+| Paso elevado | Ciudad de Guatemala | Dos pilas de hormigón y un tablero con quitamiedos |
+
+Las cinco van con los materiales tematizados de la región, así que además son de
 caliza en Tikal, de adoquín en Antigua y de hormigón en la capital sin una sola
 línea de más.
+
+**Y en cada sitio se mueve algo que no te quiere matar.** Donde hay agua saltan
+peces de un margen al otro, cruzando la calzada de un salto y entrando con su
+chapoteo; donde hay cielo cruzan bandadas de tres aves batiendo alas por lo
+alto. Y siempre caen motas del color del sitio. Un sitio en el que no se mueve
+nada más que lo que te quiere matar no es un sitio, es un decorado. La regla que
+los mantiene fuera del juego: **el pez cruza siempre por delante y a ras, y el
+ave va a más de doce de altura**, así que ninguno comparte sitio con nada que
+golpee y no hay forma de confundirlos con una amenaza.
 
 **Las bifurcaciones.** Cada 1.150 m la calzada se parte de verdad, y no se abre:
 **se desvía, a 45° clavados**. Desde la cola del divisor los dos ramales salen
@@ -647,6 +681,11 @@ Lo que importa mantener si se toca:
   verde. Todo ocurría. No había nada que ver. De ahí las oleadas, los tintes
   reelegidos para contrastar con su región y el tinte aplicado a las cuatro
   luces en vez de a dos.
+- **Y el hito de distancia hubo que reescalarlo con la ruta.** Uno cada 250 m
+  estaba bien para carreras de uno o dos kilómetros; con la ruta en 600 y pico
+  son **2.500 fanfarrias por partida**, una cada cuatro segundos durante dos
+  horas y media. A 2.000 sale una cada medio minuto, que sigue siendo un hito y
+  no un tic.
 - **El tinte se pisaba a sí mismo.** Iba entre el sol y el hemisférico, así que
   la línea siguiente —`hemiLight.color.copy(...)`— le borraba la mitad del
   trabajo. Ahora va después de las cuatro luces.
