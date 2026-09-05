@@ -231,6 +231,33 @@ a ver ahora se ven enteros. Petén es el primer repaso, y salieron cuatro:
   es **polvo de piedra**, y el gris cal es además lo que más lejos está del verde
   de Alta Verapaz.
 
+### Repaso zona por zona: Río Dulce
+
+- **Río Dulce y Monterrico eran el mismo sitio.** Compartían la silueta del
+  horizonte *y* el matorral de la cuneta —los dos `palm`—, así que el cañón de
+  Izabal y la playa del Pacífico, dos paradas que están a cuatro de distancia
+  en la ruta, desde la calzada se veían idénticos. Río Dulce se lleva silueta
+  propia y Monterrico se queda la palmera, que en una playa es exactamente lo
+  que toca.
+- **La suya es el paredón**, no la palmera: una pared de caliza cayendo a plomo,
+  con la selva colgando arriba y el castillo de San Felipe a sus pies. Pasa de
+  7,1 de alto y 1,62 a 1 a **12,3 y 1,99 a 1**. Y es *una* pared y no un cañón
+  de dos, porque **el hito se planta a un lado de la calzada, no a caballo de
+  ella**: un hueco en medio no se leería como «se pasa por entre las dos», se
+  leería como una muesca en un bulto del margen.
+- **La orilla es manglar, no palmeral.** El mangle se reconoce por una sola
+  cosa: parece estar de pie sobre el agua, sobre raíces en zanco. Dos zancos
+  abiertos y una copa baja y ancha, con el mismo presupuesto de tres cubos.
+- **Y el tercer tinte verde oscuro sobre suelo verde**, a 5° del suelo que tiñe.
+  Lo que trae troncos río abajo es la **crecida**, y una crecida se ve porque el
+  agua se pone de color barro: 129°.
+- **El suelo, otra vez, decía monte** mientras cinco cosas del propio sitio
+  decían agua: los peces que saltan de un margen al otro, el muelle del final de
+  zona, sus obstáculos azules, el fondo casi negro de los huecos y un suceso que
+  se llama «troncos del río». Verde jade oscuro, que es el color del Río Dulce
+  metido en el cañón y lo que lo separa del turquesa claro de Semuc, dos paradas
+  antes: mismo tono, pero 0,44 de luz contra 0,26.
+
 **De aquí salió una métrica, y con ella una cola de trabajo.** El tinte de un
 suceso hay que medirlo **en tono contra el SUELO de su región**, no contra la
 niebla: el suelo es el plano grande que el jugador tiene a los dos lados de la
@@ -243,9 +270,28 @@ pasado una nube por delante, no como que está pasando algo.
 Pasada la métrica a las trece zonas, **el arreglo de Petén se había comido a sí
 mismo**: al poner el suelo de Flores del color del lago, su tinte azul se quedó
 a 12° de la superficie que tiñe. Ahora es color limo —lo que un cenote remueve
-al tragarse la calzada—, a 140°. Y quedan pendientes para sus repasos: Río Dulce
-(5°), Ciudad de Guatemala (4°), Monterrico (43°), y las cunetas de Tajumulco
-(2,6), Chichicastenango (2,8) y el Fuego (2,0).
+al tragarse la calzada—, a 140°.
+
+Y con Río Dulce salió la segunda medida: **dos paradas seguidas no pueden
+parecerse**, porque la ruta se recorre en orden y lo único con lo que el jugador
+puede comparar un sitio es con el que acaba de dejar atrás. Dos vecinos con el
+mismo suelo, la misma silueta o el mismo matorral son un sitio contado dos
+veces, aunque por separado los dos estén bien. La cola que queda, por orden de
+ruta:
+
+| Parada | Qué le falta |
+|---|---|
+| Monterrico | Tinte a 43° de su suelo |
+| Tajumulco | Cuneta de 2,6 · **misma silueta que Todos Santos, y van seguidas** |
+| Todos Santos | La otra mitad de lo anterior |
+| Chichicastenango | Cuneta de 2,8 · **mismo suelo que Atitlán, y van seguidas** |
+| Atitlán | **Misma silueta que el Fuego, y van seguidas** |
+| Volcán de Fuego | Cuneta de 2,0 · la otra mitad de lo anterior |
+| Ciudad de Guatemala | Tinte a 4° de su suelo |
+
+Esquipulas y Antigua también comparten silueta (`colonial`), pero están a seis
+paradas de distancia y las dos son ciudad colonial: ahí la repetición dice algo
+en vez de restar.
 
 **El juego.** Tres vidas (hasta cinco con mejoras), escudo que absorbe un
 golpe, multiplicador por racha de jade, hitos cada 2.000 m, jaguar que se acerca

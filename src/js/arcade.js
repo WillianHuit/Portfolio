@@ -688,13 +688,20 @@ const REGIONS = [
     },
     {
         id: 'riodulce', name: 'Río Dulce', dept: 'Izabal', mm: [86.0, 61.1],
-        skyTop: 0x2f86c9, skyBot: 0xa8e0e6, fog: 0x6fb3c0, ground: 0x2e6b4e,
+        // Y el suelo era verde monte, con cinco cosas del propio sitio diciendo
+        // que esto va sobre el agua: los peces que saltan de un margen al otro,
+        // el muelle del final de zona, sus obstaculos azules, el fondo casi
+        // negro de los huecos y un suceso que se llama "troncos del río". Es la
+        // misma contradiccion de Flores y de Semuc, la tercera. Verde jade
+        // oscuro, que es el color del Río Dulce metido en el cañón y lo que lo
+        // separa del turquesa claro de las pozas de Semuc, dos paradas antes.
+        skyTop: 0x2f86c9, skyBot: 0xa8e0e6, fog: 0x6fb3c0, ground: 0x1c4f3f,
         sun: 0xfff6e0, sunI: 2.2, hemi: 0xe4f4f6, hemiI: 2.4,
         roadA: 0xd9c9a4, roadB: 0xbfab82, kerb: 0x8a6b45,
         stone: 0x9b7448, accent: 0xe0b25c, hazard: 0x1f7fb0, pit: 0x06222f,
-        land: 'palm', landA: 0x6f4f2f, landB: 0x2f9e5e,
+        land: 'gorge', landA: 0x8a9a86, landB: 0x2f9e5e,
         ridge: 0x3f7f7a, sky: 'cloud', skyC: 0xffffff,
-        road: [1, 3, 0.84, 0.02], prop: 'palm', propA: 0x6f4f2f, propB: 0x2f9e5e,
+        road: [1, 3, 0.84, 0.02], prop: 'mangrove', propA: 0x6f4f2f, propB: 0x2f9e5e,
         ob: [1.25, 0.85, 1.1]
     },
     {
@@ -1147,8 +1154,11 @@ const ZONES = {
     semuc:       { name: 'Desprendimiento',     kind: 'lluvia',   what: RODANTE,  n: 8,
                    warn: 'derrumbe', tint: 0xa89a7a, spark: 0xe8e0cc,
                    gate: GATE_TUNEL, vida: 'pez', bicho: 0xd8e8e0, polvo: 0xd8f0ea },
+    // Tercer tinte verde oscuro sobre suelo verde, a cinco grados de tono del
+    // suelo que tine. Lo que trae troncos rio abajo es la CRECIDA, y una
+    // crecida se ve porque el agua se pone de color barro.
     riodulce:    { name: 'Troncos del río',     kind: 'pasillo',  what: TRONCO,   n: 7,
-                   warn: 'derrumbe', tint: 0x1d5e3a, spark: 0xb08a52,
+                   warn: 'derrumbe', tint: 0x8a6234, spark: 0xb08a52,
                    gate: GATE_MUELLE, vida: 'pez', bicho: 0xc8b078, polvo: 0x8fe0c0 },
     esquipulas:  { name: 'Caravana de romería', kind: 'enjambre', what: BUS,      n: 7,
                    warn: 'parada',   tint: 0x7a4a18, spark: 0xf0c34a,
@@ -3103,6 +3113,17 @@ function propSpec(kind, k, out) {
             put(1, -1.2 * t, 4.7 * t, 0, 2.6 * t, 0.3, 1.0, -0.3, 1);
             put(2, 1.2 * t, 4.7 * t, 0.2, 2.6 * t, 0.3, 1.0, 0.3, 1);
             break;
+        case 'mangrove':
+            // La orilla del Río Dulce no es playa de palmeras —eso es
+            // Monterrico, y era literalmente el mismo matorral— sino MANGLE, y
+            // el mangle se reconoce por una sola cosa: parece estar de pie
+            // sobre el agua, sobre raices en zanco que salen del tronco por
+            // encima de la superficie. Dos zancos abiertos y una copa baja y
+            // ancha, con el mismo presupuesto de tres cubos.
+            put(0, -0.5, 1.0 * t, 0.2, 0.26, 2.0 * t, 0.26, 0.42, 0);
+            put(1, 0.6, 1.0 * t, -0.2, 0.26, 2.0 * t, 0.26, -0.38, 0);
+            put(2, 0, 2.9 * t, 0, 3.4 * t, 1.9 * t, 3.0 * t, 0, 1);
+            break;
         case 'agave':
             put(0, 0, 0.9 * t, 0, 0.4, 1.8 * t, 1.4, 0.25, 0);
             put(1, 0.5, 0.8 * t, 0.3, 0.4, 1.6 * t, 1.2, -0.35, 0);
@@ -3357,7 +3378,28 @@ function silhouette(kind, s, R) {
             torre(0.6 * s, 3.6 * s, 2.6 * s, 5.4 * s);
             break;
         }
-        case 'palm': {                                    // Río Dulce y Monterrico
+        case 'gorge': {                                   // Río Dulce
+            // Un PAREDON, no una palmera. La palmera la compartian el Río
+            // Dulce y Monterrico —la silueta Y el matorral—, asi que el cañón
+            // de Izabal y la playa del Pacífico tenian literalmente el mismo
+            // horizonte: dos sitios a cuatro paradas de distancia que desde la
+            // calzada eran el mismo. Lo que se ve en el Río Dulce es una pared
+            // de caliza cayendo a plomo, con la selva colgando arriba y el
+            // castillo de San Felipe a sus pies.
+            //
+            // Y una pared y no un cañón de dos paredes, porque el hito se
+            // planta A UN LADO de la calzada y no a caballo de ella: un hueco
+            // en medio no se leeria como "se pasa por entre las dos", se leeria
+            // como una muesca en un bulto del margen.
+            put(0, 5.75 * s - 1, 0, 5.6 * s, 11.5 * s, 5.0 * s, R.landA);
+            put(-0.3 * s, 11.4 * s, 0.3 * s, 6.2 * s, 1.9 * s, 5.4 * s, R.landB);
+            put(3.1 * s, 3.1 * s - 1, 1.6 * s, 3.0 * s, 6.2 * s, 3.4 * s, R.landA);
+            put(3.1 * s, 6.5 * s, 1.6 * s, 3.4 * s, 1.2 * s, 3.8 * s, R.landB);
+            put(-3.4 * s, 1.0 * s - 1, 3.0 * s, 2.2 * s, 2.0 * s, 2.2 * s, R.landB);
+            put(-3.4 * s, 2.3 * s, 3.0 * s, 2.6 * s, 0.5 * s, 2.6 * s, R.landA);
+            break;
+        }
+        case 'palm': {                                    // Monterrico
             put(0, 3.2 * s - 1, 0, 0.75 * s, 7.4 * s, 0.75 * s, R.landA);
             for (let f = 0; f < 4; f++) {
                 const a = f * Math.PI / 4 + 0.3;
