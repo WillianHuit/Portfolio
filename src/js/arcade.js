@@ -1531,6 +1531,18 @@ const POWERS = {
     double: { name: 'Jade doble',          time: 11,   color: 0x4affd0, weight: 20 },
     amber:  { name: 'Ámbar de Verapaz',    time: 6,    color: 0xe0a02c, weight: 16 },
     flight: { name: 'Vuelo del quetzal',   time: 6.5,  color: 0x7fd4ff, weight: 12 },
+    // LA CUENTA LARGA. La racha multiplica el jade y hasta ahora no tenia
+    // ninguna proteccion: un solo golpe la ponia a cero, asi que jugar bien
+    // durante dos minutos y rozar una estela valia lo mismo que no haber
+    // jugado. Este poder dice una sola cosa —el golpe ya no te corta la
+    // cuenta— y por eso se llama como el calendario que no se reinicia.
+    racha:  { name: 'Cuenta larga',        time: 10,   color: 0xf0c34a, weight: 13 },
+    // EL CORAZON DE COPAL. Las vidas solo se recuperaban de dos formas, y las
+    // dos son largas: cien gotas del pachon o cinco placas de impulso. Que la
+    // calzada pueda devolverte una, de tarde en tarde, es lo que hace que ir
+    // con una sola vida sea tension y no una cuenta atras. No sale si ya las
+    // llevas todas: un premio que no hace nada es peor que ningun premio.
+    vida:   { name: 'Corazón de copal',    time: 0,    color: 0xef4444, weight: 9 },
     // El poder PROPIO del traje que lleves. Es un solo hueco con cinco
     // significados y no cinco poderes sueltos, y eso no es un atajo: solo se
     // puede llevar un traje a la vez, asi que dos de ellos no pueden coincidir
@@ -1565,6 +1577,51 @@ const POWER_KEYS = Object.keys(POWERS);
 const POWER_CHANCE = 0.17;          // por compas de recorrido
 
 // ===========================================================================
+// La caja misteriosa
+// ===========================================================================
+// Es lo unico de la calzada que el jugador recoge SIN SABER que le va a tocar,
+// y ahi esta toda la gracia: todo lo demas del juego se lee de lejos y se
+// decide con tiempo —esta señal avisa de esto, esta pieza es el iman—, asi que
+// una pieza que no se puede leer es una decision de otro tipo. Se ve venir
+// perfectamente y esta en un carril, o sea que cogerla es siempre voluntario.
+//
+// Dos de cada tres traen algo bueno. La proporcion importa: si casi siempre
+// tocara premio, dejaria de ser una apuesta y seria un poder con otro dibujo;
+// si casi siempre tocara castigo, nadie la cogeria y seria un obstaculo con
+// otro dibujo. Con un tercio de maldiciones, cogerla es siempre defendible y
+// nunca gratis.
+const CAJA_EVERY = 900;             // una cada trece segundos de crucero
+const CAJA_MALA = 0.34;             // cuantas traen maldicion
+
+// Y ninguna maldicion mata. Todas se pasan solas, ninguna quita vidas y
+// ninguna toca lo unico que no se puede recuperar; lo que hacen es poner
+// dificil durante unos segundos algo que normalmente es facil. Una caja que
+// pudiera matarte de golpe no seria una apuesta, seria una trampa, y el
+// jugador dejaria de abrirlas para siempre despues de la primera.
+const MALDICIONES = {
+    humo:   { name: 'Humo de copal',       time: 4.5, color: 0x9a8f7a, icon: '≋',
+              corto: 'Se cierra la vista' },
+    espejo: { name: 'Espejo de obsidiana', time: 5,   color: 0x8f6ad9, icon: '⇄',
+              corto: 'Izquierda es derecha' },
+    piedra: { name: 'Piedra de moler',     time: 6,   color: 0xa06a34, icon: '⤓',
+              corto: 'Saltas más bajo' },
+    // La unica instantanea, y por eso la unica que no lleva reloj en el HUD.
+    // Duele donde duele —la racha— pero no cuesta ni una vida.
+    fuga:   { name: 'Fuga de jade',        time: 0,   color: 0x2ec4a0, icon: '↯',
+              corto: 'Se te escapa la racha' }
+};
+const MAL_KEYS = Object.keys(MALDICIONES);
+
+// UNA maldicion a la vez, igual que el poder propio es un solo hueco con cinco
+// significados. Con una caja cada trece segundos, dos maldiciones a la vez son
+// perfectamente posibles, y tres efectos raros simultaneos no se leen como tres
+// cosas: se leen como que el juego se ha roto. La nueva sustituye a la vieja.
+const curse = { kind: null, t: 0, max: 1 };
+
+const espejado = () => curse.kind === 'espejo' && curse.t > 0;
+const pesado = () => (curse.kind === 'piedra' && curse.t > 0 ? 0.76 : 1);
+
+// ===========================================================================
 // Estado
 // ===========================================================================
 const State = {
@@ -1596,8 +1653,9 @@ const game = {
     // tramo de ciudad, que es lo que convierte la llegada en llegada.
     finishS: -1,
     won: false,          // la carrera se cerro por llegar, no por morir
-    powers: { magnet: 0, double: 0, amber: 0, flight: 0, propio: 0 },
-    powerMax: { magnet: 1, double: 1, amber: 1, flight: 1, propio: 1 },
+    powers: { magnet: 0, double: 0, amber: 0, flight: 0, propio: 0, racha: 0 },
+    powerMax: { magnet: 1, double: 1, amber: 1, flight: 1, propio: 1, racha: 1 },
+    nextCaja: 0,         // distancia a la que toca la proxima caja misteriosa
     boost: 0,            // segundos que quedan de impulso
     routePos: 0,         // en que punto de la ruta se esta; solo lo mueven los cruces
     roadS0: -1,          // trazado donde el firme cambia de departamento, -1 si no
@@ -1728,8 +1786,11 @@ const dom = {
     pw: {
         magnet: $('pwMagnet'), flight: $('pwFlight'),
         double: $('pwDouble'), amber: $('pwAmber'), boost: $('pwBoost'),
-        propio: $('pwPropio')
-    }
+        racha: $('pwRacha'), propio: $('pwPropio')
+    },
+    pwCurse: $('pwCurse'),
+    toast: $('toast'),
+    curseVeil: $('curseVeil')
 };
 
 // ===========================================================================
@@ -2260,7 +2321,18 @@ const GEO = {
     // El poder propio: un tetraedro, que es la unica forma de la lista con una
     // punta hacia arriba y tres caras. No se parece a ninguna de las otras
     // cinco, que es lo unico que se le pide a la pieza de un poder.
-    propio: new THREE.TetrahedronGeometry(0.52)
+    propio: new THREE.TetrahedronGeometry(0.52),
+    // La cuenta larga: un DISCO. Es la unica pieza plana de todas, asi que a
+    // ochenta por hora se separa de las siete redondeadas sin mirarla.
+    racha:  new THREE.CylinderGeometry(0.46, 0.46, 0.15, 12),
+    // El corazon de copal: una bola de resina, de pocas caras. La gota del
+    // runner tambien es una esfera, pero es azul claro y solo existe con ese
+    // traje puesto; esta es roja, que es el color de las vidas en todo el HUD.
+    vida:   new THREE.SphereGeometry(0.44, 6, 5),
+    // Y la caja, que es lo unico CUADRADO que se recoge en toda la calzada.
+    // Una caja tiene que parecer una caja: si se pareciese a un poder, el
+    // jugador creeria saber lo que va a pasar, que es justo lo contrario.
+    caja:   new THREE.BoxGeometry(0.74, 0.74, 0.74)
 };
 
 const cam = { y: 6.6, aimY: 1.6, aimZ: -16, fov: 60 };
@@ -2436,6 +2508,11 @@ function buildMaterials() {
     for (const k of POWER_KEYS) {
         mat[k] = lam(POWERS[k].color, { emissive: POWERS[k].color, emissiveIntensity: 0.5 });
     }
+    // La caja no es un poder y no puede llevar el color de ninguno: si brillara
+    // en morado o en ambar, el jugador leeria "iman" o "ambar" y creeria que
+    // sabe lo que viene. Madera y latido propio, que es lo que dice "aqui hay
+    // algo y no se sabe el que".
+    mat.caja = lam(0xb08a52, { emissive: 0x8a5a20, emissiveIntensity: 0.35 });
 }
 
 // --- Suelo ---
@@ -6374,7 +6451,11 @@ function hazX(h, z) {
 // recogerla no hace nada seria peor que no soltarla.
 function rollPower() {
     const fuera = k => (k === 'shield' && game.shield) ||
-                       (k === 'propio' && !propioAct);
+                       (k === 'propio' && !propioAct) ||
+                       // Y el corazon no sale con las vidas al completo, por lo
+                       // mismo que el escudo no sale si ya llevas uno: recoger
+                       // algo que no hace nada es peor que no encontrarlo.
+                       (k === 'vida' && game.lives >= maxLives());
     let total = 0;
     for (const k of POWER_KEYS) {
         if (fuera(k)) continue;
@@ -7079,6 +7160,20 @@ function generateChunk(z) {
         if (y >= 0) spawnPickup(l, z - 12, y + 1.3, rollPower());
     }
 
+    // --- La caja misteriosa ---
+    // Por distancia y no por sorteo de compas, como las vallas: lo que hace que
+    // funcione es que aparezcan a un ritmo RECONOCIBLE. Un premio que puede
+    // salir tres veces seguidas y luego no salir en dos minutos no se aprende,
+    // y lo que hay que aprender aqui es "cada cierto rato hay que decidir".
+    // No sale en los primeros trescientos: la primera decision del juego no
+    // puede ser una apuesta a ciegas.
+    if (game.distance > 300 && game.distance > game.nextCaja) {
+        game.nextCaja = game.distance + CAJA_EVERY * (0.75 + Math.random() * 0.5);
+        const l = (Math.random() * 3) | 0;
+        const y = flat(l);
+        if (y >= 0) spawnPickup(l, z - 12, y + 1.35, 'caja');
+    }
+
     // --- Placa de impulso ---
     // Nunca en el mismo compas que un obstaculo del propio carril: la placa
     // es un premio, y un premio que te mete de cabeza en una estela no lo es.
@@ -7454,6 +7549,12 @@ function islandHit() {
 // Entrada
 // ===========================================================================
 function moveLane(dir) {
+    // EL ESPEJO DE OBSIDIANA. Se invierte aqui dentro y no en cada sitio que
+    // pide un cambio de carril: por aqui pasan el teclado y el dedo, asi que
+    // una sola linea cubre las dos formas de jugar y no hay manera de que una
+    // se quede sin maldecir.
+    if (espejado()) dir = -dir;
+
     const next = Math.max(0, Math.min(2, player.lane + dir));
     if (next === player.lane) return;
 
@@ -7494,7 +7595,7 @@ function jump() {
     // encadenan en el aire. Va antes que todo lo demas porque no depende de
     // estar en el suelo ni de tener la mejora del salto doble.
     if (game.powers.propio > 0 && vehOn === 'monopatin' && !player.grounded) {
-        doJump(DOUBLE_JUMP_V * dote().salto);
+        doJump(DOUBLE_JUMP_V * dote().salto * pesado());
         sfx.djump();
         burstParticles(player.x, player.y + 0.4, PLAYER_Z, 6, 0.6, PROPIOS.monopatin.color);
         return;
@@ -7506,11 +7607,19 @@ function jump() {
         // El salto del monopatin. La altura va con el CUADRADO de la velocidad
         // de salida, asi que un 16 % mas de impulso son un 34 % mas de alto: el
         // numero de la tabla parece pequeno y no lo es.
-        doJump(JUMP_V * dote().salto);
+        // LA PIEDRA DE MOLER va sobre la velocidad de salida, no sobre la
+        // altura: la altura sale del CUADRADO de la velocidad, asi que un 24 %
+        // menos de impulso son un 42 % menos de alto —de 2,64 a 1,53—. Y ahi
+        // esta el limite que no se puede cruzar: el tronco pide 1,15, o sea que
+        // sigue pasandose. Lo que se encoge es la ventana para acertar el
+        // momento, de 0,49 s a 0,29 s. Una maldicion tiene que poner dificil
+        // algo que era facil, no prohibirlo: si el salto dejara de valer, el
+        // tronco pasaria a ser muerte segura y la caja, una trampa.
+        doJump(JUMP_V * dote().salto * pesado());
         player.jumps = 1;
         sfx.jump();
     } else if (lvl('djump') > 0 && player.jumps < 2) {
-        doJump(DOUBLE_JUMP_V * dote().salto);
+        doJump(DOUBLE_JUMP_V * dote().salto * pesado());
         player.jumps = 2;
         sfx.djump();
         burstParticles(player.x, player.y + 0.4, PLAYER_Z, 6, 0.6, 0x7fd4ff);
@@ -7803,7 +7912,11 @@ const AURA_SHAPE = {
     // comprueba que exista, asi que sin esta linea el juego reventaba en el
     // momento exacto de recoger la pieza. Lo destapo la sonda al primer intento.
     // Va rapido y ceñido, que es lo que le pega a un poder de vehiculo.
-    propio: { r: 1.05, y: 0.95, sube: 0.6, atras: 0.8, giro: 5.4, onda: 0.18 }
+    propio: { r: 1.05, y: 0.95, sube: 0.6, atras: 0.8, giro: 5.4, onda: 0.18 },
+    // La cuenta larga gira DESPACIO y sube: es un contador que avanza, no una
+    // ventaja que corre. Sin esta entrada updateAuras revienta al recogerla,
+    // que es el mismo fallo que tuvo el poder propio la primera vez.
+    racha:  { r: 1.15, y: 0.55, sube: 1.5, atras: 0, giro: 1.9, onda: 0.28 }
 };
 
 // El poder con cuenta atras que mas dura de los que hay puestos. Si hay dos,
@@ -8356,7 +8469,9 @@ function scrollWorld(dt) {
         p.mesh.rotation.x += dt * 1.6;
 
         // Iman: solo tira del jade. Robarle al jugador la decision de ir a por
-        // un poder concreto le quitaria la gracia al poder.
+        // un poder concreto le quitaria la gracia al poder, y desde que existe
+        // la caja misteriosa esta linea aguanta algo mas gordo: una caja que se
+        // te viniera encima sola no seria una apuesta, seria una emboscada.
         if (range > 0 && p.kind === 'jade' &&
             p.z > -range && p.z < 4 && Math.abs(LANE_X[p.lane] - player.x) < 6.5) {
             const pull = Math.min(1, 7 * dt);
@@ -8524,9 +8639,17 @@ function checkCollisions() {
     for (const p of pickups) {
         if (!p.active) continue;
         if (Math.abs(p.z - PLAYER_Z) > 1.3) continue;
+        // LA CAJA SE COGE CON EL MARGEN JUSTO DE SU CARRIL, no con el del jade.
+        // El alcance de recogida crece con la mejora del iman hasta 3,0 y los
+        // carriles estan a 2,3, asi que con la mejora al maximo una pieza del
+        // carril de al lado se recoge sola. Para el jade eso es el regalo que
+        // se ha comprado; para una caja que puede traer maldicion es quitarle
+        // al jugador la unica decision que la caja tiene, y encima castigarle
+        // por haber mejorado el iman.
+        const alcance = p.kind === 'caja' ? LANE_HALF : reach;
         // Por posicion real de la pieza, no por su indice de carril: con el
         // iman activo la pieza ya no esta sobre su carril.
-        if (Math.abs(player.x - p.mesh.position.x) > reach) continue;
+        if (Math.abs(player.x - p.mesh.position.x) > alcance) continue;
         if (Math.abs(p.mesh.position.y - (player.y + 1.1)) > yTol) continue;
 
         p.active = false;
@@ -8770,8 +8893,29 @@ function collect(p) {
         return;
     }
 
+    // La caja no es un poder: no tiene reloj, ni aura, ni entrada en POWERS, y
+    // por eso sale por su propia puerta y con return. Lo que hace es SORTEAR.
+    if (kind === 'caja') {
+        abrirCaja(x, y, z);
+        return;
+    }
+
     if (kind === 'shield') {
         game.shield = true;
+        sfx.shield();
+        showToast('Escudo', POWERS.shield.color);
+    } else if (kind === 'vida') {
+        // No puede pasarse del maximo: los rombos del HUD se dibujan contra
+        // maxLives(). Aun asi rollPower ya lo filtra, y esto es el cinturon:
+        // la caja misteriosa tambien reparte poderes y no pasa por ese filtro.
+        if (game.lives < maxLives()) {
+            game.lives++;
+            showToast('Corazón de copal · una vida', POWERS.vida.color);
+        } else {
+            game.jade += 5;
+            game.jadeScore += Math.round(120 * jadeScale());
+            showToast('Vidas al completo · +5 jade', POWERS.vida.color);
+        }
         sfx.shield();
     } else {
         const t = POWERS[kind].time * powerScale();
@@ -8785,9 +8929,90 @@ function collect(p) {
             if (!wasFlying) spawnSkyTrail();
         }
         sfx.power();
+        // El nombre, dicho. Un aura de color alrededor del personaje dice que
+        // ALGO esta puesto, pero no cual: con siete poderes y un hueco propio
+        // que cambia de significado con el traje, aprenderse los colores es
+        // deberes del jugador. Decirlo una vez, pequeño y medio segundo, no
+        // interrumpe nada y quita la adivinanza.
+        showToast(nombrePoder(kind), POWERS[kind].color);
     }
     burstParticles(x, y, z, 16, 1.15, POWERS[kind].color);
     hudDirty = true;
+}
+
+// El nombre del poder tal y como hay que decirlo: el hueco propio cambia de
+// nombre con el traje, asi que no se puede leer de POWERS a secas.
+function nombrePoder(kind) {
+    if (kind === 'propio') return propioAct ? propioAct.name : 'Poder del traje';
+    return POWERS[kind].name;
+}
+
+// ---------------------------------------------------------------------------
+// Abrir la caja
+// ---------------------------------------------------------------------------
+// Dos tercios premio y un tercio maldicion. Y pase lo que pase SE DICE: una
+// caja que te invierte los controles sin avisar no se lee como una maldicion,
+// se lee como que el juego se ha estropeado, y el jugador deja de abrirlas.
+function abrirCaja(x, y, z) {
+    if (Math.random() < CAJA_MALA) {
+        const k = MAL_KEYS[(Math.random() * MAL_KEYS.length) | 0];
+        echarMaldicion(k);
+        burstParticles(x, y, z, 20, 1.3, MALDICIONES[k].color);
+        return;
+    }
+
+    // El premio. Casi siempre un poder de los de siempre —que es lo que hace
+    // que valga la pena abrirlas— y de vez en cuando un puñado de jade, para
+    // que no sean SOLO una segunda fuente de poderes.
+    if (Math.random() < 0.22) {
+        game.jade += 15;
+        game.jadeScore += Math.round(15 * 25 * comboMultiplier() * jadeScale());
+        sfx.jade();
+        burstParticles(x, y, z, 26, 1.5, C.jade);
+        showToast('Caja · +15 jade', C.jade);
+        hudDirty = true;
+        return;
+    }
+
+    // rollPower ya se encarga de no dar un escudo a quien lo tiene, ni un
+    // corazon con las vidas llenas, ni el poder del traje a quien no lo tiene.
+    const k = rollPower();
+    // Se reentra en collect con la pieza convertida: asi el poder de la caja
+    // pasa por exactamente el mismo sitio que el poder de la calzada, y no hay
+    // forma de que uno haga algo que el otro no.
+    collect({ kind: k, mesh: { position: { x, y } }, z });
+}
+
+function echarMaldicion(k) {
+    const M = MALDICIONES[k];
+    sfx.shieldBreak();
+    flashHurt(HURT_AMBER, 0.42);
+    showToast(M.icon + ' ' + M.name + ' · ' + M.corto, M.color, true);
+
+    // La instantanea no ocupa el hueco: se cobra y se acaba. Dejarla ahi con
+    // un reloj corriendo diria que algo sigue pasando cuando ya no pasa nada.
+    if (M.time === 0) {
+        game.combo = 0;
+        jadeStreak = 0;
+        const pierde = Math.min(10, game.jade);
+        game.jade -= pierde;
+        hudDirty = true;
+        return;
+    }
+
+    curse.kind = k;
+    curse.t = M.time;
+    curse.max = M.time;
+    hudDirty = true;
+}
+
+function updateCurse(dt) {
+    if (curse.t <= 0) return;
+    curse.t = Math.max(0, curse.t - dt);
+    if (curse.t === 0) {
+        curse.kind = null;
+        hudDirty = true;
+    }
 }
 
 function comboMultiplier() {
@@ -8819,8 +9044,15 @@ function takeHit() {
     if (dbg.god) { game.invuln = INVULN_TIME; return; }
 
     game.invuln = INVULN_TIME;
-    game.combo = 0;
-    jadeStreak = 0;
+    // LA CUENTA LARGA aguanta el golpe. Es lo unico que hace, y por eso se
+    // avisa: una racha que sobrevive a un impacto sin que nadie lo diga se lee
+    // como que el contador esta roto, no como que el poder ha funcionado.
+    if (game.powers.racha > 0) {
+        showToast('Cuenta larga · racha intacta', POWERS.racha.color);
+    } else {
+        game.combo = 0;
+        jadeStreak = 0;
+    }
 
     // El casco va PRIMERO, antes incluso que el escudo: es lo que llevas puesto
     // encima de todo lo demas. Uno por carrera y no vuelve —revivir devuelve el
@@ -8867,7 +9099,8 @@ function updatePowers(dt) {
         game.boost = Math.max(0, game.boost - dt);
         if (game.boost === 0) changed = true;
     }
-    for (const k of ['magnet', 'double', 'amber', 'flight', 'propio']) {
+    updateCurse(dt);
+    for (const k of ['magnet', 'double', 'amber', 'flight', 'propio', 'racha']) {
         if (game.powers[k] <= 0) continue;
         game.powers[k] = Math.max(0, game.powers[k] - dt);
         if (game.powers[k] === 0) {
@@ -8910,6 +9143,27 @@ function showBanner(titulo, sub, peligro) {
     dom.banner.classList.toggle('evento', !!peligro);
     void dom.banner.offsetWidth;         // reinicia la animacion
     dom.banner.classList.add('show');
+}
+
+// El aviso pequeño. La bandera grande es para lo que cambia la partida —entrar
+// en un departamento, el suceso de la zona, el pachon lleno— y usarla para cada
+// poder la gastaria: si todo es un titular, ninguno lo es. Esto es media linea
+// bajo el HUD, medio segundo, sin parar nada.
+//
+// Y hace falta desde que existen las cajas: con siete poderes, un hueco propio
+// que cambia de nombre con el traje y cuatro maldiciones, el aura de color dice
+// que ALGO esta puesto pero no cuál. Adivinar no es leer.
+function showToast(texto, color, malo) {
+    dom.toast.textContent = texto;
+    dom.toast.style.setProperty('--c', '#' + color.toString(16).padStart(6, '0'));
+    dom.toast.classList.toggle('malo', !!malo);
+    dom.toast.hidden = false;
+    // Mismo truco que la bandera: quitar la clase, forzar el recalculo y
+    // volver a ponerla reinicia la animacion. Sin esto, dos poderes seguidos
+    // dejaban el segundo sin aviso porque la animacion ya estaba gastada.
+    dom.toast.classList.remove('show');
+    void dom.toast.offsetWidth;
+    dom.toast.classList.add('show');
 }
 
 function showRegionBanner(ri) {
@@ -8995,8 +9249,11 @@ function renderHud() {
 // en enteros y solo cuando el entero cambia. Un poder de nueve segundos hace
 // cien escrituras en total —once por segundo— en vez de 540, y con nada puesto
 // no hace ninguna.
-const barLast = { boost: -1, magnet: -1, flight: -1, double: -1, amber: -1, propio: -1 };
+const barLast = { boost: -1, magnet: -1, flight: -1, double: -1, amber: -1,
+                  propio: -1, racha: -1, curse: -1 };
 let tuckLast = -1;
+let curseLast = null;
+let humoLast = -1;
 
 function setBar(el, key, frac) {
     const pct = Math.round(Math.max(0, Math.min(1, frac)) * 100);
@@ -9031,7 +9288,7 @@ function renderBars() {
         barLast.boost = -1;
     }
 
-    for (const k of ['magnet', 'flight', 'double', 'amber', 'propio']) {
+    for (const k of ['magnet', 'flight', 'double', 'amber', 'racha', 'propio']) {
         const el = dom.pw[k];
         const t = game.powers[k];
         if (t <= 0) {
@@ -9041,6 +9298,43 @@ function renderBars() {
         if (el.hidden) el.hidden = false;
         setBar(el, k, t / game.powerMax[k]);
     }
+
+    // La maldicion, en la misma fila que los poderes y con su propio reloj.
+    // Va ahi y no en un rincon aparte a proposito: lo que el jugador tiene
+    // puesto se mira en un sitio, sea bueno o malo. Lo que la separa es el
+    // color y el marco rojo, no la posicion.
+    if (curse.t > 0) {
+        if (curse.kind !== curseLast) {
+            curseLast = curse.kind;
+            const M = MALDICIONES[curse.kind];
+            dom.pwCurse.firstChild.nodeValue = M.icon;
+            dom.pwCurse.style.setProperty(
+                '--c', '#' + M.color.toString(16).padStart(6, '0'));
+        }
+        if (dom.pwCurse.hidden) dom.pwCurse.hidden = false;
+        setBar(dom.pwCurse, 'curse', curse.t / curse.max);
+    } else if (!dom.pwCurse.hidden) {
+        dom.pwCurse.hidden = true;
+        barLast.curse = -1;
+        curseLast = null;
+    }
+}
+
+// El humo de copal es la unica maldicion que se ve en la pantalla y no en el
+// personaje. Entra de golpe y se abre despacio, que es lo que hace el humo; si
+// se disipara de golpe se leeria como un parpadeo del juego.
+function renderHumo() {
+    // El estado entra en la cuenta: el reloj de la maldicion solo corre dentro
+    // del bucle de juego, asi que morir con el humo puesto lo dejaria clavado
+    // en pantalla para siempre. Muerto o en pausa, no hay humo.
+    const t = (game.state === State.PLAYING && curse.kind === 'humo')
+        ? curse.t / curse.max : 0;
+    const v = t > 0 ? Math.min(1, t * 1.5) : 0;
+    // En centesimas y solo cuando cambia: es un estilo por frame si no.
+    const paso = Math.round(v * 100);
+    if (paso === humoLast) return;
+    humoLast = paso;
+    dom.curseVeil.style.opacity = (paso / 100).toFixed(2);
 }
 
 // La distancia si cambia en cada frame, pero es un solo textContent numerico
@@ -9521,6 +9815,14 @@ function startGame() {
     // Pronto: el primero tiene que salir en los primeros segundos, porque es lo
     // que dice donde estas antes de que el rotulo se apague.
     game.nextCerca = 200;
+    // La primera caja no cae encima de la salida: los trescientos primeros son
+    // para entender por donde se corre, no para apostar.
+    game.nextCaja = 900;
+    curse.kind = null;
+    curse.t = 0;
+    curseLast = null;
+    humoLast = -1;
+    dom.curseVeil.style.opacity = '0';
     game.gotas = 0;
     game.tuck = 0;
     for (const v of vallas) { v.active = false; v.group.visible = false; }
@@ -10459,6 +10761,10 @@ function frame(now) {
     // Va fuera del bloque de PLAYING para que tambien se apague al morir: si
     // no, la ultima vineta se quedaba encendida sobre la pantalla de fin.
     updateHurt(delta);
+    // Fuera del bloque de PLAYING por lo mismo que el destello del golpe: si
+    // se muere con el humo puesto, la niebla se quedaria encima de la pantalla
+    // de fin de partida.
+    renderHumo();
 
     // Reencuadre al volar. Si la camara siguiera al jugador con el factor de a
     // pie, a casi siete unidades de altura se saldria del encuadre por arriba;

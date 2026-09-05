@@ -741,12 +741,17 @@ atada a lo único del juego que hay que salir a buscar: la placa no te la
 encuentras, te desvías a pisarla.
 
 **Poderes** que aparecen en la calzada: escudo, imán de jade, jade doble,
-ámbar de Verapaz (ralentiza el mundo sin ralentizarte a ti) y vuelo del
-quetzal: el ave baja, te agarra con las garras y te sube a casi siete
+ámbar de Verapaz (ralentiza el mundo sin ralentizarte a ti), vuelo del
+quetzal —el ave baja, te agarra con las garras y te sube a casi siete
 unidades, donde se siembra un rastro de jade serpenteante que desde el suelo
-no existe.
+no existe—, **cuenta larga** (el golpe deja de cortarte la racha) y **corazón
+de copal** (una vida, y sólo aparece si te falta alguna).
 
-**Taller.** Seis trajes y ocho mejoras permanentes, pagados con el jade que se
+**Cajas misteriosas.** Lo único de la calzada que se recoge **sin saber qué
+trae**: dos de cada tres son un premio y la otra, una maldición de unos
+segundos. Cogerla es siempre voluntario.
+
+**Taller.** Diez trajes y ocho mejoras permanentes, pagados con el jade que se
 guarda al morir. Los tramos se abren corriendo y luego se puede salir desde
 cualquiera de ellos.
 
@@ -1632,6 +1637,106 @@ se suelta jamás: soltar en la calzada algo que al recogerlo no hace nada sería
 peor que no soltarlo. Medido: 0 de 4.000 tiradas con Ajaw, 15 % con un traje que
 sí lo tiene.
 
+### Los dos poderes que faltaban
+
+Los cinco de siempre cubrían casi todo: sobrevivir a un golpe (escudo), ganar
+tiempo para leer (ámbar), recoger más jade (imán, doble) y saltarse el problema
+entero (vuelo). Quedaban dos huecos, y los dos se notaban jugando.
+
+| Poder | Qué hace | Por qué |
+|---|---|---|
+| **Cuenta larga** · 10 s | El golpe deja de cortarte la racha | La racha multiplica el jade y **no tenía ninguna protección**: dos minutos jugando bien y un roce con una estela valían lo mismo que no haber jugado |
+| **Corazón de copal** | Una vida | Las vidas sólo se recuperaban de dos formas, y las dos son largas: **cien gotas** del pachón o **cinco placas** de impulso |
+
+Se llama Cuenta Larga por el calendario: es, literalmente, **la cuenta que no
+se reinicia**. Y las dos llevan la misma regla que ya tenía el escudo: **no
+entran en el sorteo si no significan nada.** El corazón no sale con las vidas
+al completo, igual que el escudo no sale si ya llevas uno. Medido: 0 apariciones
+en 4.000 tiradas con las vidas llenas, 294 con una menos.
+
+Y las dos **se dicen**. Que la racha sobreviva a un impacto sin que nadie lo
+anuncie no se lee como que el poder ha funcionado, se lee como que el contador
+está roto.
+
+### La caja misteriosa
+
+Es **lo único de la calzada que se recoge sin saber qué trae**. Todo lo demás
+del juego se lee de lejos y se decide con tiempo —esta señal avisa de esto, esta
+pieza es el imán—, así que una pieza que *no* se puede leer es una decisión de
+otro tipo: una apuesta.
+
+**Dos de cada tres traen premio** (`CAJA_MALA = 0,34`, medido a 34 % sobre 4.000
+aperturas). La proporción es el diseño entero: si casi siempre tocara premio,
+dejaría de ser una apuesta y sería un poder con otro dibujo; si casi siempre
+tocara castigo, nadie la cogería y sería un obstáculo con otro dibujo. Con un
+tercio de maldiciones, abrirla es siempre defendible y nunca gratis.
+
+| Maldición | Dura | Qué hace |
+|---|---|---|
+| **Humo de copal** | 4,5 s | Se cierra la vista por los bordes |
+| **Espejo de obsidiana** | 5 s | Izquierda es derecha |
+| **Piedra de moler** | 6 s | Saltas más bajo |
+| **Fuga de jade** | — | Pierdes la racha y 10 de jade |
+
+**Ninguna mata, y eso no es amabilidad: es lo que hace que se sigan abriendo.**
+Una caja que pudiera matarte de golpe no sería una apuesta, sería una trampa, y
+el jugador dejaría de abrirlas para siempre después de la primera. Todas se
+pasan solas, ninguna quita vidas y ninguna toca lo que no se puede recuperar.
+
+Cuatro decisiones que sostienen esto:
+
+- **La piedra de moler pone difícil algo fácil; no lo prohíbe.** Va sobre la
+  velocidad de salida del salto, y la altura sale del **cuadrado** de esa
+  velocidad: un 24 % menos de impulso son un 42 % menos de alto, de 2,64 a 1,53.
+  Ahí está el límite que no se puede cruzar: **el tronco pide 1,15**, o sea que
+  sigue pasándose. Lo que se encoge es la ventana para acertar el momento, de
+  0,49 s a 0,29 s. Si el salto dejara de valer, el tronco sería muerte segura.
+- **El humo deja el centro limpio.** Cierra por los bordes. Una maldición que
+  tapara dónde pisas no pondría difícil el juego: lo apagaría, y morir sin haber
+  podido ver qué te mató no se lee como haber fallado.
+- **Una maldición a la vez.** Con una caja cada trece segundos, dos a la vez son
+  perfectamente posibles, y tres efectos raros simultáneos no se leen como tres
+  cosas: se leen como que el juego se ha roto. La nueva sustituye a la vieja.
+- **Cogerla es siempre voluntario, y hubo que defenderlo dos veces.** El imán ya
+  tiraba sólo del jade, así que ninguna caja se te viene encima. Pero el
+  **alcance de recogida** crece con la mejora del imán hasta 3,0 y los carriles
+  están a 2,3: con la mejora al máximo, una caja del carril de al lado **se
+  recogía sola**. Para el jade eso es el regalo que te has comprado; para una
+  caja que puede maldecirte es quitarte la única decisión que la caja tiene, y
+  encima castigarte por haber mejorado el imán. La caja se coge con el margen
+  justo de su carril.
+
+Y **la caja se ve caja**: es lo único cuadrado que se recoge en todo el juego, y
+lleva material propio de madera. Si brillara del color de un poder, el jugador
+creería saber lo que viene, que es exactamente lo contrario de lo que se pide.
+
+### El aviso pequeño
+
+Hasta ahora, recoger un poder daba un aura de color alrededor del personaje y
+una casilla en el HUD. Eso dice que **algo** está puesto, pero no cuál: con
+siete poderes, un hueco propio que cambia de nombre con el traje y cuatro
+maldiciones, aprenderse los colores era deberes del jugador. **Adivinar no es
+leer.**
+
+Ahora cada recogida dice su nombre en media línea, medio segundo, sin parar
+nada. Y es una pieza nueva y no la bandera que ya existía, por una razón:
+
+- **La bandera grande es para lo que cambia la partida** —entrar en un
+  departamento, el suceso de la zona, el pachón lleno—. Usarla también para cada
+  poder la gastaría: **si todo es un titular, ninguno lo es.**
+- **Va abajo, no arriba.** Arriba están el HUD y el minimapa, y el hueco libre
+  del centro de la pantalla es justo por donde viene la calzada. Tapar lo que se
+  está esquivando para contar lo que se acaba de recoger sería el peor cambio
+  posible.
+- **La maldición se anuncia el doble de rato y con marco rojo.** Si un aviso te
+  dice que los controles están invertidos, tiene que seguir en pantalla el
+  tiempo suficiente para leerlo entero *mientras* esquivas.
+
+**Y la maldición se mira en la misma fila que los poderes**, no en otra esquina:
+lo que llevas puesto se mira en un sitio, sea bueno o malo. Lo que la separa es
+que respira —una ventaja se queda quieta, un castigo insiste— y el resplandor
+rojo, que se lee antes que el glifo.
+
 Dos límites que hacen que los poderes no rompan lo que ya estaba:
 
 - **La embestida no se lleva por delante los huecos ni el muro del ramal
@@ -1934,6 +2039,19 @@ contenido de en medio.
 - **En ventana baja** —un móvil apaisado son unos 380 px de alto— se retira la
   nota de pie, que es lo único ahí dentro que no se pulsa. Si se quitara el hueco
   de las fichas quedarían tres botones y nada que comprar.
+
+**Y el menú lleva el mismo tratamiento**, porque es el otro panel que crece: el
+aviso de movimiento, la reseña y los controles. Título arriba, botones abajo, y
+en medio lo único que scrollea. El botón de **Jugar** no puede acabar debajo del
+borde de la ventana.
+
+De paso, **los dos controles de la moto de pista van plegados** en un
+`<details>`. No es que importen menos: es que sólo existen si has comprado una
+de ellas, y dos filas fijas que no le sirven a casi nadie eran precisamente lo
+que estaba empujando el botón de Jugar hacia fuera. *Un control que no está
+escrito no existe; uno que está a un clic, sí.* Es un `<details>` y no un botón
+con JavaScript porque el navegador ya sabe hacer esto, y además queda accesible
+con teclado y anunciado por un lector de pantalla sin escribir una línea.
 
 ## Idiomas y URLs
 

@@ -159,6 +159,29 @@
             margin-bottom: 0.15rem;
         }
 
+        /* Lo que sólo le sirve a quien ha comprado algo, plegado. Un <details>
+           y no un botón con JavaScript: el navegador ya sabe hacer esto, y
+           además queda accesible con teclado y anunciado por un lector de
+           pantalla sin escribir una línea. */
+        .fold { margin-bottom: 1.1rem; text-align: left; }
+
+        .fold summary {
+            cursor: pointer;
+            list-style: none;
+            font-size: 0.76rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: rgba(239, 230, 210, 0.6);
+            padding: 0.4rem 0;
+            text-align: center;
+        }
+
+        .fold summary::-webkit-details-marker { display: none; }
+        .fold summary::before { content: '▸ '; color: var(--jade); }
+        .fold[open] summary::before { content: '▾ '; }
+        .fold summary:hover { color: var(--jade); }
+        .fold .keys { margin-bottom: 0; }
+
         /* ===== Botones ===== */
         .btn {
             font: inherit;
@@ -491,6 +514,26 @@
             background: var(--c);
         }
 
+        /* La maldición va en la misma fila y con el mismo reloj: lo que llevas
+           puesto se mira en un sitio. Lo que la separa es que respira —una
+           ventaja se queda quieta, un castigo insiste— y el resplandor rojo
+           por detrás, que se lee antes que el glifo. */
+        .pw.mal {
+            border-color: rgba(239, 68, 68, 0.85);
+            box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.28),
+                        0 0 14px rgba(239, 68, 68, 0.35);
+            animation: malLatido 1.1s ease-in-out infinite;
+        }
+
+        @keyframes malLatido {
+            0%, 100% { transform: scale(1); }
+            50%      { transform: scale(1.07); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .pw.mal { animation: none; }
+        }
+
         /* ===== Hito de distancia ===== */
         .milestone {
             position: fixed;
@@ -567,6 +610,76 @@
             14%  { opacity: 1; transform: translate(-50%, 0); }
             80%  { opacity: 1; transform: translate(-50%, 0); }
             100% { opacity: 0; transform: translate(-50%, -16px); }
+        }
+
+        /* ===== El aviso pequeño =====
+           Debajo del hito y de la bandera, y mucho más discreto que los dos:
+           esto sale cada vez que se recoge un poder, o sea a menudo, y lo que
+           sale a menudo no puede gritar. Media línea, medio segundo, y se va.
+
+           Va abajo y no arriba: arriba están el HUD y el minimapa, y el sitio
+           que queda libre en el centro de la pantalla es justo por donde viene
+           la calzada. Tapar lo que se está esquivando para contar lo que se
+           acaba de recoger sería el peor cambio posible. */
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 12%;
+            transform: translate(-50%, 0);
+            z-index: 7;
+            pointer-events: none;
+            opacity: 0;
+            padding: 0.42rem 0.95rem;
+            border-radius: 0.5rem;
+            background: rgba(16, 32, 28, 0.78);
+            border: 1px solid var(--c, #2ec4a0);
+            color: var(--c, #2ec4a0);
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            white-space: nowrap;
+            max-width: 92vw;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            backdrop-filter: blur(4px);
+        }
+
+        .toast[hidden] { display: none !important; }
+        .toast.show { animation: toastPop 1.5s ease-out forwards; }
+
+        /* La maldición se anuncia más rato y con marco rojo. No es un capricho
+           de estilo: si un aviso te dice que los controles están invertidos,
+           tiene que seguir en pantalla el tiempo suficiente para leerlo
+           ENTERO mientras esquivas. */
+        .toast.malo {
+            border-color: rgba(239, 68, 68, 0.9);
+            box-shadow: 0 0 18px rgba(239, 68, 68, 0.3);
+        }
+
+        .toast.malo.show { animation: toastPop 2.4s ease-out forwards; }
+
+        @keyframes toastPop {
+            0%   { opacity: 0; transform: translate(-50%, 12px); }
+            12%  { opacity: 1; transform: translate(-50%, 0); }
+            76%  { opacity: 1; transform: translate(-50%, 0); }
+            100% { opacity: 0; transform: translate(-50%, -8px); }
+        }
+
+        /* ===== Humo de copal =====
+           Cierra la vista POR LOS BORDES y deja el centro limpio. Una maldición
+           que tapara el centro no pondría difícil el juego: lo apagaría, y
+           morir sin haber podido ver qué te mató no se lee como haber fallado.
+           La opacidad la mueve el bucle, así que aquí no hay transición: una
+           encima haría que el humo llegase tarde y se arrastrase al irse. */
+        .curse-veil {
+            position: fixed;
+            inset: 0;
+            z-index: 5;
+            pointer-events: none;
+            opacity: 0;
+            background: radial-gradient(ellipse at 50% 56%,
+                        transparent 20%, rgba(74, 66, 52, 0.55) 58%,
+                        rgba(38, 33, 26, 0.94) 100%);
         }
 
         /* ===== Vineta de velocidad ===== */
@@ -695,6 +808,28 @@
 
         .sound-toggle:hover { border-color: var(--jade); }
         .sound-toggle[hidden] { display: none !important; }
+
+        /* El menú, con el mismo tratamiento que el taller y por el mismo
+           motivo: es el otro panel que crece —el aviso de movimiento, la
+           reseña, los controles— y el botón de Jugar no puede acabar debajo
+           del borde de la ventana. Título arriba, botones abajo, y lo que se
+           lee en medio, que es lo único que scrollea. */
+        #menu .panel {
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - 3rem);
+            max-height: calc(100dvh - 3rem);
+        }
+
+        #menu .menu-mid {
+            flex: 1 1 auto;
+            min-height: 0;          /* sin esto se niega a encoger: ver el taller */
+            overflow-y: auto;
+            overscroll-behavior: contain;
+        }
+
+        #menu .glyph-mark, #menu h1, #menu .tagline,
+        #menu .actions, #menu .route-note, #menu .sponsor { flex: 0 0 auto; }
 
         /* ===== Taller: skins, mejoras y ruta ===== */
         /* EL TALLER NO CRECE HACIA ABAJO SIN FIN. Con diez trajes, la rejilla
@@ -1269,6 +1404,11 @@
             <h1>SACBÉ</h1>
             <p class="tagline">La calzada blanca</p>
 
+            <!-- Todo lo que se LEE va en este bloque, y es el único que
+                 scrollea. Fuera quedan el título y los botones, que son lo que
+                 no puede caer por debajo del borde de la ventana. Mismo
+                 problema que tenía el taller y misma solución. -->
+            <div class="menu-mid">
             <!-- Solo aparece si el navegador pide menos movimiento -->
             <div class="notice" id="motionNotice" hidden>
                 <b>Aviso de movimiento.</b> Tu sistema está configurado para reducir
@@ -1286,13 +1426,24 @@
                 <div class="key-row"><b>← →</b> cambiar de carril</div>
                 <div class="key-row"><b>↑ / Espacio</b> saltar (mantén para más alto)</div>
                 <div class="key-row"><b>↓</b> deslizarte, o caer en picado</div>
-                <!-- Solo hace algo con una moto de pista puesta, pero se dice
-                     aquí igualmente: un control que no está escrito en ningún
-                     sitio es un control que no existe. -->
-                <div class="key-row"><b>↓ mantenido</b> tumbarte y acelerar (motos de pista)</div>
-                <div class="key-row"><b>↓ ↓</b> tumbarte y salir disparado a tope</div>
                 <div class="key-row"><b>Táctil</b> desliza o toca</div>
             </div>
+
+            <!-- Los dos controles de la moto de pista van PLEGADOS. No es que
+                 importen menos: es que sólo existen si has comprado una de
+                 ellas, y cuatro filas fijas que no le sirven a casi nadie
+                 empujaban el botón de Jugar por debajo del borde de la
+                 ventana, que es exactamente el fallo que se acaba de arreglar
+                 en el taller. Un control que no está escrito no existe; uno
+                 que está a un clic, sí. -->
+            <details class="fold">
+                <summary>Con una moto de pista puesta</summary>
+                <div class="keys">
+                    <div class="key-row"><b>↓ mantenido</b> tumbarte: acelera hasta el techo de esa moto</div>
+                    <div class="key-row"><b>↓ ↓</b> dos toques seguidos: al techo de golpe</div>
+                </div>
+            </details>
+            </div><!-- /.menu-mid -->
 
             <div class="actions">
                 <button class="btn" id="playBtn" type="button">Jugar</button>
@@ -1502,11 +1653,18 @@
                 <span class="pw" id="pwDouble" style="--c:#4affd0" hidden>✦<i></i></span>
                 <span class="pw" id="pwAmber"  style="--c:#e0a02c" hidden>◉<i></i></span>
                 <span class="pw" id="pwBoost"  style="--c:#4affd0" hidden>»<i></i></span>
+                <span class="pw" id="pwRacha"  style="--c:#f0c34a" hidden>∞<i></i></span>
                 <!-- El poder propio del traje. El glifo y el color los pone
                      applySkin al vestirse: es un solo hueco con cinco
                      significados, porque sólo se puede llevar un traje a la vez
                      y dos de ellos no pueden coincidir nunca. -->
                 <span class="pw" id="pwPropio" style="--c:#ffffff" hidden>◈<i></i></span>
+                <!-- Y la maldición de la caja, en la MISMA fila. Lo que llevas
+                     puesto se mira en un sitio, sea bueno o malo; lo que la
+                     separa es el marco rojo, no estar en otra esquina.
+                     Como el poder propio, es un solo hueco: el glifo y el color
+                     los pone renderBars según cuál esté echada. -->
+                <span class="pw mal" id="pwCurse" style="--c:#9a8f7a" hidden>≋<i></i></span>
             </div>
         </div>
 
@@ -1528,6 +1686,19 @@
 
     <!-- Bandera al entrar en un departamento nuevo -->
     <p class="banner" id="banner" hidden><b></b><span></span></p>
+
+    <!-- El aviso pequeño: media línea, medio segundo, sin parar nada. La
+         bandera de arriba es para lo que cambia la partida; si se usara también
+         para cada poder recogido dejaría de significar nada. Hace falta desde
+         que hay cajas misteriosas: el aura dice que algo está puesto, pero no
+         cuál, y adivinar no es leer. -->
+    <p class="toast" id="toast" hidden></p>
+
+    <!-- El humo de copal, la única maldición que se ve en la pantalla y no en
+         el personaje. Cierra la vista por los bordes; nunca tapa el centro,
+         porque una maldición que impide ver dónde pisas no pone difícil el
+         juego, lo apaga. -->
+    <div class="curse-veil" id="curseVeil" aria-hidden="true"></div>
 
     <!-- Vineta que se cierra con la velocidad: el aviso de que aceleras -->
     <div class="speed-veil" id="speedVeil" aria-hidden="true"></div>
