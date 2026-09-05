@@ -67,13 +67,22 @@
         /* ===== Capas de interfaz ===== */
         /* align-content en vez de place-items: con la tienda abierta el panel
            puede ser mas alto que la ventana, y con place-items el borde
-           superior quedaba fuera de alcance al hacer scroll. */
+           superior quedaba fuera de alcance al hacer scroll.
+
+           Y `safe center` encima, declarado DESPUES para que el navegador que
+           no lo entienda se quede con el `center` de la linea de arriba en vez
+           de con nada. Centrar algo mas alto que su caja lo desborda por los
+           DOS lados, y el desbordamiento de arriba no se puede alcanzar
+           haciendo scroll: la cabecera del panel se queda fuera para siempre.
+           `safe` dice justo eso: centra mientras quepa, y en cuanto no quepa
+           alinea arriba, que es lo unico que deja llegar a todo. */
         .layer {
             position: fixed;
             inset: 0;
             display: grid;
             justify-items: center;
             align-content: center;
+            align-content: safe center;
             overflow-y: auto;
             overscroll-behavior: contain;
             padding: 1.5rem;
@@ -688,6 +697,41 @@
         .sound-toggle[hidden] { display: none !important; }
 
         /* ===== Taller: skins, mejoras y ruta ===== */
+        /* EL TALLER NO CRECE HACIA ABAJO SIN FIN. Con diez trajes, la rejilla
+           de fichas empujaba el "Volver" por debajo del borde de la ventana:
+           el boton seguia ahi, pero no habia nada que dijera que hubiera que
+           hacer scroll para encontrarlo, asi que a efectos practicos la tienda
+           se quedaba sin salida. Y no es un problema de esta lista, es de
+           cualquier lista que crezca.
+           Se le pone techo al panel y se hace que scrollen SOLO las fichas:
+           la cabecera con el jade, las pestanas y los botones se quedan
+           siempre a la vista, pase lo que pase con el contenido de en medio. */
+        #shop .panel {
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - 3rem);
+            /* dvh descuenta la barra del navegador movil, que vh no descuenta */
+            max-height: calc(100dvh - 3rem);
+        }
+
+        /* min-height: 0 no es adorno. Un hijo flexible trae min-height: auto de
+           serie, que le prohibe encogerse por debajo de su contenido: sin esto
+           la rejilla se niega a scrollear y vuelve a empujar el pie fuera. */
+        #shop .cards {
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            padding-right: 0.35rem;
+        }
+
+        /* Lo de arriba y lo de abajo no se encogen: son lo que no puede
+           desaparecer. */
+        #shop .shop-head,
+        #shop .tabs,
+        #shop .shop-hint,
+        #shop .actions { flex: 0 0 auto; }
+
         .shop-head {
             display: flex;
             justify-content: space-between;
@@ -1046,8 +1090,8 @@
             line-height: 1.6;
         }
 
-        /* Los Shorts son verticales: el hueco se reserva en 9/16 para que el
-           panel no dé un salto cuando entra el reproductor. */
+        /* Los carteles son verticales: el hueco se reserva en 9/16 para que el
+           panel no dé un salto cuando entra la imagen. */
         .short-host {
             position: relative;
             width: min(15rem, 62vw);
@@ -1061,12 +1105,8 @@
         }
 
         .short-host[hidden] { display: none !important; }
-        .short-host iframe { width: 100%; height: 100%; border: 0; display: block; }
 
-        /* El cartel ocupa el mismo hueco que el reproductor, así que el panel
-           mide lo mismo caiga uno u otro y no da ningún salto.
-
-           `contain`, no `cover`. Los carteles son 9/16 clavados y el hueco
+        /* `contain`, no `cover`. Los carteles son 9/16 clavados y el hueco
            también… salvo cuando `max-height: 46vh` lo achata en una ventana
            baja, que es justo lo que pasa en un móvil apaisado. Con `cover` ahí
            se recortaba el logo de arriba y la dirección web de abajo: los dos
@@ -1092,9 +1132,8 @@
         }
 
         /* `display: grid` gana al `display: none` que trae el atributo hidden,
-           así que hay que decirlo a mano. Con el vídeo no se notaba —el iframe
-           es opaco y lo tapaba entero—, pero el cartel se ve entero y deja dos
-           franjas a los lados por las que se colaba el texto de repuesto. */
+           así que hay que decirlo a mano: el cartel deja dos franjas a los
+           lados por las que se colaba el texto de repuesto. */
         .short-fallback[hidden] { display: none !important; }
 
         .revive-timer {
@@ -1209,6 +1248,17 @@
             .pw { width: 1.8rem; height: 1.8rem; font-size: 0.85rem; }
             .cards { grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); }
         }
+
+        /* Ventana baja —un movil apaisado son unos 380 px de alto— y el techo
+           del taller deja de dar para todo. Lo que se quita es la nota de pie,
+           que es lo unico ahi dentro que no se pulsa; si se quitara el hueco
+           de las fichas quedarian tres botones y nada que comprar. */
+        @media (max-height: 620px) {
+            #shop .shop-head { margin-bottom: 0.6rem; }
+            #shop .tabs { margin-bottom: 0.6rem; }
+            #shop .shop-hint { display: none; }
+            #shop .actions { margin-top: 0.8rem !important; }
+        }
     </style>
 </head>
 <body>
@@ -1236,6 +1286,11 @@
                 <div class="key-row"><b>← →</b> cambiar de carril</div>
                 <div class="key-row"><b>↑ / Espacio</b> saltar (mantén para más alto)</div>
                 <div class="key-row"><b>↓</b> deslizarte, o caer en picado</div>
+                <!-- Solo hace algo con una moto de pista puesta, pero se dice
+                     aquí igualmente: un control que no está escrito en ningún
+                     sitio es un control que no existe. -->
+                <div class="key-row"><b>↓ mantenido</b> tumbarte y acelerar (motos de pista)</div>
+                <div class="key-row"><b>↓ ↓</b> tumbarte y salir disparado a tope</div>
                 <div class="key-row"><b>Táctil</b> desliza o toca</div>
             </div>
 
@@ -1270,13 +1325,14 @@
             <p class="glyph-mark" aria-hidden="true">◈</p>
             <h1 class="revive-title">¿SIGUES?</h1>
             <p class="revive-sub" id="reviveSub">
-                Mira el anuncio de nuestro patrocinador y vuelves a la calzada
+                Un momento con nuestro patrocinador y vuelves a la calzada
                 con una vida y el escudo puesto. Solo una vez por carrera.
             </p>
 
             <!-- El bloque del anuncio entero se oculta cuando ya se gastó esta
-                 carrera: volver a plantar un vídeo delante de alguien que ya lo
-                 vio y que además trae su propio ángel es cobrarle dos veces. -->
+                 carrera: volver a plantar el cartel delante de alguien que ya
+                 lo vio y que además trae su propio ángel es cobrarle dos
+                 veces. -->
             <div id="reviveAd">
                 <div class="short-host" id="shortHost">
                     <div class="short-fallback" id="shortFallback">
@@ -1504,6 +1560,9 @@
             <button type="button" data-dbg="final">Al final de la zona</button>
             <button type="button" data-dbg="zona">Zona siguiente</button>
             <button type="button" data-dbg="god" id="dbgGod" aria-pressed="false">Invulnerable</button>
+            <!-- Invulnerable no cubre esto: salirse de la calzada no es un
+                 golpe del que protegerse, es que debajo no hay suelo. -->
+            <button type="button" data-dbg="fall" id="dbgFall" aria-pressed="false">Ignorar caídas</button>
             <button type="button" data-dbg="slow" id="dbgSlow" aria-pressed="false">Ir despacio</button>
             <button type="button" data-dbg="jade">+1000 jade y 3 ángeles</button>
         </div>

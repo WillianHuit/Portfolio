@@ -605,6 +605,7 @@ trabajar. Lleva:
 | **Al final de la zona** | Deja 900 unidades de zona: entra la estructura de despedida y el cruce de destino |
 | **Zona siguiente** | Cambia de sitio sin pasar por el cruce |
 | **Invulnerable** | Los golpes no hacen nada |
+| **Ignorar caídas** | Salirse de la calzada devuelve al carril en vez de matar |
 | **Ir despacio** | El mundo a un tercio, para poder mirar en vez de esquivar |
 | **+1000 jade y 3 ángeles** | Para probar la tienda y las cuatro vueltas |
 
@@ -612,6 +613,15 @@ trabajar. Lleva:
 reparto de siempre.** Así lo que se ve probando es exactamente lo que va a ver
 el jugador —con su ventana limpia, su cartel forzado y su hueco antes del
 cruce— y no una versión de laboratorio que funcione sólo desde el botón.
+
+**«Ignorar caídas» hace falta aparte de «Invulnerable»**, y no es una duplicidad:
+salirse de la calzada **no es un golpe del que protegerse**, es que debajo ya no
+hay suelo, así que nunca pasó por `takeHit` y la invulnerabilidad no lo tocaba.
+Y no basta con no matar: dejando al jugador donde estaba, el mismo comprobante
+se dispara otra vez al paso siguiente y se queda corriendo por el aire al lado
+de la carretera. Lo que hace es **devolverlo a un carril que exista** —el del
+medio salvo que se haya hundido esa tabla o que el estrechamiento no lo deje,
+que entonces prueba los otros dos—.
 
 Con el panel cerrado no cuesta ni una línea por frame: todo lo que hace está
 detrás de banderas que nacen apagadas.
@@ -747,7 +757,7 @@ cuerpo en sol menor y segunda parte en sol mayor— con melodía, cifrado y
 de los efectos (tecla `N`).
 
 **Patrocinio (Cefas Panadería).** Todo sale del objeto `CEFAS` en `arcade.js`:
-cambiar de anunciante, de enlaces o de vídeos es tocar ese objeto y nada más.
+cambiar de anunciante, de enlaces o de carteles es tocar ese objeto y nada más.
 Dos formatos, y ninguno interrumpe la partida:
 
 - **La franja**, en el menú y en la pantalla de fin: la carta, Instagram,
@@ -755,7 +765,7 @@ Dos formatos, y ninguno interrumpe la partida:
   entre seis. Son momentos en los que el jugador ya
   está parado leyendo.
 - **El panel de revivir**, que solo se ofrece *después* de perder —cuando la
-  alternativa es cerrar la pestaña— y una sola vez por carrera. Se ve un Short
+  alternativa es cerrar la pestaña— y una sola vez por carrera. Se ve un cartel
   y se vuelve con una vida y el escudo puesto.
 
 Lo que importa mantener si se toca:
@@ -1346,7 +1356,16 @@ Lo que importa mantener si se toca:
   de respaldo del sistema: el `⬡` del escudo se dibujaba como una «O» en
   Windows. Los trajes no llevan glifo sino un muñeco pintado con sus propios
   colores, que es icono y vista previa a la vez.
-- **Revivir se gana viendo el vídeo, no siguiendo las redes.** Un botón de
+- **El anuncio ya no lleva vídeo, y no por probabilidad cero.** Uno de cada
+  veinte revivires plantaba un Short en un `iframe` de YouTube. Se ha quitado
+  **entero** —el bloque, el `iframe`, la lista de identificadores y la regla de
+  CSS que le reservaba sitio—, porque mientras el código existiera seguiría
+  habiendo un dominio de terceros al que se le pide algo justo cuando el jugador
+  acaba de morir. Ahora se ofrece **siempre el cartel**: una imagen del propio
+  origen, sin peticiones fuera y sin nada que arranque solo. El enlace al canal
+  se queda en el bloque del patrocinador — eso es un enlace que se pulsa o no, no
+  un reproductor.
+- **Revivir se gana esperando delante del cartel, no siguiendo las redes.** Un botón de
   «seguir» no se puede verificar desde el navegador, así que premiarlo sería
   premiar el clic; y las tres plataformas desaconsejan el seguimiento
   incentivado. Los enlaces sociales están, pero no dan nada a cambio.
@@ -1359,9 +1378,9 @@ Lo que importa mantener si se toca:
   usarlo, así que **una carrera admite cuatro vueltas: tres compradas y una del
   patrocinador**. Y el jade deja de servir sólo para trajes.
 - **El ángel NO pasa por el anuncio ni por el reloj.** Ése es exactamente el
-  trato —el jade compra tu tiempo—, y si además pidiera el vídeo no sería nada.
-  Por lo mismo, gastado el anuncio el panel deja de ser un anuncio: plantar otro
-  vídeo de treinta segundos delante de alguien que ya lo vio esta carrera y que
+  trato —el jade compra tu tiempo—, y si además pidiera el anuncio no sería nada.
+  Por lo mismo, gastado el anuncio el panel deja de ser un anuncio: plantar otra
+  vez el cartel y su reloj delante de alguien que ya lo vio esta carrera y que
   encima trae su propio ángel es cobrarle dos veces por lo mismo.
 - **Es lo único de la tienda que se GASTA**, así que no cabe en la tabla de
   mejoras —donde el nivel sólo sube— y lleva su propio contador. Va en ocre en
@@ -1370,21 +1389,9 @@ Lo que importa mantener si se toca:
   morir en la zona diez.
 - **Rechazar cierra la carrera aunque queden ángeles.** El jugador acaba de
   decir que no quiere seguir; volver a preguntárselo con otro botón es insistir.
-- **La cuenta atrás del anuncio corre por reloj propio**, no por el estado del
-  reproductor: si un bloqueador tumba el iframe, el jugador revive igual.
-  Cobrarle el fallo de otro sería injusto, y además le dejaría sin salida.
-- **El vídeo arranca silenciado, y `mute=1` no es un descuido.** Chrome bloquea
-  el arranque automático con sonido en un iframe de otro dominio salvo que el
-  usuario tenga historial con YouTube, así que sin silenciar se quedaba parado
-  en el fotograma de portada para buena parte de la gente. Ya que va a
-  arrancar solo, mejor que se vea moviéndose; el aviso bajo el título dice
-  dónde está el altavoz.
-- **Uno de cada veinte anuncios lleva vídeo; los otros diecinueve son un
-  cartel.** El vídeo pide un iframe a un tercero, arranca solo y tarda en
-  cargar; el cartel es una imagen del propio origen y está puesta antes de que
-  el jugador levante la vista. Un 5 % es bastante para que el canal siga
-  apareciendo sin que revivir se convierta en un trámite. Medido sobre 600
-  tiradas: 4,2 %.
+- **La cuenta atrás del anuncio corre por reloj propio**, no por el estado de lo
+  que se vea: si la imagen no llega a cargar, el jugador revive igual. Cobrarle
+  el fallo de otro sería injusto, y además le dejaría sin salida.
 
 - **El cartel va con `contain`, no con `cover`.** Los seis carteles son 9/16
   clavados y el hueco del panel también… salvo cuando `max-height: 46vh` lo
@@ -1393,9 +1400,8 @@ Lo que importa mantener si se toca:
   cosas que un cartel tiene que decir. Prefiero dos franjas oscuras a los lados.
 
 - **Y hubo que apagar a mano el texto de repuesto.** `.short-fallback` lleva
-  `display: grid`, que gana al `display: none` del atributo `hidden`. Con el
-  vídeo no se notaba —el iframe es opaco y lo tapaba entero—; con el cartel, el
-  texto se colaba por las franjas de los lados.
+  `display: grid`, que gana al `display: none` del atributo `hidden`, así que el
+  texto se colaba por las franjas oscuras de los lados del cartel.
 
 - **Los banners solo en el menú y en el fin de partida**, nunca sobre el juego
   y nunca durante una partida. Y no en el panel de revivir: ahí ya hay un
@@ -1418,12 +1424,8 @@ Lo que importa mantener si se toca:
   miden lo mismo— y por eso el CSS no les impone `aspect-ratio`: forzarles una
   proporción común recortaría o estiraría la mitad.
 
-- **Se rota entre los Shorts al azar**, para que quien muera dos partidas
-  seguidas no vea el mismo anuncio.
-- **El iframe no existe hasta que se abre el panel.** `arcade.html` no hace ni
-  una petición a terceros mientras nadie muera y acepte el anuncio, y se usa
-  el dominio `youtube-nocookie.com`. Al cerrar el panel el iframe se
-  **elimina**: esconderlo dejaba el vídeo sonando por debajo de la partida.
+- **Se rota entre los carteles**, para que quien muera dos partidas seguidas no
+  vea el mismo anuncio.
 - **Al revivir se despeja el tramo que tienes delante** (obstáculos a menos de
   70 unidades, amenazas a menos de 90). Sin eso reaparecías dentro del mismo
   obstáculo que acababa de matarte.
@@ -1520,7 +1522,7 @@ tres minutos que dura una zona, y las barras avanzan un uno por ciento cada
 varios segundos. Ahora se recuerda lo último escrito y se comparan cuatro
 cadenas, que sale mucho más barato que escribirlas.
 
-## Tres trajes, y cada uno juega distinto
+## Diez trajes, y cada uno juega distinto
 
 Eran ocho. Cinco de ellos —Tejedora, Guerrero Jaguar, Quetzal, Chapín y
 Ceniza— eran **el mismo muñeco con otros siete colores**: se compraban una vez,
@@ -1535,22 +1537,64 @@ entrada es una forma de jugar vale más que una larga de recolores.
 | **Patineta** | 800 | **Talla** al cambiar de carril | carril **0,086 s** |
 | **Monopatín** | 1.000 | **Levanta la tabla** al saltar | salto **3,55** (+34 %) |
 | **Moto** | 1.500 | El **casco** aguanta un golpe | — |
+| **Pista 125 / 250 / 450 / 600** | 1.900 – 4.200 | Casco, embestida y **la tumbada** | ver abajo |
 
-### La moto de pista
+### Las cuatro motos de pista
 
-La misma moto y las mismas dos cosas —casco y embestida—, más **la tumbada**. Es
-lo más caro de la tienda (2.400) porque es lo único que se **pilota**: las demás
+Las mismas dos cosas de la moto normal —casco y embestida— más **la tumbada**, y
+son lo más caro de la tienda porque son lo único que se **pilota**: las demás
 ventajas se llevan puestas y ésta hay que sostenerla.
 
-**Manteniendo abajo, la moto acelera sola.** Y no sin fin: tiene **su** techo,
-98 u/s, que es lo que esa máquina sabe dar —de crucero a tope tarda 1,9 s—.
-Pasado ese punto, o cuando la partida ya va más rápido por su cuenta, la tumbada
-deja de acelerar y se queda en **un empujón corto**: una moto no pasa de su
-propia punta por mucho que el piloto se esconda mejor. Al levantarse vuelve a lo
-normal en 0,72 s, no de golpe: un corte seco de treinta unidades por segundo se
-lee como un tirón del juego y no como haberse incorporado.
+**Manteniendo abajo, la moto acelera sola.** Y no sin fin: cada cilindrada tiene
+**su** techo, que es lo que esa máquina sabe dar. Pasado ese punto, o cuando la
+partida ya va más rápido por su cuenta, la tumbada deja de acelerar y se queda en
+**un empujón corto**: una moto no pasa de su propia punta por mucho que el piloto
+se esconda mejor. Al levantarse vuelve a lo normal en 0,68 s, no de golpe: un
+corte seco de treinta unidades por segundo se lee como un tirón del juego y no
+como haberse incorporado.
 
-Dos detalles que hacen que se sostenga de verdad:
+Cuatro cilindradas, y lo que cambia entre ellas son **los dos números que se
+notan pilotando**:
+
+| Moto | Precio | Techo | Gana | De crucero a tope |
+|---|---|---|---|---|
+| **Pista 125** | 1.900 | 84 u/s | 20 u/s² | **0,80 s** |
+| **Pista 250** | 2.400 | 96 u/s | 22 u/s² | 1,27 s |
+| **Pista 450** | 3.200 | 106 u/s | 25 u/s² | 1,52 s |
+| **Pista 600** | 4.200 | **116 u/s** | 28 u/s² | 1,71 s |
+
+A más cilindrada, **más techo y más empuje** —que es lo que pasa de verdad— pero
+el techo sube más deprisa que el empuje, así que **la grande tarda más en
+estirar**: la de 125 se planta arriba en ocho décimas y la de 600 tarda el doble.
+Eso es lo que la convierte en una elección y no en una escalera de pagar y ya.
+
+**Ninguna llega a 120**, que es `SPEED_HARD`, el tope que garantiza que el mundo
+no avance más de 2,0 por paso de simulación contra una ventana de colisión de
+2,2. La de 600 se queda en 116 a propósito: prometer más sería mentir, porque el
+límite lo recortaría.
+
+**El identificador de la de 250 sigue siendo `pista`**, aunque rompa el patrón de
+los otros tres. Es el que se guardó en las partidas de quien ya la compró, y
+renombrarlo le borraría una moto de 2.400 de jade.
+
+### Dos formas de tumbarse
+
+| Gesto | Qué hace |
+|---|---|
+| **Mantener ↓** | Acelera progresivamente hasta el techo de esa moto |
+| **↓ ↓** (dos toques en menos de 0,32 s) | La pone **en su techo de golpe** |
+
+Las dos acaban en el mismo sitio: **el atajo es al tiempo, no a la punta**, y
+soltar la tecla devuelve igual de despacio venga de donde venga. Lo que paga el
+toque doble es el gesto: hay que soltar y volver a pulsar en menos de un tercio
+de segundo, y ↓ es también la tecla de agacharse.
+
+**El toque doble se cuenta sólo con pulsaciones de verdad.** Mantener una tecla
+dispara `keydown` repetido cada treinta milisegundos: sin filtrar `e.repeat`, la
+primera forma se convertiría automáticamente en la segunda y no habría dos
+formas, habría una. Medido: 40 repeticiones del sistema, ninguna contada.
+
+Y tres detalles que hacen que se sostenga de verdad:
 
 - **La postura no caduca mientras se aguanta.** El deslizamiento normal dura
   0,45 s; sin esto habría que machacar la tecla para acelerar, que es justo lo
@@ -1559,6 +1603,11 @@ Dos detalles que hacen que se sostenga de verdad:
   de más, así que en una cuesta abajo no se dispara y en llano se nota igual.
 - Y si la ventana pierde el foco con la tecla abajo, el `keyup` no llega nunca:
   hay un `blur` que suelta la tumbada, o la moto se quedaría acelerando sola.
+
+**La ficha va en la tarjeta de la tienda**: cilindrada, techo y segundos hasta el
+tope. Cuatro motos que sólo se diferencian en dos números tienen que enseñar esos
+dos números — sin ellos, elegir entre la de 450 y la de 600 es pagar por un
+adjetivo.
 
 ### Y cada traje tiene su poder, que sólo le sale a él
 
@@ -1694,7 +1743,7 @@ pancarta va a 11,6 de altura, por encima incluso del vuelo del quetzal. Y
 ninguna se planta sobre una bifurcación: ahí hay que leer el rótulo verde, y un
 anuncio al lado es exactamente lo que no debe haber.
 
-**Al runner le salen 2,6 veces más** —cada 240 unidades contra cada 620—. El
+**Al runner le salen diez veces más** —cada 62 unidades contra cada 620—. El
 runner corre una **carrera**, no un camino, y una carrera se reconoce porque el
 margen está forrado de anuncios.
 
@@ -1717,13 +1766,33 @@ personas saltando a la vez son un mecanismo, seis saltando cada una a lo suyo
 son un público. Es lo que convierte una carretera con anuncios en una **carrera**:
 los anuncios los pone quien paga, el público viene a ver.
 
-**Al runner, el margen no se le queda «con anuncios»: se le queda forrado.** Una
-valla cada 110 unidades es una cada segundo y medio a velocidad de crucero, 5,6
-veces más que a los demás, y un corrillo cada 190. Es lo que se ve desde dentro
-de una maratón patrocinada, y lo que separa correr una carrera de ir por una
-carretera. El público y las vallas van en repartos **separados** a propósito: si
-compartieran turno, cada corrillo llegaría pegado a un panel y el margen saldría
-a bandazos en vez de lleno.
+**Al runner, el margen no se le queda «con anuncios»: se le queda forrado.** Y
+la medida que importa no es cada cuánto sale uno, es **cuántos hay a la vista a
+la vez**: de la niebla a los pies hay 181 unidades, así que
+
+| | Cada | A la vista | Pórticos |
+|---|---|---|---|
+| De serie | 620 | 0,3 | uno cada 36 s |
+| Runner, primera versión | 110 | 1,6 | uno cada 9 s |
+| **Runner, ahora** | **62** | **2,9** | uno cada 6,5 s |
+
+A 110 salía uno cada segundo y medio, sí, **pero de uno en uno**: entre panel y
+panel quedaba calzada pelada. A 62 nunca se acaba uno sin que ya venga el
+siguiente, que es lo que hace que el margen se lea como forrado en vez de como
+salpicado. El público, igual: un corrillo cada 115, 1,6 a la vista.
+
+**Los pórticos no se multiplican por diez.** La proporción de serie es una de
+cada cuatro; aplicada a diez veces más paneles pondría un arco cada tres segundos
+y medio, y eso no es una maratón, es un túnel. Con el runner baja a una de cada
+siete.
+
+**Y alternan margen en vez de sortearlo.** Con un panel cada 620 el azar daba
+igual; con uno cada 62, tirar una moneda deja rachas de cuatro seguidos al mismo
+lado — eso no es una calle vallada, es un lado vallado y el otro vacío.
+
+El público y las vallas van en repartos **separados** a propósito: si compartieran
+turno, cada corrillo llegaría pegado a un panel y el margen saldría a bandazos en
+vez de lleno.
 
 ### Lo que hace que el sitio sea el sitio, pasando de cerca
 
@@ -1735,8 +1804,7 @@ o sea al final. El resultado era que en Petén salían primero los murciélagos 
 pirámide aparecía casi al terminar, cuando **la pirámide no es la despedida de
 Tikal: es Tikal**.
 
-Ahora pasan piezas del sitio **al borde de la calzada**, a 15,5 del centro, una
-cada 18 segundos —unas diez por zona— y desde los primeros segundos de entrar.
+Ahora pasan piezas del sitio **al borde de la calzada**, a 15,5 del centro.
 Reusan `silhouette()`, la **misma** función que dibuja el horizonte, así que cada
 región trae de cerca exactamente lo suyo sin una línea de arte nueva y sin poder
 desincronizarse de lo que se ve al fondo.
@@ -1744,6 +1812,48 @@ desincronizarse de lo que se ve al fondo.
 Lo único que hay que garantizar es que no invadan la calzada, y está medido
 sobre **las trece regiones a la escala más grande que pueden salir**: lo más
 cerca que llega una pieza es a 5,8 del centro, y la calzada acaba en 4,2.
+
+#### La primera versión no se veía, y por dos motivos a la vez
+
+**Uno: salía poquísimo.** Uno cada 1.250 unidades son diez por zona, y de la
+niebla a los pies hay 181 unidades, o sea que cada uno se ve **menos de tres
+segundos**. Treinta segundos de templo en tres minutos de Petén se pierden
+enteros, así que lo único reconocible del sitio seguía siendo la pirámide por la
+que se pasa por debajo al despedirse — justo lo que sobraba.
+
+Ahora sale **uno cada 340** (36 por zona), **alternando margen**, y de vez en
+cuando **por parejas** —uno a cada lado, desfasados en z—, que es lo que se lee
+como pasar *por dentro* del sitio y no como un bulto del margen.
+
+**Y aprietan durante el suceso: uno cada 190.** El suceso de la zona no es una
+cosa que ocurra en el mismo rato que el sitio, es lo que pasa **en** el sitio, así
+que el camazotz sale de entre los templos y no de una recta vacía doscientos
+metros más allá.
+
+**Dos: no se apoyaba en el suelo.** Iba colgada de `riseOf()`, que es la altura de
+la **calzada**, y la calzada va siempre por encima de la explanada, porque el
+plano del suelo se inclina a propósito para no taparla nunca. Medido por franjas:
+
+| Franja z | La calzada está por encima del suelo | Niebla |
+|---|---|---|
+| −170 a −140 | 0,70 – **4,87** | 77 % |
+| −110 a −80 | 0,89 – 2,47 | 31 % |
+| −30 a +11 | 0,82 – 1,68 | 0 % |
+
+Un templo colgado del asfalto **se despegaba del terreno hasta 3,9 unidades**
+—1,5 en lo que se ve claro—. Una valla con patas o un corrillo de gente aguantan
+eso; un bloque de piedra de ocho de ancho, no: se lee flotando. Ahora se apoyan
+en la **explanada**, que es la superficie sobre la que están, con error medido de
+0,0000 en las trece regiones y también en las cuestas.
+
+**El público, lo mismo.** Está a 7,6 del centro y la calzada acaba en 4,2: lo que
+pisa es el suelo. Colgado de `riseOf()` flotaba hasta unidad y media — **una
+persona entera** — sobre el terreno.
+
+> Y esto es exactamente lo que la prueba estuvo a punto de no encontrar. La
+> primera hipótesis fue que las piezas quedaban **enterradas**; midiéndolo, el
+> hundimiento máximo resultó ser de 0,30 y el problema era el contrario. El
+> arreglo habría sido el mismo, pero la explicación habría sido falsa.
 
 **Y todo esto no añade un solo archivo.** Las telas son las seis tiras apaisadas
 que ya estaban en el repositorio para el menú y el fin de partida; se cargan una
@@ -1780,12 +1890,50 @@ carrera y no vuelve** —revivir devuelve el escudo, no el casco—, porque si s
 repusiera la moto dejaría de ser un traje con ventaja para ser un traje con otra
 regla de vidas.
 
-Cuesta 1.500 de jade, el más caro con diferencia, y va el último de la lista.
-**Aun así hay que decirlo: es el primer traje del juego que da ventaja
-mecánica**, así que mientras esté puesto los otros seis son estrictamente
-peores. Si al probarlo desequilibra, lo natural es darle una contrapartida en
+Cuesta 1.500 de jade y abre la parte cara de la lista: por encima sólo están las
+cuatro de pista, que son la misma moto más la tumbada. **Aun así hay que
+decirlo: las motos son lo único del juego con ventaja *defensiva***, así que
+mientras haya una puesta los otros cinco trajes son estrictamente peores en ese
+frente. Si al probarlo desequilibra, lo natural es darle una contrapartida en
 vez de rebajarle el casco —una moto se inclina, no se desplaza de lado, así que
 cambiar de carril más lento le sienta bien al vehículo y al balance a la vez—.
+
+## Los menús no se salen de la página
+
+Dos fallos distintos, los dos por la misma causa: **un panel puede ser más alto
+que la ventana**, y hasta ahora nadie había dicho qué pasa entonces.
+
+**Centrar algo más alto que su caja lo desborda por los dos lados**, y el
+desbordamiento de *arriba* no se puede alcanzar haciendo scroll: la cabecera del
+panel se queda fuera para siempre. La solución es una palabra:
+
+```css
+align-content: center;
+align-content: safe center;   /* declarado después, para el que no lo entienda */
+```
+
+`safe` dice exactamente lo que hace falta: **centra mientras quepa y, en cuanto
+no quepa, alinea arriba**, que es lo único que deja llegar a todo. Va declarado
+dos veces a propósito: el navegador que no entienda `safe` descarta esa línea y
+se queda con el `center` de la anterior, en vez de quedarse sin nada.
+
+**Y el taller ya no crece hacia abajo sin fin.** Con diez trajes, la rejilla de
+fichas empujaba el botón «Volver» por debajo del borde de la ventana. El botón
+seguía ahí, pero **no había nada que dijera que hubiera que bajar a buscarlo**,
+así que a efectos prácticos la tienda se quedaba sin salida. Y no es un problema
+de esta lista: es de cualquier lista que crezca.
+
+Ahora el panel tiene techo (`100dvh`, que descuenta la barra del navegador móvil
+—`vh` no la descuenta—) y **scrollean sólo las fichas**: la cabecera con el jade,
+las pestañas y los botones se quedan siempre a la vista, pase lo que pase con el
+contenido de en medio.
+
+- **`min-height: 0` no es adorno.** Un hijo flexible trae `min-height: auto` de
+  serie, que le prohíbe encogerse por debajo de su contenido: sin esa línea la
+  rejilla se niega a scrollear y vuelve a empujar el pie fuera.
+- **En ventana baja** —un móvil apaisado son unos 380 px de alto— se retira la
+  nota de pie, que es lo único ahí dentro que no se pulsa. Si se quitara el hueco
+  de las fichas quedarían tres botones y nada que comprar.
 
 ## Idiomas y URLs
 
