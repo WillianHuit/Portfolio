@@ -106,7 +106,7 @@
 :root {
     /* Colores principales */
     --primary-color: #0a7d62;   /* jade */
-    --secondary-color: #0e9f8a;
+    --secondary-color: #0a8576;
     --accent-color: #d97706;    /* oro */
     --success-color: #10b981;
     
@@ -154,8 +154,8 @@
 
 /* Modo Oscuro */
 html.dark-mode {
-    --primary-color: #14a37f;
-    --secondary-color: #0f8f86;
+    --primary-color: #0e8c6b;
+    --secondary-color: #0b7f78;
     --accent-color: #f59e0b;
     --text-primary: #eef6f2;
     --text-secondary: #b7c8c0;
