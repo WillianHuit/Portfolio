@@ -116,7 +116,7 @@ const translations = {
             },
             project6: {
                 title: "Co-munity",
-                description: "Plataforma web en desarrollo para gestión comunitaria y colaboración social, facilitando la comunicación y organización de comunidades."
+                description: "Plataforma ciudadana para reportar problemas urbanos en Guatemala (baches, fugas, alumbrado, basura) sobre un mapa interactivo, con una lista pública filtrable y exportación a CSV."
             },
             project7: {
                 title: "Plataforma de Ajedrez Maya",
@@ -276,7 +276,7 @@ const translations = {
             },
             project6: {
                 title: "Co-munity",
-                description: "Web platform in development for community management and social collaboration, facilitating communication and organization of communities."
+                description: "Civic platform to report urban problems in Guatemala (potholes, water leaks, street lighting, trash) on an interactive map, with a searchable public list and CSV export."
             },
             project7: {
                 title: "Mayan Chess Platform",
