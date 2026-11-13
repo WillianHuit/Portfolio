@@ -2205,18 +2205,27 @@ html.dark-mode .mesh-blob {
     pointer-events: none;
 }
 
+.hero-3d {
+    background: linear-gradient(180deg, #a9d4ee 0%, #e6f0ec 58%, #f6e6cc 100%);
+}
+
+html.dark-mode .hero-3d {
+    background: linear-gradient(180deg, #08141b 0%, #12251f 60%, #1d2b25 100%);
+}
+
 .hero-3d.is-ready { opacity: 1; }
 
 /* El texto queda a la izquierda: el diorama se desvanece por ese lado */
 @media (min-width: 901px) {
     .hero-3d {
-        -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 38%);
-        mask-image: linear-gradient(90deg, transparent 0%, #000 38%);
+        -webkit-mask-image: linear-gradient(90deg, transparent 0%, transparent 28%, #000 66%);
+        mask-image: linear-gradient(90deg, transparent 0%, transparent 28%, #000 66%);
     }
 }
 
 @media (max-width: 900px) {
-    .hero-3d.is-ready { opacity: 0.35; }
+    .hero-3d.is-ready { opacity: 0.4; }
+    html.dark-mode .hero-3d.is-ready { opacity: 0.45; }
 }
 
 .has-hero3d .hero-mesh,
@@ -2282,46 +2291,6 @@ html.dark-mode .mesh-blob {
 
 @media (max-width: 480px) {
     .cert-list { grid-template-columns: 1fr; }
-}
-
-/* ===========================
-   Proyecto destacado (Sacbe)
-   =========================== */
-.project-card.featured {
-    grid-column: 1 / -1;
-    flex-direction: row;
-    align-items: stretch;
-    gap: var(--spacing-xl);
-    padding: var(--spacing-md);
-}
-
-.project-card.featured .project-canvas-wrap {
-    flex: 1.2;
-    min-height: 280px;
-    border-radius: var(--border-radius-lg);
-    overflow: hidden;
-    background: linear-gradient(180deg, #f3efe2 0%, #cfe8dc 100%);
-}
-
-.project-card.featured .project-canvas-wrap canvas {
-    display: block;
-    width: 100%;
-    height: 100%;
-}
-
-.project-card.featured .project-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-.dark-mode .project-card.featured .project-canvas-wrap {
-    background: linear-gradient(180deg, #0a1411 0%, #16231f 100%);
-}
-
-@media (max-width: 768px) {
-    .project-card.featured { flex-direction: column; gap: var(--spacing-md); }
 }
 
 /* ===========================
@@ -2415,3 +2384,25 @@ html.dark-mode .mesh-blob {
 .more-projects h4 { color: var(--text-primary); margin-bottom: 0.25rem; }
 .more-projects p { color: var(--text-secondary); margin-bottom: var(--spacing-sm); }
 .more-projects .project-links { margin-top: var(--spacing-sm); }
+
+/* Rotulo del lugar que muestra el hero 3D */
+.hero-place {
+    position: absolute;
+    right: var(--spacing-lg);
+    bottom: var(--spacing-md);
+    z-index: 1;
+    display: none;
+    margin: 0;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #fff;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.55);
+}
+
+.has-hero3d .hero-place { display: block; }
+
+@media (max-width: 900px) {
+    .has-hero3d .hero-place { display: none; }
+}

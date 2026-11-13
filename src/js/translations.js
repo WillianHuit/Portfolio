@@ -40,7 +40,8 @@ const translations = {
             description: "Especializado en desarrollo web, COBOL y análisis de sistemas. Apasionado por crear soluciones tecnológicas innovadoras.",
             contact: "Contáctame",
             downloadCV: "Descargar CV",
-            projects: "Ver Proyectos"
+            projects: "Ver Proyectos",
+            place: "Ciudad de Guatemala"
         },
         
         // About
@@ -126,11 +127,6 @@ const translations = {
                 title: "Panadería Cefas",
                 description: "Juego 3D de panadería en el navegador: armas pasteles y panes paso a paso, atiendes pedidos a tiempo y mejoras tu cocina, con festividades de Guatemala y pedidos reales por WhatsApp."
             },
-            project9: {
-                title: "Sacbé",
-                description: "Endless runner voxel en Three.js que recorre Guatemala de norte a sur: regiones con su paisaje, poderes, trajes y maratones, todo en el navegador y sin servidor."
-            },
-            play: "Jugar",
             more: "Más proyectos"
         },
         
@@ -215,7 +211,8 @@ const translations = {
             description: "Specialized in web development, COBOL and systems analysis. Passionate about creating innovative technological solutions.",
             contact: "Contact Me",
             downloadCV: "Download CV",
-            projects: "View Projects"
+            projects: "View Projects",
+            place: "Guatemala City"
         },
         
         // About
@@ -301,11 +298,6 @@ const translations = {
                 title: "Cefas Bakery",
                 description: "3D bakery game in the browser: build cakes and breads step by step, serve orders on time and upgrade your kitchen, with Guatemalan holidays and real orders sent through WhatsApp."
             },
-            project9: {
-                title: "Sacbé",
-                description: "Voxel endless runner built with Three.js that crosses Guatemala from north to south: regional landscapes, power-ups, outfits and marathons, all in the browser with no server."
-            },
-            play: "Play",
             more: "More projects"
         },
         
