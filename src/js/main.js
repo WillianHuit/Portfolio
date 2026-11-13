@@ -631,7 +631,9 @@ function initProjectTilt() {
 
     const MAX_TILT = 7; // grados
 
-    document.querySelectorAll('.project-card').forEach((card) => {
+    // La tarjeta destacada es ancha y lleva un canvas WebGL: inclinarla
+    // la desenfoca y compite con la escena, asi que se queda quieta.
+    document.querySelectorAll('.project-card:not(.featured)').forEach((card) => {
         card.classList.add('tilting');
         let frame = null;
 
