@@ -35,7 +35,7 @@ function onIntersect(elements, callback, options = {}) {
 // Forms y a ~4 MB de imagenes: la pantalla podia quedarse varios segundos.
 // Ahora se oculta en cuanto el DOM esta listo, con un minimo para que no
 // parpadee y un tope duro para que nunca se quede colgada.
-const LOADER_MIN_MS = 450;
+const LOADER_MIN_MS = 0;
 const LOADER_MAX_MS = 2000;
 const loaderStart = performance.now();
 let loaderDone = false;
@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initParticles();
     initReveals();
     initCounters();
-    initSkillBars();
+    initContactForm();
     initTyping();
     initProjectTilt();
     initEasterEgg();
@@ -284,7 +284,7 @@ function initParticles() {
 
     // Color cacheado: antes se leia con getComputedStyle dentro del bucle
     // de dibujo, ~1200 lecturas forzadas de estilo por frame.
-    let particleColor = readCssVar('--primary-color') || '#6366f1';
+    let particleColor = readCssVar('--primary-color') || '#0a7d62';
     let width = 0;
     let height = 0;
     let dpr = 1;
@@ -292,7 +292,7 @@ function initParticles() {
     let running = false;
 
     document.addEventListener('themechanged', () => {
-        particleColor = readCssVar('--primary-color') || '#6366f1';
+        particleColor = readCssVar('--primary-color') || '#0a7d62';
     });
 
     function particleCount() {
@@ -449,7 +449,7 @@ function initReveals() {
     // Stagger de tarjetas
     const groups = [
         '.stat-card', '.skill-category', '.strength-card',
-        '.project-card', '.certification-card', '.education-card',
+        '.project-card', '.cert-row', '.education-card',
         '.contact-card', '.timeline-item'
     ];
 
@@ -538,44 +538,24 @@ function initCounters() {
 }
 
 // ===========================
-// Barras de habilidades + porcentaje
+// Formulario de contacto (abre el cliente de correo)
 // ===========================
-function initSkillBars() {
-    const bars = document.querySelectorAll('.skill-progress');
+function initContactForm() {
+    const form = document.getElementById('contactForm');
+    if (!form) return;
 
-    bars.forEach((bar) => {
-        const info = bar.closest('.skill-info');
-        if (!info || info.querySelector('.skill-percent')) return;
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (!form.reportValidity()) return;
 
-        const label = document.createElement('span');
-        label.className = 'skill-percent';
-        label.textContent = '0%';
-        info.querySelector('h4').appendChild(label);
-    });
+        const data = new FormData(form);
+        const body = `${data.get('message')}
 
-    onIntersect(bars, (bar) => {
-        const value = parseInt(bar.dataset.progress, 10) || 0;
-        bar.style.setProperty('--progress-width', value + '%');
-        bar.classList.add('animated');
-
-        const label = bar.closest('.skill-info')?.querySelector('.skill-percent');
-        if (!label) return;
-
-        if (prefersReducedMotion) {
-            label.textContent = value + '%';
-            return;
-        }
-
-        const duration = 1000;
-        const start = performance.now();
-
-        function step(now) {
-            const t = Math.min((now - start) / duration, 1);
-            label.textContent = Math.round(value * (1 - Math.pow(1 - t, 3))) + '%';
-            if (t < 1) requestAnimationFrame(step);
-        }
-
-        requestAnimationFrame(step);
+— ${data.get('name')}`;
+        window.location.href =
+            'mailto:willian.huit.soporte@gmail.com' +
+            `?subject=${encodeURIComponent(data.get('subject'))}` +
+            `&body=${encodeURIComponent(body)}`;
     });
 }
 

@@ -38,8 +38,8 @@
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="src/img/favicon.ico">
     <link rel="apple-touch-icon" sizes="180x180" href="src/img/apple-touch-icon.png">
-    <meta name="theme-color" content="#6366f1" media="(prefers-color-scheme: light)">
-    <meta name="theme-color" content="#111827" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#0a7d62" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0f1a17" media="(prefers-color-scheme: dark)">
 
     <!-- Tipografia auto-alojada: se precargan solo los pesos del subset latin
          que se usan sobre el pliegue. Los latin-ext y el resto los pide el
@@ -224,6 +224,7 @@
 
     <!-- Hero Section -->
     <header id="home" class="hero">
+        <canvas id="hero3d" class="hero-3d" aria-hidden="true"></canvas>
         <div class="hero-mesh" aria-hidden="true">
             <span class="mesh-blob mesh-1"></span>
             <span class="mesh-blob mesh-2"></span>
@@ -290,7 +291,7 @@
             <div class="about-content">
                 <div class="about-text">
                     <p data-i18n="about.description">
-                        Programador en formación y coordinador de proyectos con experiencia en desarrollo web, 
+                        Programador y coordinador de proyectos con experiencia en desarrollo web, 
                         análisis lógico, documentación técnica y mejora de procesos. He liderado actividades y 
                         equipos en proyectos culturales y educativos, gestionando plataformas, formularios, 
                         bases de datos y experiencia de usuario.
@@ -310,7 +311,7 @@
                                 <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-project-diagram"></use></svg>
                             </div>
                             <div class="stat-info">
-                                <h3 class="stat-number" data-count="10" data-suffix="+">0</h3>
+                                <h3 class="stat-number" data-count="8" data-suffix="">0</h3>
                                 <p data-i18n="about.stat2">Proyectos Completados</p>
                             </div>
                         </div>
@@ -319,7 +320,7 @@
                                 <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-users"></use></svg>
                             </div>
                             <div class="stat-info">
-                                <h3 class="stat-number" data-count="5" data-suffix="+">0</h3>
+                                <h3 class="stat-number" data-count="500" data-suffix="+">0</h3>
                                 <p data-i18n="about.stat3">Equipos Liderados</p>
                             </div>
                         </div>
@@ -341,7 +342,7 @@
                     <div class="timeline-dot"></div>
                     <div class="timeline-content">
                         <div class="timeline-date" data-i18n="experience.job1.date">2023 - Actual</div>
-                        <h3 data-i18n="experience.job1.title">Programador Principiante</h3>
+                        <h3 data-i18n="experience.job1.title">Programador</h3>
                         <p class="timeline-company">Banco Industrial</p>
                         <ul class="timeline-tasks">
                             <li data-i18n="experience.job1.task1">Diseño y desarrollo de aplicaciones en COBOL para procesamiento batch y sistemas en línea</li>
@@ -386,9 +387,7 @@
                             </div>
                             <div class="skill-info">
                                 <h4>JavaScript</h4>
-                                <div class="skill-bar">
-                                    <div class="skill-progress" data-progress="75"></div>
-                                </div>
+                                <div class="skill-pips" data-level="2" aria-hidden="true"><i></i><i></i><i></i></div>
                                 <span class="skill-level" data-i18n="skills.intermediate">Intermedio</span>
                             </div>
                         </div>
@@ -398,9 +397,7 @@
                             </div>
                             <div class="skill-info">
                                 <h4>Python</h4>
-                                <div class="skill-bar">
-                                    <div class="skill-progress" data-progress="50"></div>
-                                </div>
+                                <div class="skill-pips" data-level="1" aria-hidden="true"><i></i><i></i><i></i></div>
                                 <span class="skill-level" data-i18n="skills.basic">Básico</span>
                             </div>
                         </div>
@@ -410,9 +407,7 @@
                             </div>
                             <div class="skill-info">
                                 <h4>Java</h4>
-                                <div class="skill-bar">
-                                    <div class="skill-progress" data-progress="50"></div>
-                                </div>
+                                <div class="skill-pips" data-level="1" aria-hidden="true"><i></i><i></i><i></i></div>
                                 <span class="skill-level" data-i18n="skills.basic">Básico</span>
                             </div>
                         </div>
@@ -422,9 +417,7 @@
                             </div>
                             <div class="skill-info">
                                 <h4>COBOL</h4>
-                                <div class="skill-bar">
-                                    <div class="skill-progress" data-progress="60"></div>
-                                </div>
+                                <div class="skill-pips" data-level="2" aria-hidden="true"><i></i><i></i><i></i></div>
                                 <span class="skill-level" data-i18n="skills.intermediate">Intermedio</span>
                             </div>
                         </div>
@@ -441,9 +434,7 @@
                             </div>
                             <div class="skill-info">
                                 <h4>HTML & CSS</h4>
-                                <div class="skill-bar">
-                                    <div class="skill-progress" data-progress="85"></div>
-                                </div>
+                                <div class="skill-pips" data-level="3" aria-hidden="true"><i></i><i></i><i></i></div>
                                 <span class="skill-level" data-i18n="skills.advanced">Avanzado</span>
                             </div>
                         </div>
@@ -453,9 +444,7 @@
                             </div>
                             <div class="skill-info">
                                 <h4>Responsive Design</h4>
-                                <div class="skill-bar">
-                                    <div class="skill-progress" data-progress="80"></div>
-                                </div>
+                                <div class="skill-pips" data-level="3" aria-hidden="true"><i></i><i></i><i></i></div>
                                 <span class="skill-level" data-i18n="skills.advanced">Avanzado</span>
                             </div>
                         </div>
@@ -465,9 +454,7 @@
                             </div>
                             <div class="skill-info">
                                 <h4>React + Vite</h4>
-                                <div class="skill-bar">
-                                    <div class="skill-progress" data-progress="50"></div>
-                                </div>
+                                <div class="skill-pips" data-level="1" aria-hidden="true"><i></i><i></i><i></i></div>
                                 <span class="skill-level" data-i18n="skills.basic">Básico</span>
                             </div>
                         </div>
@@ -484,9 +471,7 @@
                             </div>
                             <div class="skill-info">
                                 <h4>SQL / MySQL / SQL Server</h4>
-                                <div class="skill-bar">
-                                    <div class="skill-progress" data-progress="55"></div>
-                                </div>
+                                <div class="skill-pips" data-level="1" aria-hidden="true"><i></i><i></i><i></i></div>
                                 <span class="skill-level" data-i18n="skills.basic">Básico</span>
                             </div>
                         </div>
@@ -503,9 +488,7 @@
                             </div>
                             <div class="skill-info">
                                 <h4>Claude Code / IA</h4>
-                                <div class="skill-bar">
-                                    <div class="skill-progress" data-progress="70"></div>
-                                </div>
+                                <div class="skill-pips" data-level="2" aria-hidden="true"><i></i><i></i><i></i></div>
                                 <span class="skill-level" data-i18n="skills.intermediate">Intermedio</span>
                             </div>
                         </div>
@@ -515,9 +498,7 @@
                             </div>
                             <div class="skill-info">
                                 <h4>Git & GitHub</h4>
-                                <div class="skill-bar">
-                                    <div class="skill-progress" data-progress="70"></div>
-                                </div>
+                                <div class="skill-pips" data-level="2" aria-hidden="true"><i></i><i></i><i></i></div>
                                 <span class="skill-level" data-i18n="skills.intermediate">Intermedio</span>
                             </div>
                         </div>
@@ -527,9 +508,7 @@
                             </div>
                             <div class="skill-info">
                                 <h4>VS Code</h4>
-                                <div class="skill-bar">
-                                    <div class="skill-progress" data-progress="85"></div>
-                                </div>
+                                <div class="skill-pips" data-level="3" aria-hidden="true"><i></i><i></i><i></i></div>
                                 <span class="skill-level" data-i18n="skills.advanced">Avanzado</span>
                             </div>
                         </div>
@@ -539,9 +518,7 @@
                             </div>
                             <div class="skill-info">
                                 <h4>Figma</h4>
-                                <div class="skill-bar">
-                                    <div class="skill-progress" data-progress="65"></div>
-                                </div>
+                                <div class="skill-pips" data-level="2" aria-hidden="true"><i></i><i></i><i></i></div>
                                 <span class="skill-level" data-i18n="skills.intermediate">Intermedio</span>
                             </div>
                         </div>
@@ -551,9 +528,7 @@
                             </div>
                             <div class="skill-info">
                                 <h4>Google Apps Script</h4>
-                                <div class="skill-bar">
-                                    <div class="skill-progress" data-progress="60"></div>
-                                </div>
+                                <div class="skill-pips" data-level="1" aria-hidden="true"><i></i><i></i><i></i></div>
                                 <span class="skill-level" data-i18n="skills.basic">Básico</span>
                             </div>
                         </div>
@@ -649,7 +624,27 @@
                 <div class="title-underline"></div>
             </div>
             <div class="projects-grid">
-                <div class="project-card">
+                <div class="project-card featured">
+                    <div class="project-canvas-wrap">
+                        <canvas id="sacbePreview" aria-hidden="true"></canvas>
+                    </div>
+                    <div class="project-content">
+                        <h3 data-i18n="projects.project9.title">Sacbé</h3>
+                        <p data-i18n="projects.project9.description">Endless runner voxel en Three.js que recorre Guatemala de norte a sur: regiones con su paisaje, poderes, trajes y pruebas de maratón, todo en un solo navegador y sin dependencias de servidor.</p>
+                        <div class="project-tags">
+                            <span class="tag">Three.js</span>
+                            <span class="tag">WebGL</span>
+                            <span class="tag">Instancing</span>
+                        </div>
+                        <div class="project-links">
+                            <a href="arcade.html">
+                                <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-rocket"></use></svg> <span data-i18n="projects.play">Jugar</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="project-card zos">
                     <div class="project-image">
                         <img src="src/img/projects/IBM-idz.jpg" alt="Compilador IBM zSeries" width="380" height="253" loading="lazy" decoding="async">
                     </div>
@@ -667,7 +662,7 @@
                     </div>
                 </div>
 
-                <div class="project-card">
+                <div class="project-card zos">
                     <div class="project-image">
                         <img src="src/img/projects/testing-program.jpg" alt="zSeries Testing Application" width="800" height="395" loading="lazy" decoding="async">
                     </div>
@@ -685,7 +680,7 @@
                     </div>
                 </div>
 
-                <div class="project-card">
+                <div class="project-card zos">
                     <div class="project-image">
                         <img src="src/img/projects/vsam-files.jpg" alt="Calculadora VSAM" width="800" height="396" loading="lazy" decoding="async">
                     </div>
@@ -699,47 +694,6 @@
                             <span class="tag">VSAM</span>
                             <span class="tag">Mainframe</span>
                             <span class="tag">Tool</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="project-card">
-                    <div class="project-icon">
-                        <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-project-diagram"></use></svg>
-                    </div>
-                    <div class="project-content">
-                        <h3 data-i18n="projects.project4.title">Sistemas IYF Guatemala</h3>
-                        <p data-i18n="projects.project4.description">
-                            Desarrollo de sistemas completos incluyendo formularios web, automatizaciones, 
-                            bases de datos y documentación técnica para organización sin fines de lucro.
-                        </p>
-                        <div class="project-tags">
-                            <span class="tag">Web Development</span>
-                            <span class="tag">Automation</span>
-                            <span class="tag">Google Apps Script</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="project-card">
-                    <div class="project-icon">
-                        <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-briefcase"></use></svg>
-                    </div>
-                    <div class="project-content">
-                        <h3 data-i18n="projects.project5.title">Portfolio Personal</h3>
-                        <p data-i18n="projects.project5.description">
-                            Portfolio profesional desarrollado con HTML, CSS y JavaScript, 
-                            implementando sistema de internacionalización y modo oscuro.
-                        </p>
-                        <div class="project-tags">
-                            <span class="tag">HTML</span>
-                            <span class="tag">CSS</span>
-                            <span class="tag">JavaScript</span>
-                        </div>
-                        <div class="project-links">
-                            <a href="https://github.com/WillianHuit/Portfolio" target="_blank" rel="noopener noreferrer">
-                                <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-github"></use></svg> Ver código
-                            </a>
                         </div>
                     </div>
                 </div>
@@ -788,7 +742,52 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="project-card">
+                    <div class="project-image">
+                        <img src="src/img/projects/panaderia-cefas.jpg" alt="Panadería Cefas, juego 3D de panadería" width="800" height="396" loading="lazy" decoding="async">
+                    </div>
+                    <div class="project-content">
+                        <h3 data-i18n="projects.project8.title">Panadería Cefas</h3>
+                        <p data-i18n="projects.project8.description">
+                            Juego 3D de panadería en el navegador: armas pasteles y panes paso a paso, atiendes pedidos
+                            a tiempo y mejoras tu cocina, con festividades de Guatemala y pedidos reales por WhatsApp.
+                        </p>
+                        <div class="project-tags">
+                            <span class="tag">Three.js</span>
+                            <span class="tag">JavaScript</span>
+                            <span class="tag">Juego 3D</span>
+                            <span class="tag">Google Apps Script</span>
+                        </div>
+                        <div class="project-links">
+                            <a href="https://backerymaker.vercel.app/" target="_blank" rel="noopener noreferrer">
+                                <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-external-link-alt"></use></svg> Ver demo
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
+            <h3 class="category-title more-title" data-i18n="projects.more">Más proyectos</h3>
+            <ul class="more-projects">
+                <li>
+                    <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-project-diagram"></use></svg>
+                    <div>
+                        <h4 data-i18n="projects.project4.title">Sistemas IYF Guatemala</h4>
+                        <p data-i18n="projects.project4.description">Desarrollo de sistemas completos incluyendo formularios web, automatizaciones, bases de datos y documentación técnica para organización sin fines de lucro.</p>
+                        <div class="project-tags"><span class="tag">Web Development</span><span class="tag">Automation</span><span class="tag">Google Apps Script</span></div>
+                    </div>
+                </li>
+                <li>
+                    <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-briefcase"></use></svg>
+                    <div>
+                        <h4 data-i18n="projects.project5.title">Portfolio Personal</h4>
+                        <p data-i18n="projects.project5.description">Portfolio profesional desarrollado con HTML, CSS y JavaScript, implementando sistema de internacionalización y modo oscuro.</p>
+                        <div class="project-tags"><span class="tag">HTML</span><span class="tag">CSS</span><span class="tag">JavaScript</span></div>
+                        <div class="project-links"><a href="https://github.com/WillianHuit/Portfolio" target="_blank" rel="noopener noreferrer"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-github"></use></svg> Ver código</a></div>
+                    </div>
+                </li>
+            </ul>
+
         </div>
     </section>
 
@@ -842,230 +841,36 @@
             <!-- Desarrollo Técnico -->
             <div class="certifications-category">
                 <h3 class="category-title" data-i18n="certifications.technical">Desarrollo Técnico</h3>
-                <div class="certifications-grid">
-                    <div class="certification-card">
-                        <div class="cert-inner">
-                            <div class="cert-face cert-front">
-                                <div class="certification-icon"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-award"></use></svg></div>
-                                <div class="certification-content">
-                                    <h4>Creative CSS Hover And Animation Effects</h4>
-                                    <p class="certification-provider">Udemy</p>
-                                </div>
-                            </div>
-                            <div class="cert-face cert-back">
-                                <h4>Creative CSS Hover And Animation Effects</h4>
-                                <p class="certification-provider">Udemy</p>
-                                <a href="src/pdf/Creative CSS Hover And Animation Effects In Hindi.pdf" target="_blank" rel="noopener noreferrer" class="certification-link">
-                                <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-external-link-alt"></use></svg> <span data-i18n="certifications.view">Ver certificado</span>
-                            </a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="certification-card">
-                        <div class="cert-inner">
-                            <div class="cert-face cert-front">
-                                <div class="certification-icon"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-award"></use></svg></div>
-                                <div class="certification-content">
-                                    <h4>Design Thinking for Beginners</h4>
-                                    <p class="certification-provider">Udemy</p>
-                                </div>
-                            </div>
-                            <div class="cert-face cert-back">
-                                <h4>Design Thinking for Beginners</h4>
-                                <p class="certification-provider">Udemy</p>
-                                <a href="src/pdf/Design Thinking for Beginners Develop Innovative Ideas.pdf" target="_blank" rel="noopener noreferrer" class="certification-link">
-                                <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-external-link-alt"></use></svg> <span data-i18n="certifications.view">Ver certificado</span>
-                            </a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="certification-card">
-                        <div class="cert-inner">
-                            <div class="cert-face cert-front">
-                                <div class="certification-icon"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-award"></use></svg></div>
-                                <div class="certification-content">
-                                    <h4>DevOps - Las Artes Marciales del Software</h4>
-                                    <p class="certification-provider">Udemy</p>
-                                </div>
-                            </div>
-                            <div class="cert-face cert-back">
-                                <h4>DevOps - Las Artes Marciales del Software</h4>
-                                <p class="certification-provider">Udemy</p>
-                                <a href="src/pdf/DevOps - Las Artes Marciales del Software.pdf" target="_blank" rel="noopener noreferrer" class="certification-link">
-                                <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-external-link-alt"></use></svg> <span data-i18n="certifications.view">Ver certificado</span>
-                            </a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="certification-card">
-                        <div class="cert-inner">
-                            <div class="cert-face cert-front">
-                                <div class="certification-icon"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-award"></use></svg></div>
-                                <div class="certification-content">
-                                    <h4>Scrum desde cero - Prepárate para ser Scrum Master</h4>
-                                    <p class="certification-provider">Udemy</p>
-                                </div>
-                            </div>
-                            <div class="cert-face cert-back">
-                                <h4>Scrum desde cero - Prepárate para ser Scrum Master</h4>
-                                <p class="certification-provider">Udemy</p>
-                                <a href="src/pdf/Scrum desde cero - Prepárate para ser Scrum Master.pdf" target="_blank" rel="noopener noreferrer" class="certification-link">
-                                <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-external-link-alt"></use></svg> <span data-i18n="certifications.view">Ver certificado</span>
-                            </a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="certification-card">
-                        <div class="cert-inner">
-                            <div class="cert-face cert-front">
-                                <div class="certification-icon"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-award"></use></svg></div>
-                                <div class="certification-content">
-                                    <h4>UX leyes y fundamentos</h4>
-                                    <p class="certification-provider">Udemy</p>
-                                </div>
-                            </div>
-                            <div class="cert-face cert-back">
-                                <h4>UX leyes y fundamentos</h4>
-                                <p class="certification-provider">Udemy</p>
-                                <a href="src/pdf/UX leyes y fundamentos.pdf" target="_blank" rel="noopener noreferrer" class="certification-link">
-                                <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-external-link-alt"></use></svg> <span data-i18n="certifications.view">Ver certificado</span>
-                            </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <ul class="cert-list">
+                    <li><a class="cert-row" href="src/pdf/Creative CSS Hover And Animation Effects In Hindi.pdf" target="_blank" rel="noopener noreferrer"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-award"></use></svg><span class="cert-title">Creative CSS Hover And Animation Effects</span><span class="cert-provider">Udemy</span><svg class="icon cert-go" aria-hidden="true" focusable="false"><use href="#i-external-link-alt"></use></svg></a></li>
+                    <li><a class="cert-row" href="src/pdf/Design Thinking for Beginners Develop Innovative Ideas.pdf" target="_blank" rel="noopener noreferrer"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-award"></use></svg><span class="cert-title">Design Thinking for Beginners</span><span class="cert-provider">Udemy</span><svg class="icon cert-go" aria-hidden="true" focusable="false"><use href="#i-external-link-alt"></use></svg></a></li>
+                    <li><a class="cert-row" href="src/pdf/DevOps - Las Artes Marciales del Software.pdf" target="_blank" rel="noopener noreferrer"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-award"></use></svg><span class="cert-title">DevOps - Las Artes Marciales del Software</span><span class="cert-provider">Udemy</span><svg class="icon cert-go" aria-hidden="true" focusable="false"><use href="#i-external-link-alt"></use></svg></a></li>
+                    <li><a class="cert-row" href="src/pdf/Scrum desde cero - Prepárate para ser Scrum Master.pdf" target="_blank" rel="noopener noreferrer"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-award"></use></svg><span class="cert-title">Scrum desde cero - Prepárate para ser Scrum Master</span><span class="cert-provider">Udemy</span><svg class="icon cert-go" aria-hidden="true" focusable="false"><use href="#i-external-link-alt"></use></svg></a></li>
+                    <li><a class="cert-row" href="src/pdf/UX leyes y fundamentos.pdf" target="_blank" rel="noopener noreferrer"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-award"></use></svg><span class="cert-title">UX leyes y fundamentos</span><span class="cert-provider">Udemy</span><svg class="icon cert-go" aria-hidden="true" focusable="false"><use href="#i-external-link-alt"></use></svg></a></li>
+                </ul>
             </div>
 
             <!-- Tecnologías Emergentes -->
             <div class="certifications-category">
                 <h3 class="category-title" data-i18n="certifications.emerging">Tecnologías Emergentes</h3>
-                <div class="certifications-grid">
-                    <div class="certification-card">
-                        <div class="cert-inner">
-                            <div class="cert-face cert-front">
-                                <div class="certification-icon"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-award"></use></svg></div>
-                                <div class="certification-content">
-                                    <h4>Creación de contenido con inteligencia artificial (ChatGPT)</h4>
-                                    <p class="certification-provider">Udemy</p>
-                                </div>
-                            </div>
-                            <div class="cert-face cert-back">
-                                <h4>Creación de contenido con inteligencia artificial (ChatGPT)</h4>
-                                <p class="certification-provider">Udemy</p>
-                                <a href="src/pdf/Creación de contenido con inteligencia artificial (chatGPT).pdf" target="_blank" rel="noopener noreferrer" class="certification-link">
-                                <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-external-link-alt"></use></svg> <span data-i18n="certifications.view">Ver certificado</span>
-                            </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <ul class="cert-list">
+                    <li><a class="cert-row" href="src/pdf/Creación de contenido con inteligencia artificial (chatGPT).pdf" target="_blank" rel="noopener noreferrer"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-award"></use></svg><span class="cert-title">Creación de contenido con inteligencia artificial (ChatGPT)</span><span class="cert-provider">Udemy</span><svg class="icon cert-go" aria-hidden="true" focusable="false"><use href="#i-external-link-alt"></use></svg></a></li>
+                </ul>
             </div>
 
             <!-- Habilidades Blandas -->
             <div class="certifications-category">
                 <h3 class="category-title" data-i18n="certifications.soft">Habilidades Blandas</h3>
-                <div class="certifications-grid">
-                    <div class="certification-card">
-                        <div class="cert-inner">
-                            <div class="cert-face cert-front">
-                                <div class="certification-icon"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-award"></use></svg></div>
-                                <div class="certification-content">
-                                    <h4>Comunicación Asertiva y Empatía</h4>
-                                    <p class="certification-provider">Udemy</p>
-                                </div>
-                            </div>
-                            <div class="cert-face cert-back">
-                                <h4>Comunicación Asertiva y Empatía</h4>
-                                <p class="certification-provider">Udemy</p>
-                                <a href="src/pdf/Comunicación Asertiva y Empatía.pdf" target="_blank" rel="noopener noreferrer" class="certification-link">
-                                <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-external-link-alt"></use></svg> <span data-i18n="certifications.view">Ver certificado</span>
-                            </a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="certification-card">
-                        <div class="cert-inner">
-                            <div class="cert-face cert-front">
-                                <div class="certification-icon"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-award"></use></svg></div>
-                                <div class="certification-content">
-                                    <h4>Inteligencia Emocional en el Trabajo</h4>
-                                    <p class="certification-provider">Udemy</p>
-                                </div>
-                            </div>
-                            <div class="cert-face cert-back">
-                                <h4>Inteligencia Emocional en el Trabajo</h4>
-                                <p class="certification-provider">Udemy</p>
-                                <a href="src/pdf/Inteligencia Emocional en el Trabajo - Aprende tus Emociones.pdf" target="_blank" rel="noopener noreferrer" class="certification-link">
-                                <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-external-link-alt"></use></svg> <span data-i18n="certifications.view">Ver certificado</span>
-                            </a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="certification-card">
-                        <div class="cert-inner">
-                            <div class="cert-face cert-front">
-                                <div class="certification-icon"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-award"></use></svg></div>
-                                <div class="certification-content">
-                                    <h4>StoryTelling - Curso completo para profesionales</h4>
-                                    <p class="certification-provider">Udemy</p>
-                                </div>
-                            </div>
-                            <div class="cert-face cert-back">
-                                <h4>StoryTelling - Curso completo para profesionales</h4>
-                                <p class="certification-provider">Udemy</p>
-                                <a href="src/pdf/StoryTelling. Curso completo para profesionales y curiosos.pdf" target="_blank" rel="noopener noreferrer" class="certification-link">
-                                <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-external-link-alt"></use></svg> <span data-i18n="certifications.view">Ver certificado</span>
-                            </a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="certification-card">
-                        <div class="cert-inner">
-                            <div class="cert-face cert-front">
-                                <div class="certification-icon"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-award"></use></svg></div>
-                                <div class="certification-content">
-                                    <h4>Productividad Personal - para alcanzar tus sueños</h4>
-                                    <p class="certification-provider">Udemy</p>
-                                </div>
-                            </div>
-                            <div class="cert-face cert-back">
-                                <h4>Productividad Personal - para alcanzar tus sueños</h4>
-                                <p class="certification-provider">Udemy</p>
-                                <a href="src/pdf/Productividad Personal-para alcanzar tus sueños.pdf" target="_blank" rel="noopener noreferrer" class="certification-link">
-                                <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-external-link-alt"></use></svg> <span data-i18n="certifications.view">Ver certificado</span>
-                            </a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="certification-card">
-                        <div class="cert-inner">
-                            <div class="cert-face cert-front">
-                                <div class="certification-icon"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-award"></use></svg></div>
-                                <div class="certification-content">
-                                    <h4>Pequeños Hábitos, Grandes Resultados</h4>
-                                    <p class="certification-provider">Udemy</p>
-                                </div>
-                            </div>
-                            <div class="cert-face cert-back">
-                                <h4>Pequeños Hábitos, Grandes Resultados</h4>
-                                <p class="certification-provider">Udemy</p>
-                                <a href="src/pdf/Pequeños Hábitos, Grandes Resultados.pdf" target="_blank" rel="noopener noreferrer" class="certification-link">
-                                <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-external-link-alt"></use></svg> <span data-i18n="certifications.view">Ver certificado</span>
-                            </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <ul class="cert-list">
+                    <li><a class="cert-row" href="src/pdf/Comunicación Asertiva y Empatía.pdf" target="_blank" rel="noopener noreferrer"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-award"></use></svg><span class="cert-title">Comunicación Asertiva y Empatía</span><span class="cert-provider">Udemy</span><svg class="icon cert-go" aria-hidden="true" focusable="false"><use href="#i-external-link-alt"></use></svg></a></li>
+                    <li><a class="cert-row" href="src/pdf/Inteligencia Emocional en el Trabajo - Aprende tus Emociones.pdf" target="_blank" rel="noopener noreferrer"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-award"></use></svg><span class="cert-title">Inteligencia Emocional en el Trabajo</span><span class="cert-provider">Udemy</span><svg class="icon cert-go" aria-hidden="true" focusable="false"><use href="#i-external-link-alt"></use></svg></a></li>
+                    <li><a class="cert-row" href="src/pdf/StoryTelling. Curso completo para profesionales y curiosos.pdf" target="_blank" rel="noopener noreferrer"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-award"></use></svg><span class="cert-title">StoryTelling - Curso completo para profesionales</span><span class="cert-provider">Udemy</span><svg class="icon cert-go" aria-hidden="true" focusable="false"><use href="#i-external-link-alt"></use></svg></a></li>
+                    <li><a class="cert-row" href="src/pdf/Productividad Personal-para alcanzar tus sueños.pdf" target="_blank" rel="noopener noreferrer"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-award"></use></svg><span class="cert-title">Productividad Personal - para alcanzar tus sueños</span><span class="cert-provider">Udemy</span><svg class="icon cert-go" aria-hidden="true" focusable="false"><use href="#i-external-link-alt"></use></svg></a></li>
+                    <li><a class="cert-row" href="src/pdf/Pequeños Hábitos, Grandes Resultados.pdf" target="_blank" rel="noopener noreferrer"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-award"></use></svg><span class="cert-title">Pequeños Hábitos, Grandes Resultados</span><span class="cert-provider">Udemy</span><svg class="icon cert-go" aria-hidden="true" focusable="false"><use href="#i-external-link-alt"></use></svg></a></li>
+                </ul>
             </div>
-        </div>
+
+            </div>
     </section>
 
     <!-- Contacto -->
@@ -1113,17 +918,19 @@
                     </div>
                 </div>
                 <div class="contact-form-wrapper">
-                    <iframe 
-                        loading="lazy"
-                        title="Formulario de contacto"
-                        src="https://docs.google.com/forms/d/e/1FAIpQLSexEQrgbz_AA-uvftxpGjgABwB1GKq5uV5e-IB0RfP5Bk_KJw/viewform?embedded=true" 
-                        width="100%" 
-                        height="800" 
-                        frameborder="0" 
-                        marginheight="0" 
-                        marginwidth="0">
-                        Cargando…
-                    </iframe>
+                    <form class="contact-form" id="contactForm" novalidate>
+                        <label class="field"><span data-i18n="contact.name">Nombre</span>
+                            <input type="text" name="name" autocomplete="name" required></label>
+                        <label class="field"><span data-i18n="contact.subject">Asunto</span>
+                            <input type="text" name="subject" required></label>
+                        <label class="field"><span data-i18n="contact.message">Mensaje</span>
+                            <textarea name="message" rows="6" required></textarea></label>
+                        <button type="submit" class="btn btn-primary">
+                            <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-envelope"></use></svg>
+                            <span data-i18n="contact.send">Enviar mensaje</span>
+                        </button>
+                        <p class="form-note" data-i18n="contact.note">Se abrirá tu aplicación de correo con el mensaje listo para enviar.</p>
+                    </form>
                 </div>
             </div>
         </div>
@@ -1179,5 +986,6 @@
     <script defer src="src/js/translations.js"></script>
     <script defer src="src/js/language.js"></script>
     <script defer src="src/js/main.js"></script>
+    <script type="module" src="src/js/hero3d.js"></script>
 </body>
 </html>

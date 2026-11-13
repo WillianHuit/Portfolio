@@ -46,10 +46,10 @@ const translations = {
         // About
         about: {
             title: "Perfil Profesional",
-            description: "Programador en formación y coordinador de proyectos con experiencia en desarrollo web, análisis lógico, documentación técnica y mejora de procesos. He liderado actividades y equipos en proyectos culturales y educativos, gestionando plataformas, formularios, bases de datos y experiencia de usuario.",
+            description: "Programador y coordinador de proyectos con experiencia en desarrollo web, análisis lógico, documentación técnica y mejora de procesos. He liderado actividades y equipos en proyectos culturales y educativos, gestionando plataformas, formularios, bases de datos y experiencia de usuario.",
             stat1: "Años en el área",
-            stat2: "Proyectos Completados",
-            stat3: "Equipos Liderados"
+            stat2: "Proyectos publicados",
+            stat3: "Participantes en eventos coordinados"
         },
         
         // Experience
@@ -121,7 +121,17 @@ const translations = {
             project7: {
                 title: "Plataforma de Ajedrez Maya",
                 description: "Plataforma interactiva para aprender y jugar ajedrez con temática histórica de Mayas vs Españoles, ofreciendo una experiencia educativa única sobre la cultura maya."
-            }
+            },
+            project8: {
+                title: "Panadería Cefas",
+                description: "Juego 3D de panadería en el navegador: armas pasteles y panes paso a paso, atiendes pedidos a tiempo y mejoras tu cocina, con festividades de Guatemala y pedidos reales por WhatsApp."
+            },
+            project9: {
+                title: "Sacbé",
+                description: "Endless runner voxel en Three.js que recorre Guatemala de norte a sur: regiones con su paisaje, poderes, trajes y maratones, todo en el navegador y sin servidor."
+            },
+            play: "Jugar",
+            more: "Más proyectos"
         },
         
         // Education
@@ -151,7 +161,12 @@ const translations = {
         contact: {
             title: "Contáctame",
             description: "¿Tienes un proyecto en mente? ¡Hablemos! Estoy disponible para colaboraciones y nuevas oportunidades.",
-            email: "Email"
+            email: "Email",
+            name: "Nombre",
+            subject: "Asunto",
+            message: "Mensaje",
+            send: "Enviar mensaje",
+            note: "Se abrirá tu aplicación de correo con el mensaje listo para enviar."
         },
         
         // Footer
@@ -206,10 +221,10 @@ const translations = {
         // About
         about: {
             title: "Professional Profile",
-            description: "Programmer in training and project coordinator with experience in web development, logical analysis, technical documentation, and process improvement. I have led activities and teams in cultural and educational projects, managing platforms, forms, databases, and user experience.",
+            description: "Programmer and project coordinator with experience in web development, logical analysis, technical documentation, and process improvement. I have led activities and teams in cultural and educational projects, managing platforms, forms, databases, and user experience.",
             stat1: "Years in the field",
-            stat2: "Completed Projects",
-            stat3: "Teams Led"
+            stat2: "Published projects",
+            stat3: "Participants in events coordinated"
         },
         
         // Experience
@@ -281,7 +296,17 @@ const translations = {
             project7: {
                 title: "Mayan Chess Platform",
                 description: "Interactive platform to learn and play chess with historical theme of Mayans vs Spanish, offering a unique educational experience about Mayan culture."
-            }
+            },
+            project8: {
+                title: "Cefas Bakery",
+                description: "3D bakery game in the browser: build cakes and breads step by step, serve orders on time and upgrade your kitchen, with Guatemalan holidays and real orders sent through WhatsApp."
+            },
+            project9: {
+                title: "Sacbé",
+                description: "Voxel endless runner built with Three.js that crosses Guatemala from north to south: regional landscapes, power-ups, outfits and marathons, all in the browser with no server."
+            },
+            play: "Play",
+            more: "More projects"
         },
         
         // Education
@@ -311,7 +336,12 @@ const translations = {
         contact: {
             title: "Contact Me",
             description: "Have a project in mind? Let's talk! I'm available for collaborations and new opportunities.",
-            email: "Email"
+            email: "Email",
+            name: "Name",
+            subject: "Subject",
+            message: "Message",
+            send: "Send message",
+            note: "Your email app will open with the message ready to send."
         },
         
         // Footer

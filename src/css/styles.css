@@ -105,20 +105,20 @@
    =========================== */
 :root {
     /* Colores principales */
-    --primary-color: #6366f1;
-    --secondary-color: #8b5cf6;
-    --accent-color: #ec4899;
+    --primary-color: #0a7d62;   /* jade */
+    --secondary-color: #0e9f8a;
+    --accent-color: #d97706;    /* oro */
     --success-color: #10b981;
     
     /* Colores de texto */
-    --text-primary: #1f2937;
-    --text-secondary: #6b7280;
-    --text-light: #9ca3af;
+    --text-primary: #14231e;
+    --text-secondary: #53635d;
+    --text-light: #8a9a94;
     
     /* Colores de fondo */
     --bg-primary: #ffffff;
-    --bg-secondary: #f9fafb;
-    --bg-tertiary: #f3f4f6;
+    --bg-secondary: #f4f8f6;
+    --bg-tertiary: #e6eeea;
     
     /* Sombras */
     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -154,12 +154,15 @@
 
 /* Modo Oscuro */
 html.dark-mode {
-    --text-primary: #f9fafb;
-    --text-secondary: #d1d5db;
-    --text-light: #9ca3af;
-    --bg-primary: #111827;
-    --bg-secondary: #1f2937;
-    --bg-tertiary: #374151;
+    --primary-color: #14a37f;
+    --secondary-color: #0f8f86;
+    --accent-color: #f59e0b;
+    --text-primary: #eef6f2;
+    --text-secondary: #b7c8c0;
+    --text-light: #7f948b;
+    --bg-primary: #0f1a17;
+    --bg-secondary: #16231f;
+    --bg-tertiary: #263630;
 }
 
 /* ===========================
@@ -532,7 +535,7 @@ ul {
 }
 
 html.dark-mode .navbar {
-    background: rgba(17, 24, 39, 0.95);
+    background: rgba(15, 26, 23, 0.95);
 }
 
 .navbar.scrolled {
@@ -703,7 +706,7 @@ html.dark-mode .navbar {
     font-size: 3.5rem;
     font-weight: 700;
     margin-bottom: var(--spacing-sm);
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color), var(--accent-color));
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -1057,32 +1060,6 @@ html.dark-mode .navbar {
     color: var(--text-primary);
 }
 
-.skill-bar {
-    width: 100%;
-    height: 8px;
-    background: var(--bg-tertiary);
-    border-radius: var(--border-radius-full);
-    overflow: hidden;
-    margin-bottom: 0.5rem;
-}
-
-.skill-progress {
-    height: 100%;
-    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
-    border-radius: var(--border-radius-full);
-    transition: width 1s ease-out;
-    width: 0;
-}
-
-.skill-progress.animated {
-    width: var(--progress-width);
-}
-
-.skill-level {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-}
-
 /* Fortalezas */
 .strengths {
     margin-top: var(--spacing-2xl);
@@ -1315,76 +1292,6 @@ html.dark-mode .navbar {
     margin-bottom: 0;
 }
 
-.certifications-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: var(--spacing-lg);
-    margin-top: var(--spacing-lg);
-}
-
-.certification-card {
-    background: var(--bg-primary);
-    padding: var(--spacing-lg);
-    border-radius: var(--border-radius-lg);
-    box-shadow: var(--shadow-md);
-    transition: all var(--transition-normal);
-    display: flex;
-    gap: var(--spacing-md);
-    border: 2px solid transparent;
-}
-
-.certification-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-xl);
-    border-color: var(--primary-color);
-}
-
-.certification-icon {
-    font-size: 2.5rem;
-    color: var(--primary-color);
-    min-width: 60px;
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-}
-
-.certification-content {
-    flex: 1;
-}
-
-.certification-content h4 {
-    font-size: 1.125rem;
-    margin-bottom: var(--spacing-xs);
-    color: var(--text-primary);
-    line-height: 1.4;
-}
-
-.certification-provider {
-    color: var(--text-secondary);
-    font-size: 0.875rem;
-    margin-bottom: var(--spacing-sm);
-}
-
-.certification-link {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--spacing-xs);
-    color: var(--primary-color);
-    text-decoration: none;
-    font-size: 0.875rem;
-    font-weight: 500;
-    transition: all var(--transition-normal);
-}
-
-.certification-link:hover {
-    color: var(--secondary-color);
-    gap: calc(var(--spacing-xs) + 2px);
-}
-
-.certification-link .icon {
-    font-size: 0.75rem;
-}
-
 /* ===========================
    Contact Section
    =========================== */
@@ -1451,12 +1358,6 @@ html.dark-mode .navbar {
     padding: var(--spacing-xl);
     border-radius: var(--border-radius-lg);
     box-shadow: var(--shadow-md);
-    min-height: 800px;
-}
-
-.contact-form-wrapper iframe {
-    border-radius: var(--border-radius-md);
-    max-width: 100%;
 }
 
 .contact-form {
@@ -1492,7 +1393,7 @@ html.dark-mode .navbar {
 .form-group textarea:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    box-shadow: 0 0 0 3px rgba(10, 125, 98, 0.12);
 }
 
 .form-group textarea {
@@ -1634,24 +1535,6 @@ html.dark-mode .navbar {
     
     .contact-form-wrapper {
         padding: var(--spacing-md);
-        min-height: 700px;
-    }
-    
-    .contact-form-wrapper iframe {
-        height: 700px;
-    }
-    
-    .certifications-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .certification-card {
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .certification-icon {
-        justify-content: center;
     }
     
     .footer-content {
@@ -1683,7 +1566,7 @@ html.dark-mode .navbar {
     }
     
     html.dark-mode .nav-menu {
-        background: rgba(17, 24, 39, 0.98);
+        background: rgba(15, 26, 23, 0.98);
     }
     
     .nav-menu.active {
@@ -1807,7 +1690,7 @@ html:not(.no-js) .section.reveal.is-visible {
     width: 100%;
     transform: scaleX(0);
     transform-origin: 0 50%;
-    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), var(--accent-color));
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
     will-change: transform;
 }
 
@@ -1907,7 +1790,7 @@ html:not(.no-js) .section.reveal.is-visible {
     border-radius: var(--border-radius-lg);
     background: radial-gradient(
         420px circle at var(--mx, 50%) var(--my, 50%),
-        rgba(99, 102, 241, 0.16),
+        rgba(10, 125, 98, 0.16),
         transparent 60%
     );
     opacity: 0;
@@ -1930,32 +1813,6 @@ html:not(.no-js) .section.reveal.is-visible {
     transform: none;
 }
 
-/* ===========================
-   Skill bars: brillo al llenarse
-   =========================== */
-.skill-bar {
-    position: relative;
-    overflow: hidden;
-}
-
-.skill-progress {
-    position: relative;
-    overflow: hidden;
-}
-
-.skill-progress.animated::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
-    transform: translateX(-100%);
-    animation: skillShimmer 1.6s ease-out 0.4s;
-}
-
-@keyframes skillShimmer {
-    to { transform: translateX(200%); }
-}
-
 /* En flex y no flotado: con nombres largos ("SQL / MySQL / SQL Server")
    el porcentaje flotado se caia a su propia linea. */
 .skill-info h4 {
@@ -1963,14 +1820,6 @@ html:not(.no-js) .section.reveal.is-visible {
     align-items: baseline;
     justify-content: space-between;
     gap: var(--spacing-xs);
-}
-
-.skill-percent {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--primary-color);
-    font-variant-numeric: tabular-nums;
-    flex-shrink: 0;
 }
 
 /* ===========================
@@ -2172,6 +2021,7 @@ html.dark-mode .mesh-blob {
     top: 35%;
     left: 45%;
     background: var(--accent-color);
+    opacity: 0.16;
     animation: meshDrift3 30s ease-in-out infinite;
 }
 
@@ -2247,103 +2097,7 @@ html.dark-mode .mesh-blob {
     to { transform: translateX(-50%); }
 }
 
-/* ===========================
-   Certificaciones: flip 3D
-   =========================== */
-.certification-card {
-    perspective: 1200px;
-    background: none;
-    box-shadow: none;
-    padding: 0;
-    /* Altura fija: las dos caras se superponen en absoluto y sin esto
-       la tarjeta colapsaria. */
-    min-height: 190px;
-}
-
-.certification-card:hover {
-    transform: none;
-    box-shadow: none;
-}
-
-.cert-inner {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    min-height: inherit;
-    transform-style: preserve-3d;
-    transition: transform 700ms cubic-bezier(0.4, 0.2, 0.2, 1);
-}
-
-.certification-card:hover .cert-inner,
-.certification-card:focus-within .cert-inner {
-    transform: rotateY(180deg);
-}
-
-.cert-face {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    padding: var(--spacing-lg);
-    border-radius: var(--border-radius-lg);
-    background: var(--bg-primary);
-    box-shadow: var(--shadow-md);
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-}
-
-.cert-front {
-    gap: var(--spacing-md);
-    align-items: flex-start;
-}
-
-.cert-back {
-    transform: rotateY(180deg);
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    gap: var(--spacing-xs);
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    color: #fff;
-}
-
-.cert-back h4,
-.cert-back .certification-provider {
-    color: #fff;
-}
-
-.cert-back .certification-link {
-    margin-top: var(--spacing-sm);
-    padding: 0.55rem 1.1rem;
-    border-radius: var(--border-radius-full);
-    background: rgba(255, 255, 255, 0.18);
-    color: #fff;
-}
-
-.cert-back .certification-link:hover {
-    background: rgba(255, 255, 255, 0.3);
-    color: #fff;
-}
-
-/* Sin soporte de 3D (o con menos movimiento) no debe quedar nada oculto:
-   las caras se apilan en flujo normal. */
 @media (prefers-reduced-motion: reduce) {
-    .certification-card { min-height: 0; }
-
-    .cert-inner { transform: none !important; }
-
-    .cert-face {
-        position: static;
-        inset: auto;
-        backface-visibility: visible;
-        -webkit-backface-visibility: visible;
-    }
-
-    .cert-back {
-        transform: none;
-        margin-top: var(--spacing-xs);
-    }
-
     .marquee-track,
     .mesh-blob {
         animation: none !important;
@@ -2436,3 +2190,228 @@ html.dark-mode .mesh-blob {
         transform: none !important;
     }
 }
+
+/* ===========================
+   Hero 3D (Three.js)
+   =========================== */
+.hero-3d {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    opacity: 0;
+    transition: opacity 1.2s ease;
+    pointer-events: none;
+}
+
+.hero-3d.is-ready { opacity: 1; }
+
+/* El texto queda a la izquierda: el diorama se desvanece por ese lado */
+@media (min-width: 901px) {
+    .hero-3d {
+        -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 38%);
+        mask-image: linear-gradient(90deg, transparent 0%, #000 38%);
+    }
+}
+
+@media (max-width: 900px) {
+    .hero-3d.is-ready { opacity: 0.35; }
+}
+
+.has-hero3d .hero-mesh,
+.has-hero3d #particles { display: none; }
+
+/* ===========================
+   Habilidades: nivel en tres puntos (sin porcentajes inventados)
+   =========================== */
+.skill-pips {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 0.5rem;
+}
+
+.skill-pips i {
+    width: 22px;
+    height: 6px;
+    border-radius: var(--border-radius-full);
+    background: var(--bg-tertiary);
+}
+
+.skill-pips[data-level="1"] i:nth-child(-n+1),
+.skill-pips[data-level="2"] i:nth-child(-n+2),
+.skill-pips[data-level="3"] i {
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+}
+
+/* ===========================
+   Certificaciones: lista compacta
+   =========================== */
+.cert-list {
+    list-style: none;
+    margin: var(--spacing-md) 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: var(--spacing-sm) var(--spacing-lg);
+}
+
+.cert-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: 0.85rem 1rem;
+    background: var(--bg-primary);
+    border: 1px solid var(--bg-tertiary);
+    border-radius: var(--border-radius-md);
+    color: var(--text-primary);
+    transition: border-color var(--transition-normal), transform var(--transition-normal);
+}
+
+.cert-row:hover,
+.cert-row:focus-visible {
+    border-color: var(--primary-color);
+    transform: translateX(4px);
+}
+
+.cert-row .icon { color: var(--primary-color); }
+.cert-title { font-weight: 500; line-height: 1.35; }
+.cert-provider { color: var(--text-secondary); font-size: 0.8rem; }
+.cert-go { font-size: 0.75rem; opacity: 0.6; }
+
+@media (max-width: 480px) {
+    .cert-list { grid-template-columns: 1fr; }
+}
+
+/* ===========================
+   Proyecto destacado (Sacbe)
+   =========================== */
+.project-card.featured {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: stretch;
+    gap: var(--spacing-xl);
+    padding: var(--spacing-md);
+}
+
+.project-card.featured .project-canvas-wrap {
+    flex: 1.2;
+    min-height: 280px;
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    background: linear-gradient(180deg, #f3efe2 0%, #cfe8dc 100%);
+}
+
+.project-card.featured .project-canvas-wrap canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.project-card.featured .project-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.dark-mode .project-card.featured .project-canvas-wrap {
+    background: linear-gradient(180deg, #0a1411 0%, #16231f 100%);
+}
+
+@media (max-width: 768px) {
+    .project-card.featured { flex-direction: column; gap: var(--spacing-md); }
+}
+
+/* ===========================
+   Formulario de contacto
+   =========================== */
+.contact-form .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.contact-form input,
+.contact-form textarea {
+    font: inherit;
+    padding: 0.75rem 0.9rem;
+    color: var(--text-primary);
+    background: var(--bg-secondary);
+    border: 1px solid var(--bg-tertiary);
+    border-radius: var(--border-radius-md);
+    resize: vertical;
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 1px;
+}
+
+.form-note {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+/* ===========================
+   Proyectos mainframe: guiños de terminal, con el estilo del resto de tarjetas
+   =========================== */
+.project-card.zos h3 {
+    font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+    font-size: 1.3rem;
+}
+
+.project-card.zos h3::before { content: '> '; color: var(--primary-color); }
+.project-card.zos h3::after {
+    content: '_';
+    margin-left: 2px;
+    color: var(--primary-color);
+    animation: blink 1s steps(1) infinite;
+}
+
+.project-card.zos .tag {
+    font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+    font-size: 0.8rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .project-card.zos h3::after { animation: none; }
+}
+
+/* ===========================
+   Más proyectos (sin captura): lista compacta
+   =========================== */
+.more-title { margin-top: var(--spacing-xl); }
+
+.more-projects {
+    list-style: none;
+    padding: 0;
+    margin: var(--spacing-md) 0 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+.more-projects li {
+    display: flex;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: var(--bg-primary);
+    border: 1px solid var(--bg-tertiary);
+    border-radius: var(--border-radius-lg);
+}
+
+.more-projects > li > .icon {
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+    color: var(--primary-color);
+}
+
+.more-projects h4 { color: var(--text-primary); margin-bottom: 0.25rem; }
+.more-projects p { color: var(--text-secondary); margin-bottom: var(--spacing-sm); }
+.more-projects .project-links { margin-top: var(--spacing-sm); }
