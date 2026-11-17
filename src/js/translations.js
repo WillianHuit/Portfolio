@@ -127,6 +127,10 @@ const translations = {
                 title: "Panadería Cefas",
                 description: "Juego 3D de panadería en el navegador: armas pasteles y panes paso a paso, atiendes pedidos a tiempo y mejoras tu cocina, con festividades de Guatemala y pedidos reales por WhatsApp."
             },
+            project9: {
+                title: "Lector del Catecismo",
+                description: "Lector moderno del Catecismo de la Iglesia Católica que consume en tiempo real las páginas de vatican.va y las convierte en una lectura cuidada: índice general navegable, acceso directo a sus 2865 párrafos y modos claro, sepia y oscuro."
+            },
             more: "Más proyectos"
         },
         
@@ -297,6 +301,10 @@ const translations = {
             project8: {
                 title: "Cefas Bakery",
                 description: "3D bakery game in the browser: build cakes and breads step by step, serve orders on time and upgrade your kitchen, with Guatemalan holidays and real orders sent through WhatsApp."
+            },
+            project9: {
+                title: "Catechism Reader",
+                description: "Modern reader for the Catechism of the Catholic Church that fetches vatican.va pages in real time and turns them into a refined reading experience: a navigable table of contents, direct access to all 2,865 paragraphs, and light, sepia and dark modes."
             },
             more: "More projects"
         },
