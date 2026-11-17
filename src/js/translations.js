@@ -129,7 +129,7 @@ const translations = {
             },
             project9: {
                 title: "Lector del Catecismo",
-                description: "Lector moderno del Catecismo de la Iglesia Católica que consume en tiempo real las páginas de vatican.va y las convierte en una lectura cuidada: índice general navegable, acceso directo a sus 2865 párrafos y modos claro, sepia y oscuro."
+                description: "Lector moderno del Catecismo de la Iglesia Católica que consume en tiempo real las páginas de vatican.va y las convierte en una lectura cuidada: índice general navegable, acceso directo a sus 2865 párrafos, modos claro, sepia y oscuro, y lectura sin conexión instalable como app."
             },
             more: "Más proyectos"
         },
@@ -304,7 +304,7 @@ const translations = {
             },
             project9: {
                 title: "Catechism Reader",
-                description: "Modern reader for the Catechism of the Catholic Church that fetches vatican.va pages in real time and turns them into a refined reading experience: a navigable table of contents, direct access to all 2,865 paragraphs, and light, sepia and dark modes."
+                description: "Modern reader for the Catechism of the Catholic Church that fetches vatican.va pages in real time and turns them into a refined reading experience: a navigable table of contents, direct access to all 2,865 paragraphs, light, sepia and dark modes, and offline reading as an installable app."
             },
             more: "More projects"
         },
